@@ -58,6 +58,7 @@ export const DATE_FORMAT_DISPLAY = 'dd MMMM yyyy'
 // Tanstack Query keys (centralized)
 export const QUERY_KEYS = {
   PROFILE: ['profile'] as const,
+  CASHIERS: ['cashiers'] as const,
   PRODUCTS: ['products'] as const,
   TRANSACTIONS: ['transactions'] as const,
   DASHBOARD: ['dashboard'] as const,

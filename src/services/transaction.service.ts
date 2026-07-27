@@ -124,7 +124,7 @@ export async function getTransactions(
     .select(`
       *,
       transaction_items(*),
-      profiles!recorded_by(full_name)
+      profiles!recorded_by(id, full_name, avatar_url, phone)
     `)
     .order('transaction_at', { ascending: false })
 
@@ -176,7 +176,7 @@ export async function getTransactionWithItems(id: string): Promise<TransactionWi
     .select(`
       *,
       transaction_items(*),
-      profiles!recorded_by(full_name)
+      profiles!recorded_by(id, full_name, avatar_url, phone)
     `)
     .eq('id', id)
     .single()

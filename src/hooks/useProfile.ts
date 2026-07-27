@@ -25,6 +25,33 @@ export function useProfile() {
 }
 
 // ============================================================
+// useCashiers — fetch all active cashiers (Admin only)
+// ============================================================
+
+export function useCashiers() {
+  const { user } = useAuthStore()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.CASHIERS,
+    queryFn: async () => {
+      // Inline fetch for simplicity, can be moved to auth.service
+      const { supabase } = await import('@/lib/supabase')
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, role, avatar_url, phone')
+        .eq('role', 'kasir')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true })
+
+      if (error) throw error
+      return data as Profile[]
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 60, // 1 hour
+  })
+}
+
+// ============================================================
 // useUpdateProfile — mutation
 // ============================================================
 

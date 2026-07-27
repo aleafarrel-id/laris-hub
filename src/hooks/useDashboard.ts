@@ -4,7 +4,9 @@ import {
   getKPISummaryForDate,
   getKPISummaryForRange,
   getMonthlyTrend,
+  getMonthlyTrendByKasir,
   getTopProducts,
+  getTopProductsByKasir,
 } from '@/services/dashboard.service'
 import type { DateRange } from '@/types'
 
@@ -43,14 +45,18 @@ function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from:
 // useKPISummary — dashboard KPI cards
 // ============================================================
 
-export function useKPISummary(period: DashboardPeriod = 'today', customRange?: DateRange) {
+export function useKPISummary(period: DashboardPeriod = 'today', customRange?: DateRange, kasirId: string = 'all') {
   const range = getDateRange(period, customRange)
   const isToday = period === 'today'
 
   return useQuery({
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange],
-    queryFn: () =>
-      isToday ? getKPISummaryForDate(new Date()) : getKPISummaryForRange(range.from, range.to),
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange, kasirId],
+    queryFn: () => {
+      if (kasirId !== 'all') {
+        return getKPISummaryForRange(range.from, range.to, kasirId)
+      }
+      return isToday ? getKPISummaryForDate(new Date()) : getKPISummaryForRange(range.from, range.to)
+    },
     staleTime: 1000 * 60, // 1 min
   })
 }
@@ -59,10 +65,15 @@ export function useKPISummary(period: DashboardPeriod = 'today', customRange?: D
 // useMonthlyTrend — line chart data (last 30 days)
 // ============================================================
 
-export function useMonthlyTrend(days = 30) {
+export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
   return useQuery({
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days],
-    queryFn: () => getMonthlyTrend(days),
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days, kasirId],
+    queryFn: () => {
+      if (kasirId !== 'all') {
+        return getMonthlyTrendByKasir(days, kasirId)
+      }
+      return getMonthlyTrend(days)
+    },
     staleTime: 1000 * 60 * 5, // 5 min — chart doesn't need to be ultra-fresh
   })
 }
@@ -75,12 +86,18 @@ export function useTopProducts(
   period: DashboardPeriod = 'month',
   customRange?: DateRange,
   limit = 5,
+  kasirId = 'all',
 ) {
   const range = getDateRange(period, customRange)
 
   return useQuery({
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit],
-    queryFn: () => getTopProducts(range.from, range.to, limit),
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit, kasirId],
+    queryFn: () => {
+      if (kasirId !== 'all') {
+        return getTopProductsByKasir(range.from, range.to, kasirId, limit)
+      }
+      return getTopProducts(range.from, range.to, limit)
+    },
     staleTime: 1000 * 60 * 5,
   })
 }

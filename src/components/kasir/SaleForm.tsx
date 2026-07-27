@@ -1,5 +1,5 @@
 
-import { CheckCircle, Minus, Package, Plus, Search } from 'lucide-react'
+import { CheckCircle, Minus, Package, Plus, Search, Tag } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -125,23 +125,23 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
       {/* Product Grid */}
       <div className="p-4 bg-neutral-50/50 flex-1">
         {productsLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="flex flex-col gap-3">
             {[1, 2, 3, 4, 5, 6].map((k) => (
               <div
                 key={k}
-                className="flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden"
+                className="flex items-center bg-white rounded-2xl border border-neutral-200 overflow-hidden p-3 gap-3"
               >
-                <Skeleton className="h-28 w-full rounded-none" />
-                <div className="p-3 flex flex-col flex-1">
+                <Skeleton className="w-20 h-20 rounded-xl flex-shrink-0" />
+                <div className="flex flex-col flex-1">
                   <Skeleton className="h-4 w-3/4 mb-2" />
                   <Skeleton className="h-3 w-1/2 mb-3" />
-                  <Skeleton className="h-8 w-full rounded-xl mt-auto" />
+                  <Skeleton className="h-4 w-1/3" />
                 </div>
               </div>
             ))}
           </div>
         ) : filtered.length ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {filtered.map((product) => {
               const inCart = cart.get(product.id)
               const qty = inCart?.quantity || 0
@@ -155,15 +155,15 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                   onClick={() => {
                     if (qty === 0) addToCart(product)
                   }}
-                  className={`relative flex flex-col bg-white rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                  className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${
                     qty > 0
-                      ? 'border-primary ring-1 ring-primary shadow-[0_4px_12px_-4px_rgba(40,94,175,0.2)] scale-[0.98]'
+                      ? 'border-primary ring-1 ring-primary shadow-sm shadow-primary/10 bg-primary/5'
                       : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
                   }`}
                 >
                   {/* Image / Thumbnail */}
                   <div
-                    className={`w-full h-28 sm:h-32 flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group`}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group`}
                   >
                     {product.image_url ? (
                       <img
@@ -173,63 +173,77 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                       />
                     ) : (
                       <div className="text-white/80 drop-shadow-sm transition-transform group-active:scale-95 group-hover:scale-110">
-                        <Package size={48} strokeWidth={1.5} />
+                        <Package size={32} strokeWidth={1.5} />
                       </div>
                     )}
                     {qty > 0 && (
                       <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px] flex items-center justify-center transition-all">
                         <CheckCircle
                           className="text-white drop-shadow-md opacity-90 scale-110"
-                          size={32}
+                          size={24}
                         />
                       </div>
                     )}
                   </div>
 
                   {/* Product Info & Controls */}
-                  <div className="flex flex-col flex-1 p-3 pt-2">
-                    <p className="text-sm sm:text-base font-bold text-neutral-900 leading-tight mb-0.5 line-clamp-2">
+                  <div className="flex flex-col flex-1 min-w-0 py-0.5 self-stretch justify-center">
+                    <p className="text-sm sm:text-base font-bold text-neutral-900 leading-tight mb-1 line-clamp-1">
                       {product.name}
                     </p>
-                    <p className="text-xs sm:text-sm font-bold text-primary mb-3">
+                    
+                    {product.sku && (
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1.5">
+                        <Tag size={12} className="text-neutral-400" />
+                        <span className="truncate">{product.sku}</span>
+                      </div>
+                    )}
+                    
+                    <p className="text-sm font-bold text-primary mt-auto">
                       {formatRupiah(product.selling_price)}
                     </p>
+                  </div>
 
-                    <div className="mt-auto pt-1">
-                      {qty === 0 ? (
+                  <div className="flex-shrink-0 self-center">
+                    {qty === 0 ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          addToCart(product)
+                        }}
+                        className="w-8 h-8 sm:w-auto sm:px-4 sm:h-9 bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center gap-2 text-xs font-bold rounded-xl active:scale-95 transition-colors"
+                      >
+                        <Plus size={16} strokeWidth={2.5} />
+                        <span className="hidden sm:inline">Tambah</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-between bg-primary rounded-xl p-1 shadow-sm shadow-primary/20">
                         <button
                           type="button"
-                          onClick={() => addToCart(product)}
-                          className="w-full py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-xl active:scale-95 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            changeQty(product.id, -1)
+                          }}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
                         >
-                          + Tambah
+                          <Minus size={14} strokeWidth={3} />
                         </button>
-                      ) : (
-                        <div className="flex items-center justify-between bg-primary rounded-xl p-1 shadow-sm shadow-primary/20">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              changeQty(product.id, -1)
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
-                          >
-                            <Minus size={16} strokeWidth={3} />
-                          </button>
-                          <span className="text-white font-bold tabular-nums text-sm">{qty}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              changeQty(product.id, 1)
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
-                          >
-                            <Plus size={16} strokeWidth={3} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                        <span className="text-white font-bold tabular-nums text-xs sm:text-sm px-2 sm:px-3 min-w-[1.5rem] text-center">
+                          {qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            changeQty(product.id, 1)
+                          }}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
+                        >
+                          <Plus size={14} strokeWidth={3} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )

@@ -48,15 +48,21 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
  * Get KPI summary for a custom date range.
  * Aggregates directly from transactions table.
  */
-export async function getKPISummaryForRange(from: Date, to: Date): Promise<KPISummary> {
+export async function getKPISummaryForRange(from: Date, to: Date, kasirId?: string): Promise<KPISummary> {
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
-  const { data, error } = await db
+  let query = db
     .from('transactions')
     .select('type, total_amount, total_profit')
     .gte('transaction_at', from.toISOString())
     .lte('transaction_at', endOfDay.toISOString())
+
+  if (kasirId && kasirId !== 'all') {
+    query = query.eq('recorded_by', kasirId)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 
@@ -113,6 +119,51 @@ export async function getMonthlyTrend(days = 30): Promise<DailyTrendPoint[]> {
   }))
 }
 
+/**
+ * JS-aggregated trend for a specific kasir
+ */
+export async function getMonthlyTrendByKasir(days = 30, kasirId: string): Promise<DailyTrendPoint[]> {
+  const from = new Date()
+  from.setDate(from.getDate() - days + 1)
+  from.setHours(0, 0, 0, 0)
+  
+  const { data, error } = await db
+    .from('transactions')
+    .select('transaction_at, type, total_amount, total_profit')
+    .gte('transaction_at', from.toISOString())
+    .eq('recorded_by', kasirId)
+
+  if (error) throw error
+
+  // Initialize days map
+  const trendMap = new Map<string, DailyTrendPoint>()
+  for (let i = 0; i < days; i++) {
+    const d = new Date(from)
+    d.setDate(d.getDate() + i)
+    const dateStr = d.toISOString().split('T')[0]
+    trendMap.set(dateStr, { date: dateStr, omset: 0, profit: 0, pengeluaran: 0 })
+  }
+
+  // Aggregate
+  for (const tx of data ?? []) {
+    const d = new Date(tx.transaction_at)
+    // shift to local date string equivalent
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    
+    const point = trendMap.get(dateStr)
+    if (point) {
+      if (tx.type === 'penjualan') {
+        point.omset += Number(tx.total_amount)
+        point.profit += Number(tx.total_profit)
+      } else {
+        point.pengeluaran += Number(tx.total_amount)
+      }
+    }
+  }
+
+  return Array.from(trendMap.values())
+}
+
 export interface TopProduct {
   product_id: string
   product_name: string
@@ -137,4 +188,50 @@ export async function getTopProducts(from: Date, to: Date, limit = 5): Promise<T
 
   if (error) throw error
   return (data ?? []) as TopProduct[]
+}
+
+/**
+ * JS-aggregated top products for a specific kasir
+ */
+export async function getTopProductsByKasir(from: Date, to: Date, kasirId: string, limit = 5): Promise<TopProduct[]> {
+  const endOfDay = new Date(to)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const { data, error } = await db
+    .from('transaction_items')
+    .select(`
+      quantity, selling_price, product_hpp, product_name, product_id,
+      transactions!inner ( transaction_at, recorded_by, type )
+    `)
+    .eq('transactions.type', 'penjualan')
+    .eq('transactions.recorded_by', kasirId)
+    .gte('transactions.transaction_at', from.toISOString())
+    .lte('transactions.transaction_at', endOfDay.toISOString())
+
+  if (error) throw error
+
+  const productMap = new Map<string, TopProduct>()
+
+  for (const item of data ?? []) {
+    const id = item.product_id
+    if (!productMap.has(id)) {
+      productMap.set(id, {
+        product_id: id,
+        product_name: item.product_name,
+        total_qty: 0,
+        total_revenue: 0,
+        total_profit: 0
+      })
+    }
+    const p = productMap.get(id)!
+    p.total_qty += Number(item.quantity)
+    const rev = Number(item.quantity) * Number(item.selling_price)
+    const cost = Number(item.quantity) * Number(item.product_hpp)
+    p.total_revenue += rev
+    p.total_profit += (rev - cost)
+  }
+
+  return Array.from(productMap.values())
+    .sort((a, b) => b.total_qty - a.total_qty)
+    .slice(0, limit)
 }

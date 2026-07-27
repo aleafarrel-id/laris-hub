@@ -48,52 +48,57 @@ export function ConfirmDialog({
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            onClick={onCancel}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           />
 
-          {/* Dialog */}
-          <div className="absolute inset-0 flex items-center justify-center p-4">
+          {/* Dialog Wrapper (captures outside clicks) */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
+            onClick={onCancel}
+          >
             <motion.div
-              className="bg-white rounded-2xl shadow-modal w-full max-w-sm overflow-hidden flex flex-col"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-[24px] shadow-xl w-full max-w-[400px] overflow-hidden flex flex-col p-5 sm:p-8"
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ type: 'spring', duration: 0.4, bounce: 0 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-5">
-                <div className="flex gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'}`}
-                  >
-                    <AlertCircle size={20} strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-neutral-900 mb-1">{title}</h3>
-                    <p className="text-sm text-neutral-500 leading-relaxed">{description}</p>
-                  </div>
+              <div className="flex flex-col items-center text-center">
+                {/* Icon */}
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 sm:mb-5 ${
+                    variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
+                  }`}
+                >
+                  <AlertCircle size={28} strokeWidth={2} />
                 </div>
+
+                {/* Text */}
+                <h3 className="text-xl font-bold text-neutral-900 mb-2 sm:mb-3 text-balance tracking-tight">{title}</h3>
+                <p className="text-[14px] sm:text-[15px] text-neutral-500 leading-relaxed mb-6 sm:mb-8 text-pretty px-1 sm:px-0">{description}</p>
               </div>
 
-              <div className="bg-neutral-50 px-5 py-4 flex gap-3 justify-end border-t border-neutral-100">
+              {/* Actions */}
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-200 transition-colors active:scale-95"
+                  className="flex-1 px-4 py-3 sm:py-3 rounded-xl text-[14px] sm:text-[15px] font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors active:scale-[0.96]"
                 >
                   {cancelText}
                 </button>
                 <button
                   type="button"
                   onClick={onConfirm}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold text-white transition-colors active:scale-95 shadow-sm ${
+                  className={`flex-1 px-4 py-3 sm:py-3 rounded-xl text-[14px] sm:text-[15px] font-semibold text-white transition-colors active:scale-[0.96] shadow-sm ${
                     variant === 'danger'
-                      ? 'bg-danger hover:bg-danger-dark shadow-danger/20'
-                      : 'bg-primary hover:bg-primary-700 shadow-primary/20'
+                      ? 'bg-danger hover:bg-danger-dark'
+                      : 'bg-primary hover:bg-primary-700'
                   }`}
                 >
                   {confirmText}

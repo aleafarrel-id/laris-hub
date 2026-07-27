@@ -79,7 +79,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-50 antialiased"
           style={{ left: 'var(--layout-sidebar-width)' }}
           role="dialog"
           aria-modal="true"
@@ -87,48 +87,53 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            onClick={onClose}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             aria-hidden="true"
           />
 
-          {/* Content */}
-          <motion.div
-            className={contentClass}
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+          {/* Content Wrapper (captures outside clicks) */}
+          <div 
+            className="absolute inset-0 flex flex-col justify-end sm:justify-center p-0 sm:p-4"
+            onClick={onClose}
           >
-            {/* Handle (bottom sheet only) */}
-            {isBottom && (
-              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 rounded-full bg-neutral-200" />
+            <motion.div
+              className={contentClass}
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle (bottom sheet only) */}
+              {isBottom && (
+                <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                  <div className="w-10 h-1 rounded-full bg-neutral-200" />
+                </div>
+              )}
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
+                <h2 id="modal-title" className="text-base font-semibold text-neutral-900 text-balance tracking-tight">
+                  {title}
+                </h2>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all active:scale-[0.96]"
+                  aria-label="Tutup modal"
+                >
+                  <X size={18} strokeWidth={2} />
+                </button>
               </div>
-            )}
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
-              <h2 id="modal-title" className="text-base font-semibold text-neutral-900">
-                {title}
-              </h2>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors active:scale-[0.96] transition-transform"
-                aria-label="Tutup modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
-          </motion.div>
+              {/* Scrollable body */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+            </motion.div>
+          </div>
         </div>
       )}
     </AnimatePresence>

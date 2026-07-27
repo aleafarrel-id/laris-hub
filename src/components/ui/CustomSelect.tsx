@@ -44,10 +44,10 @@ export function CustomSelect({
     if (isOpen && ref.current) {
       const rect = ref.current.getBoundingClientRect()
       const screenWidth = window.innerWidth
-
-      // The dropdown is min-w-[160px]. If it overflows the right edge, align it to the right.
-      // 180 = 160px min-width + 20px padding margin safety
-      if (rect.left + 180 > screenWidth) {
+      
+      // Smart positioning: if the button is on the right half of the screen,
+      // anchor the dropdown to the right. Otherwise, anchor to the left.
+      if (rect.left > screenWidth / 2) {
         setDropdownStyle({ left: 'auto', right: '0px', transformOrigin: 'top right' })
       } else {
         setDropdownStyle({ left: '0px', right: 'auto', transformOrigin: 'top left' })

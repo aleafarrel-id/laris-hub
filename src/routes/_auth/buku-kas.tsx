@@ -15,9 +15,12 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
+import { useCashiers } from '@/hooks/useProfile'
 import { useTransactions } from '@/hooks/useTransactions'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { TransactionFilters, TransactionWithItems } from '@/types'
+import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import type { Profile, TransactionFilters, TransactionWithItems } from '@/types'
+import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 
 // ============================================================
 // /buku-kas — Transaction history (admin: all, kasir: own)
@@ -69,7 +72,12 @@ function BukuKasPage() {
   const [customFrom, setCustomFrom] = useState(() => todayStart().toISOString().split('T')[0])
   const [customTo, setCustomTo] = useState(() => new Date().toISOString().split('T')[0])
   const [typeFilter, setTypeFilter] = useState<TransactionFilters['type']>('all')
+  const [kasirFilter, setKasirFilter] = useState<string>('all')
+  const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
+  
   const [listRef] = useAutoAnimate()
+
+  const { data: cashiers } = useCashiers()
 
   const dateRange =
     quickRange === 'custom'
@@ -79,6 +87,7 @@ function BukuKasPage() {
   const { data: transactions, isLoading } = useTransactions({
     dateRange,
     type: typeFilter,
+    recordedBy: isAdmin && kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
   // Summary
@@ -142,8 +151,19 @@ function BukuKasPage() {
           ))}
         </div>
 
-        {/* Type filter */}
-        <div className="w-full sm:w-auto sm:ml-auto">
+        {/* Type & Kasir filters */}
+        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
+          {isAdmin && (
+            <CustomSelect
+              value={kasirFilter}
+              onChange={(val) => setKasirFilter(val)}
+              options={[
+                { value: 'all', label: 'Semua Kasir' },
+                ...(cashiers?.map((c) => ({ value: c.id, label: c.full_name })) || []),
+              ]}
+              className="min-w-[130px]"
+            />
+          )}
           <CustomSelect
             value={typeFilter as string}
             onChange={(val) => setTypeFilter(val as TransactionFilters['type'])}
@@ -254,6 +274,11 @@ function BukuKasPage() {
                     <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Tipe
                     </th>
+                    {isAdmin && (
+                      <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                        Kasir
+                      </th>
+                    )}
                     <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
                     </th>
@@ -276,6 +301,11 @@ function BukuKasPage() {
                       <td className="py-3 px-4">
                         <Skeleton className="h-6 w-20 rounded-full" />
                       </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4">
+                          <Skeleton className="h-4 w-24" />
+                        </td>
+                      )}
                       <td className="py-3 px-4">
                         <div className="flex justify-end">
                           <Skeleton className="h-4 w-24" />
@@ -328,32 +358,78 @@ function BukuKasPage() {
                     <TrendingDown size={15} className="text-danger" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
-                    {tx.type === 'penjualan'
-                      ? (tx as TransactionWithItems).transaction_items
-                          ?.map((i) => i.product_name)
-                          .join(', ') || 'Penjualan'
-                      : tx.description}
-                  </p>
-                  <p className="text-xs text-neutral-400 tabular-nums mt-0.5">
-                    {formatDateTime(tx.transaction_at)}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p
-                    className={`text-sm font-bold tabular-nums ${
-                      tx.type === 'penjualan' ? 'text-success' : 'text-danger'
-                    }`}
-                  >
-                    {tx.type === 'penjualan' ? '+' : '−'}
-                    {formatRupiah(tx.total_amount)}
-                  </p>
-                  {isAdmin && tx.type === 'penjualan' && (
-                    <p className="text-[10px] text-neutral-400 tabular-nums">
-                      profit {formatRupiah(tx.total_profit)}
-                    </p>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="text-sm font-medium text-neutral-900">
+                    {tx.type === 'penjualan' ? (
+                      <div className="flex flex-col gap-0.5">
+                        {(tx as TransactionWithItems).transaction_items && (tx as TransactionWithItems).transaction_items.length > 1 ? (
+                          (tx as TransactionWithItems).transaction_items.map((i, idx) => (
+                            <div key={idx} className="flex items-start gap-1.5 min-w-0">
+                              <span className="text-neutral-400 flex-shrink-0">•</span>
+                              <span className="truncate">{i.product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{i.quantity}</span></span>
+                            </div>
+                          ))
+                        ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
+                          <p className="truncate">
+                            {(tx as TransactionWithItems).transaction_items[0].product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{(tx as TransactionWithItems).transaction_items[0].quantity}</span>
+                          </p>
+                        ) : (
+                          <p className="truncate">Penjualan</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="truncate">{tx.description}</p>
+                    )}
+                  </div>
+                  
+                  {(tx.expense_category || tx.notes) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      {tx.type === 'pengeluaran' && tx.expense_category && (
+                        <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
+                          {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
+                        </span>
+                      )}
+                      {tx.notes && (
+                        <p className="text-xs text-neutral-500 truncate italic">
+                          "{tx.notes}"
+                        </p>
+                      )}
+                    </div>
                   )}
+
+                  {isAdmin && tx.profiles && (
+                    <div className="mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedKasirProfile(tx.profiles as Partial<Profile>)}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
+                      >
+                        <span className="truncate max-w-[120px]">{tx.profiles.full_name}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-end justify-between mt-1.5 gap-2">
+                    <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
+                      {formatDateTime(tx.transaction_at)}
+                    </span>
+                    
+                    <div className="flex flex-col items-end leading-tight flex-shrink-0">
+                      <span
+                        className={`text-sm font-bold tabular-nums whitespace-nowrap ${
+                          tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                        }`}
+                      >
+                        {tx.type === 'penjualan' ? '+' : '−'}
+                        {formatRupiah(tx.total_amount)}
+                      </span>
+                      {isAdmin && tx.type === 'penjualan' && (
+                        <span className="text-[10px] text-neutral-400 tabular-nums mt-0.5">
+                          profit {formatRupiah(tx.total_profit)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -374,6 +450,11 @@ function BukuKasPage() {
                     <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Tipe
                     </th>
+                    {isAdmin && (
+                      <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                        Kasir
+                      </th>
+                    )}
                     <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
                     </th>
@@ -390,16 +471,58 @@ function BukuKasPage() {
                       <td className="py-3 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                         {formatDateTime(tx.transaction_at)}
                       </td>
-                      <td className="py-3 px-4 text-neutral-900 max-w-xs truncate">
-                        {tx.type === 'penjualan'
-                          ? (tx as TransactionWithItems).transaction_items
-                              ?.map((i) => `${i.product_name} (${i.quantity}x)`)
-                              .join(', ')
-                          : tx.description}
+                      <td className="py-3 px-4 max-w-xs">
+                        <div className="flex items-start gap-2 mb-0.5">
+                          <div className="text-sm font-medium text-neutral-900">
+                            {tx.type === 'penjualan' ? (
+                              <div className="flex flex-col gap-0.5">
+                                {(tx as TransactionWithItems).transaction_items && (tx as TransactionWithItems).transaction_items.length > 1 ? (
+                                  (tx as TransactionWithItems).transaction_items.map((i, idx) => (
+                                    <div key={idx} className="flex items-center gap-1.5">
+                                      <span className="text-neutral-400">•</span>
+                                      <span>{i.product_name} <span className="text-neutral-400 tabular-nums">x{i.quantity}</span></span>
+                                    </div>
+                                  ))
+                                ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
+                                  <span>
+                                    {(tx as TransactionWithItems).transaction_items[0].product_name} <span className="text-neutral-400 tabular-nums">x{(tx as TransactionWithItems).transaction_items[0].quantity}</span>
+                                  </span>
+                                ) : (
+                                  <span>Penjualan</span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>{tx.description}</span>
+                                {tx.type === 'pengeluaran' && tx.expense_category && (
+                                  <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
+                                    {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {tx.notes && (
+                          <p className="text-xs text-neutral-500 truncate italic mt-1">
+                            "{tx.notes}"
+                          </p>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <TransactionBadge type={tx.type} />
                       </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4 text-neutral-600 truncate max-w-[120px]">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedKasirProfile(tx.profiles as Partial<Profile>)}
+                            className="hover:text-primary transition-colors focus:outline-none"
+                          >
+                            {tx.profiles?.full_name ?? 'Sistem'}
+                          </button>
+                        </td>
+                      )}
                       <td
                         className={`py-3 px-4 text-right font-semibold tabular-nums ${
                           tx.type === 'penjualan' ? 'text-success' : 'text-danger'
@@ -424,6 +547,13 @@ function BukuKasPage() {
           </p>
         </>
       )}
+
+      {/* Cashier Profile Modal */}
+      <CashierProfileModal 
+        isOpen={!!selectedKasirProfile}
+        onClose={() => setSelectedKasirProfile(null)}
+        profile={selectedKasirProfile}
+      />
     </div>
   )
 }

@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -54,7 +55,7 @@ function ProdukPage() {
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useLocalStorage<'grid' | 'list'>('laris-hub-view-mode', 'grid')
 
   // Confirm Dialog State
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: string; name: string }>({
@@ -160,7 +161,7 @@ function ProdukPage() {
       {/* Loading State */}
       {isLoading && (
         <div
-          className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+          className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
         >
           {[1, 2, 3, 4, 5, 6].map((k) => (
             <div
@@ -209,7 +210,7 @@ function ProdukPage() {
       {/* Product List/Grid */}
       {!isLoading && filtered.length > 0 && (
         <div
-          className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+          className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
         >
           {filtered.map((product) => {
             const margin = calcMargin(product.selling_price, product.hpp)
@@ -227,7 +228,7 @@ function ProdukPage() {
               >
                 {/* Image Section */}
                 <div
-                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-32 h-full flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-square border-b border-neutral-100'}`}
+                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-square border-b border-neutral-100'}`}
                 >
                   {product.image_url ? (
                     <img
@@ -263,11 +264,11 @@ function ProdukPage() {
 
                 {/* Content Section */}
                 <div
-                  className={`p-4 flex flex-col flex-1 ${viewMode === 'list' ? 'justify-between' : 'gap-3'}`}
+                  className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0"
                 >
-                  <div>
+                  <div className="flex flex-col gap-1.5">
                     <h3
-                      className="font-semibold text-neutral-900 leading-tight mb-1 line-clamp-1"
+                      className="font-bold text-neutral-900 leading-snug line-clamp-2"
                       title={product.name}
                     >
                       {product.name}
@@ -275,7 +276,7 @@ function ProdukPage() {
                     <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
                       {product.sku ? (
                         <>
-                          <Tag size={12} className="text-neutral-400" />
+                          <Tag size={12} className="text-neutral-400 flex-shrink-0" />
                           <span className="truncate">{product.sku}</span>
                         </>
                       ) : (
@@ -284,27 +285,25 @@ function ProdukPage() {
                     </div>
                   </div>
 
-                  <div
-                    className={`flex items-end justify-between ${viewMode === 'list' ? '' : 'mt-auto pt-3 border-t border-dashed border-neutral-200'}`}
-                  >
-                    <div>
-                      <p className="text-[10px] text-neutral-400 font-medium mb-0.5">HARGA JUAL</p>
-                      <p className="font-bold text-neutral-900 tabular-nums leading-none">
+                  <div className="flex flex-col gap-2.5 mt-auto">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">Harga Jual</p>
+                        <div className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}>
+                          <TrendingUp size={10} />
+                          <span className="text-[9px] font-bold tabular-nums leading-none">
+                            {margin.toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                      <p className="font-extrabold text-neutral-900 tabular-nums leading-none text-base">
                         {formatRupiah(product.selling_price)}
                       </p>
                     </div>
-                    <div className={`px-2 py-1 rounded-md flex items-center gap-1 ${marginColor}`}>
-                      <TrendingUp size={12} />
-                      <span className="text-[10px] font-bold tabular-nums leading-none">
-                        {margin.toFixed(0)}%
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Actions overlay (shows on hover in desktop, always in mobile) */}
-                  <div
-                    className={`flex gap-2 mt-3 ${viewMode === 'list' ? 'pt-3 border-t border-neutral-100' : ''}`}
-                  >
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
                     <button
                       type="button"
                       onClick={() => openEdit(product)}
