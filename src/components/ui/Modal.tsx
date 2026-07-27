@@ -1,0 +1,136 @@
+import { X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useEffect } from 'react'
+
+interface ModalProps {
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  children: React.ReactNode
+  /** 'bottom' slides up from bottom (mobile), 'center' is centered dialog */
+  variant?: 'bottom' | 'center'
+}
+
+/**
+ * Accessible modal — bottom sheet on mobile, centered on desktop.
+ * Closes on backdrop click and Escape key.
+ * Uses motion/react for smooth enter/exit animations.
+ */
+export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: ModalProps) {
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isOpen, onClose])
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
+  const isBottom = variant === 'bottom'
+
+  const contentVariants = isBottom
+    ? {
+        hidden: { y: '100%', opacity: 0.8 },
+        visible: {
+          y: 0,
+          opacity: 1,
+          transition: { type: 'spring' as const, damping: 30, stiffness: 350, mass: 0.8 },
+        },
+        exit: {
+          y: '100%',
+          opacity: 0.8,
+          transition: { type: 'spring' as const, damping: 35, stiffness: 400, mass: 0.7 },
+        },
+      }
+    : {
+        hidden: { scale: 0.94, opacity: 0, y: 8 },
+        visible: {
+          scale: 1,
+          opacity: 1,
+          y: 0,
+          transition: { type: 'spring' as const, damping: 28, stiffness: 380, bounce: 0 },
+        },
+        exit: {
+          scale: 0.96,
+          opacity: 0,
+          y: 4,
+          transition: { duration: 0.15, ease: 'easeIn' as const },
+        },
+      }
+
+  const contentClass = isBottom
+    ? 'absolute bottom-0 inset-x-0 bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col'
+    : 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-modal w-full max-w-md max-h-[90dvh] flex flex-col'
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50"
+          style={{ left: 'var(--layout-sidebar-width)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          {/* Backdrop */}
+          <motion.div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            onClick={onClose}
+            aria-hidden="true"
+          />
+
+          {/* Content */}
+          <motion.div
+            className={contentClass}
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            {/* Handle (bottom sheet only) */}
+            {isBottom && (
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="w-10 h-1 rounded-full bg-neutral-200" />
+              </div>
+            )}
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
+              <h2 id="modal-title" className="text-base font-semibold text-neutral-900">
+                {title}
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors active:scale-[0.96] transition-transform"
+                aria-label="Tutup modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
+}

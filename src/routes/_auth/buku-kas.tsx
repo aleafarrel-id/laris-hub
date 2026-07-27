@@ -1,0 +1,457 @@
+import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { createFileRoute } from '@tanstack/react-router'
+import {
+  ArrowLeftRight,
+  BookOpen,
+  DollarSign,
+  Filter,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react'
+import { motion } from 'motion/react'
+import { useState } from 'react'
+import { TransactionBadge } from '@/components/ui/Badge'
+import { CustomSelect } from '@/components/ui/CustomSelect'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useAuth } from '@/hooks/useAuth'
+import { useTransactions } from '@/hooks/useTransactions'
+import { formatDateTime, formatRupiah } from '@/lib/utils'
+import type { TransactionFilters, TransactionWithItems } from '@/types'
+
+// ============================================================
+// /buku-kas — Transaction history (admin: all, kasir: own)
+// ============================================================
+
+export const Route = createFileRoute('/_auth/buku-kas')({
+  component: BukuKasPage,
+})
+
+const todayStart = () => {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+type QuickRange = 'today' | 'week' | 'month' | 'custom'
+
+const QUICK_RANGES: { key: QuickRange; label: string }[] = [
+  { key: 'today', label: 'Hari Ini' },
+  { key: 'week', label: '7 Hari' },
+  { key: 'month', label: '30 Hari' },
+  { key: 'custom', label: 'Custom' },
+]
+
+function getDateRange(range: QuickRange): { from: Date; to: Date } {
+  const to = new Date()
+  to.setHours(23, 59, 59, 999)
+
+  if (range === 'week') {
+    const from = new Date()
+    from.setDate(from.getDate() - 6)
+    from.setHours(0, 0, 0, 0)
+    return { from, to }
+  }
+  if (range === 'month') {
+    const from = new Date()
+    from.setDate(from.getDate() - 29)
+    from.setHours(0, 0, 0, 0)
+    return { from, to }
+  }
+  // today
+  const from = todayStart()
+  return { from, to }
+}
+
+function BukuKasPage() {
+  const { isAdmin } = useAuth()
+  const [quickRange, setQuickRange] = useState<QuickRange>('today')
+  const [customFrom, setCustomFrom] = useState(() => todayStart().toISOString().split('T')[0])
+  const [customTo, setCustomTo] = useState(() => new Date().toISOString().split('T')[0])
+  const [typeFilter, setTypeFilter] = useState<TransactionFilters['type']>('all')
+  const [listRef] = useAutoAnimate()
+
+  const dateRange =
+    quickRange === 'custom'
+      ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) }
+      : getDateRange(quickRange)
+
+  const { data: transactions, isLoading } = useTransactions({
+    dateRange,
+    type: typeFilter,
+  })
+
+  // Summary
+  const omset =
+    transactions?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
+  const pengeluaran =
+    transactions?.filter((t) => t.type === 'pengeluaran').reduce((s, t) => s + t.total_amount, 0) ??
+    0
+  const profit =
+    transactions?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_profit, 0) ?? 0
+  const net = omset - pengeluaran
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <BookOpen size={18} className="text-primary" strokeWidth={2} />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-neutral-900">Buku Kas</h1>
+          <p className="text-xs text-neutral-500">
+            {isAdmin ? 'Semua transaksi' : 'Transaksi saya'}
+          </p>
+        </div>
+      </div>
+
+      {/* Quick Range Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 w-full min-w-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full min-w-0">
+          <Filter size={14} className="text-neutral-400 flex-shrink-0" />
+          {QUICK_RANGES.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setQuickRange(key)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-[0.96] whitespace-nowrap flex-shrink-0 ${
+                quickRange === key
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Type filter */}
+        <div className="w-full sm:w-auto sm:ml-auto">
+          <CustomSelect
+            value={typeFilter as string}
+            onChange={(val) => setTypeFilter(val as TransactionFilters['type'])}
+            options={[
+              { value: 'all', label: 'Semua Tipe' },
+              { value: 'penjualan', label: 'Penjualan' },
+              { value: 'pengeluaran', label: 'Pengeluaran' },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Custom date range */}
+      {quickRange === 'custom' && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4 bg-white border border-neutral-200 rounded-xl p-2 sm:p-1.5 shadow-sm w-full sm:max-w-fit">
+          <input
+            type="date"
+            value={customFrom}
+            onChange={(e) => setCustomFrom(e.target.value)}
+            className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-3 py-2 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer"
+          />
+          <span className="text-neutral-400 text-xs font-semibold px-1">s/d</span>
+          <input
+            type="date"
+            value={customTo}
+            onChange={(e) => setCustomTo(e.target.value)}
+            className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-3 py-2 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer"
+          />
+        </div>
+      )}
+
+      {/* Summary Cards */}
+      <motion.div
+        className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.06 } },
+        }}
+      >
+        <SummaryCard
+          label="Omset"
+          value={formatRupiah(omset)}
+          icon={TrendingUp}
+          color="text-primary"
+          bg="bg-primary/10"
+          isLoading={isLoading}
+        />
+        <SummaryCard
+          label="Pengeluaran"
+          value={formatRupiah(pengeluaran)}
+          icon={TrendingDown}
+          color="text-danger"
+          bg="bg-danger/10"
+          isLoading={isLoading}
+        />
+        <SummaryCard
+          label="Profit Bersih"
+          value={formatRupiah(net)}
+          icon={DollarSign}
+          color={net >= 0 ? 'text-success' : 'text-danger'}
+          bg={net >= 0 ? 'bg-success/10' : 'bg-danger/10'}
+          isLoading={isLoading}
+        />
+        <SummaryCard
+          label="Profit Kotor"
+          value={formatRupiah(profit)}
+          icon={ArrowLeftRight}
+          color="text-success"
+          bg="bg-success/10"
+          isLoading={isLoading}
+        />
+      </motion.div>
+
+      {/* Transaction List Loading State */}
+      {isLoading && (
+        <>
+          {/* Mobile Skeleton */}
+          <div className="space-y-2 md:hidden">
+            {[1, 2, 3, 4, 5].map((k) => (
+              <div key={k} className="app-card p-3.5 flex items-center gap-3">
+                <Skeleton className="w-9 h-9 rounded-xl flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  <Skeleton className="h-4 w-20" />
+                  {isAdmin && <Skeleton className="h-3 w-16" />}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Skeleton Table */}
+          <div className="app-card overflow-hidden hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Waktu
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Keterangan
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Tipe
+                    </th>
+                    <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Jumlah
+                    </th>
+                    {isAdmin && (
+                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                        Profit
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {[1, 2, 3, 4, 5].map((k) => (
+                    <tr key={k}>
+                      <td className="py-3 px-4">
+                        <Skeleton className="h-4 w-24" />
+                      </td>
+                      <td className="py-3 px-4">
+                        <Skeleton className="h-4 w-48" />
+                      </td>
+                      <td className="py-3 px-4">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex justify-end">
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                      </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4">
+                          <div className="flex justify-end">
+                            <Skeleton className="h-4 w-20" />
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!isLoading && !transactions?.length && (
+        <EmptyState
+          icon={BookOpen}
+          title="Tidak ada transaksi"
+          description="Tidak ada transaksi untuk filter yang dipilih"
+        />
+      )}
+
+      {!isLoading && transactions && transactions.length > 0 && (
+        <>
+          {/* Mobile card list */}
+          <div ref={listRef} className="space-y-2 md:hidden">
+            {transactions.map((tx, idx) => (
+              <motion.div
+                key={tx.id}
+                className="app-card p-3.5 flex items-center gap-3"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' as const, delay: idx * 0.03 }}
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
+                  }`}
+                >
+                  {tx.type === 'penjualan' ? (
+                    <TrendingUp size={15} className="text-success" />
+                  ) : (
+                    <TrendingDown size={15} className="text-danger" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-neutral-900 truncate">
+                    {tx.type === 'penjualan'
+                      ? (tx as TransactionWithItems).transaction_items
+                          ?.map((i) => i.product_name)
+                          .join(', ') || 'Penjualan'
+                      : tx.description}
+                  </p>
+                  <p className="text-xs text-neutral-400 tabular-nums mt-0.5">
+                    {formatDateTime(tx.transaction_at)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p
+                    className={`text-sm font-bold tabular-nums ${
+                      tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                    }`}
+                  >
+                    {tx.type === 'penjualan' ? '+' : '−'}
+                    {formatRupiah(tx.total_amount)}
+                  </p>
+                  {isAdmin && tx.type === 'penjualan' && (
+                    <p className="text-[10px] text-neutral-400 tabular-nums">
+                      profit {formatRupiah(tx.total_profit)}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="app-card overflow-hidden hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Waktu
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Keterangan
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Tipe
+                    </th>
+                    <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Jumlah
+                    </th>
+                    {isAdmin && (
+                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                        Profit
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody ref={listRef} className="divide-y divide-neutral-100">
+                  {transactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-neutral-50/80 transition-colors">
+                      <td className="py-3 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
+                        {formatDateTime(tx.transaction_at)}
+                      </td>
+                      <td className="py-3 px-4 text-neutral-900 max-w-xs truncate">
+                        {tx.type === 'penjualan'
+                          ? (tx as TransactionWithItems).transaction_items
+                              ?.map((i) => `${i.product_name} (${i.quantity}x)`)
+                              .join(', ')
+                          : tx.description}
+                      </td>
+                      <td className="py-3 px-4">
+                        <TransactionBadge type={tx.type} />
+                      </td>
+                      <td
+                        className={`py-3 px-4 text-right font-semibold tabular-nums ${
+                          tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                        }`}
+                      >
+                        {tx.type === 'penjualan' ? '+' : '−'}
+                        {formatRupiah(tx.total_amount)}
+                      </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4 text-right tabular-nums text-neutral-600">
+                          {tx.type === 'penjualan' ? formatRupiah(tx.total_profit) : '—'}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-xs text-neutral-400 mt-3 text-right tabular-nums">
+            {transactions.length} transaksi
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  bg,
+  isLoading,
+}: {
+  label: string
+  value: string
+  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>
+  color: string
+  bg: string
+  isLoading: boolean
+}) {
+  return (
+    <motion.div
+      className="app-card p-4 flex items-center gap-4"
+      variants={{
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 20, stiffness: 280 } },
+      }}
+    >
+      <div className={`w-12 h-12 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0`}>
+        <Icon size={24} className={color} strokeWidth={2} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1 break-words">
+          {label}
+        </p>
+        {isLoading ? (
+          <Skeleton className="h-6 w-3/4 rounded-md" />
+        ) : (
+          <p
+            className={`text-lg sm:text-xl md:text-2xl font-bold tabular-nums break-words ${color}`}
+          >
+            {value}
+          </p>
+        )}
+      </div>
+    </motion.div>
+  )
+}

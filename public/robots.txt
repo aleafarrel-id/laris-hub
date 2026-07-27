@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /kasir
+Disallow: /buku-kas
+Disallow: /produk
+Disallow: /profil
+Allow: /
+Allow: /login

@@ -1,0 +1,352 @@
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import {
+  Image as ImageIcon,
+  LayoutGrid,
+  List,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Tag,
+  Trash2,
+  TrendingUp,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ProductForm } from '@/components/produk/ProductForm'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Modal } from '@/components/ui/Modal'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useDeleteProduct, useProducts, useToggleProductStatus } from '@/hooks/useProducts'
+import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
+import { supabase } from '@/lib/supabase'
+import { calcMargin, formatRupiah } from '@/lib/utils'
+import type { Product } from '@/types'
+
+// ============================================================
+// /produk — Product management (admin only)
+// ============================================================
+
+export const Route = createFileRoute('/_auth/produk/')({
+  beforeLoad: async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) throw redirect({ to: '/login' })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+
+    const profileData = profile as { role: 'admin' | 'kasir' } | null
+    if (profileData?.role !== 'admin') throw redirect({ to: '/kasir' })
+  },
+  component: ProdukPage,
+})
+
+function ProdukPage() {
+  const { data: products = [], isLoading } = useProducts(false)
+  const { mutate: deleteProduct } = useDeleteProduct()
+  const { mutate: toggleStatus } = useToggleProductStatus()
+
+  const [showForm, setShowForm] = useState(false)
+  const [editProduct, setEditProduct] = useState<Product | null>(null)
+  const [search, setSearch] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // Confirm Dialog State
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  })
+
+  const filtered = useMemo(() => {
+    let list = products
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (p) => p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q),
+      )
+    }
+    return list
+  }, [products, search])
+
+  const activeCount = products.filter((p) => p.is_active).length
+
+  const handleDelete = (id: string, name: string) => {
+    setConfirmState({ isOpen: true, id, name })
+  }
+
+  const executeDelete = () => {
+    if (confirmState.id) {
+      deleteProduct(confirmState.id)
+    }
+    setConfirmState({ isOpen: false, id: '', name: '' })
+  }
+
+  const openCreate = () => {
+    setEditProduct(null)
+    setShowForm(true)
+  }
+  const openEdit = (p: Product) => {
+    setEditProduct(p)
+    setShowForm(true)
+  }
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Package size={20} className="text-primary" strokeWidth={2} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Katalog Produk</h1>
+            <p className="text-sm text-neutral-500 tabular-nums">{activeCount} produk aktif</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Search, Filter & View Mode */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search
+            size={16}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+          />
+          <input
+            type="search"
+            placeholder="Cari nama produk atau SKU..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+          />
+        </div>
+        <div className="flex gap-2 items-center justify-between sm:justify-start">
+          <div className="flex bg-neutral-100 p-1 rounded-xl flex-shrink-0">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-neutral-400 hover:text-neutral-600'}`}
+              title="Grid View"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-primary' : 'text-neutral-400 hover:text-neutral-600'}`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-[0.96] transition-all shadow-md shadow-primary/20 flex-shrink-0"
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            <span className="hidden sm:inline">Tambah Produk</span>
+            <span className="inline sm:hidden">Tambah</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div
+          className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+        >
+          {[1, 2, 3, 4, 5, 6].map((k) => (
+            <div
+              key={k}
+              className={`bg-white rounded-2xl border border-neutral-100 overflow-hidden ${viewMode === 'list' ? 'flex flex-row h-[140px]' : 'flex flex-col'}`}
+            >
+              <Skeleton
+                className={`${viewMode === 'list' ? 'w-32 h-full rounded-none flex-shrink-0' : 'w-full aspect-square rounded-none'}`}
+              />
+              <div
+                className={`p-4 flex flex-col flex-1 ${viewMode === 'list' ? 'justify-between' : 'gap-3'}`}
+              >
+                <div>
+                  <Skeleton className="h-5 w-3/4 mb-1.5" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div
+                  className={`flex items-end justify-between ${viewMode === 'list' ? '' : 'mt-auto pt-3 border-t border-dashed border-neutral-100'}`}
+                >
+                  <div>
+                    <Skeleton className="h-2.5 w-16 mb-1" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Skeleton className="h-5 w-12 rounded-md" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !filtered.length && (
+        <EmptyState
+          icon={Package}
+          title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
+          description={
+            search
+              ? 'Coba kata kunci pencarian yang berbeda'
+              : 'Mulailah dengan menambahkan produk pertama Anda'
+          }
+          action={!search ? { label: 'Tambah Produk', onClick: openCreate } : undefined}
+        />
+      )}
+
+      {/* Product List/Grid */}
+      {!isLoading && filtered.length > 0 && (
+        <div
+          className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+        >
+          {filtered.map((product) => {
+            const margin = calcMargin(product.selling_price, product.hpp)
+            const marginColor =
+              margin >= MARGIN_GOOD_THRESHOLD
+                ? 'text-success bg-success/10'
+                : margin >= MARGIN_WARNING_THRESHOLD
+                  ? 'text-warning bg-warning/10'
+                  : 'text-danger bg-danger/10'
+
+            return (
+              <div
+                key={product.id}
+                className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
+              >
+                {/* Image Section */}
+                <div
+                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-32 h-full flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-square border-b border-neutral-100'}`}
+                >
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2">
+                      <ImageIcon size={32} strokeWidth={1.5} />
+                    </div>
+                  )}
+
+                  {/* Status Badge */}
+                  <div className="absolute top-2 right-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        toggleStatus({ id: product.id, isActive: !product.is_active })
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
+                        product.is_active
+                          ? 'bg-white/80 text-success shadow-sm'
+                          : 'bg-neutral-800/80 text-white shadow-sm'
+                      }`}
+                      title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
+                    >
+                      {product.is_active ? 'AKTIF' : 'NONAKTIF'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div
+                  className={`p-4 flex flex-col flex-1 ${viewMode === 'list' ? 'justify-between' : 'gap-3'}`}
+                >
+                  <div>
+                    <h3
+                      className="font-semibold text-neutral-900 leading-tight mb-1 line-clamp-1"
+                      title={product.name}
+                    >
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
+                      {product.sku ? (
+                        <>
+                          <Tag size={12} className="text-neutral-400" />
+                          <span className="truncate">{product.sku}</span>
+                        </>
+                      ) : (
+                        <span className="text-neutral-400 italic">Tanpa SKU</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`flex items-end justify-between ${viewMode === 'list' ? '' : 'mt-auto pt-3 border-t border-dashed border-neutral-200'}`}
+                  >
+                    <div>
+                      <p className="text-[10px] text-neutral-400 font-medium mb-0.5">HARGA JUAL</p>
+                      <p className="font-bold text-neutral-900 tabular-nums leading-none">
+                        {formatRupiah(product.selling_price)}
+                      </p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-md flex items-center gap-1 ${marginColor}`}>
+                      <TrendingUp size={12} />
+                      <span className="text-[10px] font-bold tabular-nums leading-none">
+                        {margin.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions overlay (shows on hover in desktop, always in mobile) */}
+                  <div
+                    className={`flex gap-2 mt-3 ${viewMode === 'list' ? 'pt-3 border-t border-neutral-100' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => openEdit(product)}
+                      className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Pencil size={14} />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(product.id, product.name)}
+                      className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
+                      title="Hapus Produk"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Product Form Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        title={editProduct ? 'Edit Produk' : 'Tambah Produk Baru'}
+      >
+        <ProductForm product={editProduct} onSuccess={() => setShowForm(false)} />
+      </Modal>
+
+      {/* Custom Confirm Dialog for Delete */}
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Hapus Produk"
+        description={`Apakah Anda yakin ingin menghapus "${confirmState.name}"? Data transaksi lama yang menggunakan produk ini akan tetap tersimpan dengan aman.`}
+        confirmText="Hapus Produk"
+        variant="danger"
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmState({ isOpen: false, id: '', name: '' })}
+      />
+    </div>
+  )
+}
