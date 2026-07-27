@@ -53,6 +53,7 @@ export interface TransactionFilters {
   dateRange?: DateRange
   recordedBy?: string
   search?: string
+  limit?: number
 }
 
 // ============================================================

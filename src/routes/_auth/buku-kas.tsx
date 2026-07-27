@@ -9,7 +9,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -82,14 +82,30 @@ function BukuKasPage() {
   })
 
   // Summary
-  const omset =
-    transactions?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
-  const pengeluaran =
-    transactions?.filter((t) => t.type === 'pengeluaran').reduce((s, t) => s + t.total_amount, 0) ??
-    0
-  const profit =
-    transactions?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_profit, 0) ?? 0
-  const net = omset - pengeluaran
+  const { omset, pengeluaran, profit, net } = useMemo(() => {
+    let o = 0
+    let p = 0
+    let pr = 0
+
+    if (transactions) {
+      for (let i = 0; i < transactions.length; i++) {
+        const t = transactions[i]
+        if (t.type === 'penjualan') {
+          o += t.total_amount
+          pr += t.total_profit
+        } else if (t.type === 'pengeluaran') {
+          p += t.total_amount
+        }
+      }
+    }
+
+    return {
+      omset: o,
+      pengeluaran: p,
+      profit: pr,
+      net: o - p,
+    }
+  }, [transactions])
 
   return (
     <div className="page-container">

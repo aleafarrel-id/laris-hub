@@ -1,8 +1,9 @@
-import { useAutoAnimate } from '@formkit/auto-animate/react'
+
 import { CheckCircle, Minus, Package, Plus, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { useProducts } from '@/hooks/useProducts'
 import { useCreateSale } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
@@ -29,8 +30,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map())
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState('')
-
-  const [gridRef] = useAutoAnimate()
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -142,7 +141,7 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
             ))}
           </div>
         ) : filtered.length ? (
-          <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {filtered.map((product) => {
               const inCart = cart.get(product.id)
               const qty = inCart?.quantity || 0
@@ -153,7 +152,10 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
               return (
                 <div
                   key={product.id}
-                  className={`relative flex flex-col bg-white rounded-2xl border transition-all overflow-hidden ${
+                  onClick={() => {
+                    if (qty === 0) addToCart(product)
+                  }}
+                  className={`relative flex flex-col bg-white rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                     qty > 0
                       ? 'border-primary ring-1 ring-primary shadow-[0_4px_12px_-4px_rgba(40,94,175,0.2)] scale-[0.98]'
                       : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
@@ -161,10 +163,7 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                 >
                   {/* Image / Thumbnail */}
                   <div
-                    className={`w-full h-28 sm:h-32 flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group cursor-pointer`}
-                    onClick={() => {
-                      if (qty === 0) addToCart(product)
-                    }}
+                    className={`w-full h-28 sm:h-32 flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group`}
                   >
                     {product.image_url ? (
                       <img
@@ -209,16 +208,22 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                         <div className="flex items-center justify-between bg-primary rounded-xl p-1 shadow-sm shadow-primary/20">
                           <button
                             type="button"
-                            onClick={() => changeQty(product.id, -1)}
-                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              changeQty(product.id, -1)
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
                           >
                             <Minus size={16} strokeWidth={3} />
                           </button>
                           <span className="text-white font-bold tabular-nums text-sm">{qty}</span>
                           <button
                             type="button"
-                            onClick={() => changeQty(product.id, 1)}
-                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              changeQty(product.id, 1)
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
                           >
                             <Plus size={16} strokeWidth={3} />
                           </button>
@@ -231,10 +236,11 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
-            <Search size={32} className="mb-3 opacity-20" />
-            <p className="text-sm">Produk tidak ditemukan</p>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="Produk tidak ditemukan"
+            description="Coba gunakan kata kunci pencarian yang berbeda"
+          />
         )}
       </div>
 

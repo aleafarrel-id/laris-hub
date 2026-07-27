@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
@@ -18,6 +18,47 @@ interface LocalProductFormData {
   image_url: string
   is_active: boolean
 }
+
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
+  id: string
+  label: string
+  error?: string
+  isTextarea?: boolean
+  value: string | number
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+}
+
+const FormField = memo(function FormField({
+  id,
+  label,
+  error,
+  isTextarea = false,
+  className = '',
+  ...props
+}: FormFieldProps) {
+  const baseClassName = `w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm ${
+    error
+      ? 'border-danger focus:ring-danger/20 focus:border-danger'
+      : 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
+  } ${isTextarea ? 'min-h-[100px] resize-y' : ''} ${className}`
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="text-xs font-semibold text-neutral-600 uppercase tracking-wider"
+      >
+        {label}
+      </label>
+      {isTextarea ? (
+        <textarea id={id} className={baseClassName} {...(props as any)} />
+      ) : (
+        <input id={id} className={baseClassName} {...(props as any)} />
+      )}
+      {error && <p className="text-xs text-danger font-medium mt-0.5">{error}</p>}
+    </div>
+  )
+})
 
 export function ProductForm({
   product,
@@ -46,10 +87,14 @@ export function ProductForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.image_url ?? null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-  const hpp = Number(form.hpp) || 0
-  const sellingPrice = Number(form.selling_price) || 0
-  const margin = calcMargin(sellingPrice, hpp)
+  const hpp = useMemo(() => Number(form.hpp) || 0, [form.hpp])
+  const sellingPrice = useMemo(() => Number(form.selling_price) || 0, [form.selling_price])
+  const margin = useMemo(() => calcMargin(sellingPrice, hpp), [sellingPrice, hpp])
   const isPending = isCreating || isUpdating || isUploadingImage
+
+  const handleFieldChange = useCallback((id: keyof LocalProductFormData, value: string) => {
+    setForm((f) => ({ ...f, [id]: value }))
+  }, [])
 
   const validate = () => {
     const errs: Partial<LocalProductFormData> = {}
@@ -106,50 +151,6 @@ export function ProductForm({
     }
   }
 
-  const field = (
-    id: keyof LocalProductFormData,
-    label: string,
-    props: React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>,
-    isTextarea = false,
-  ) => (
-    <div className="flex flex-col gap-1.5">
-      <label
-        htmlFor={id}
-        className="text-xs font-semibold text-neutral-600 uppercase tracking-wider"
-      >
-        {label}
-      </label>
-      {isTextarea ? (
-        <textarea
-          id={id}
-          value={typeof form[id] === 'boolean' ? '' : String(form[id])}
-          onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
-          disabled={isPending}
-          className={`w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all min-h-[100px] resize-y shadow-sm ${
-            errors[id]
-              ? 'border-danger focus:ring-danger/20 focus:border-danger'
-              : 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
-          }`}
-          {...(props as any)}
-        />
-      ) : (
-        <input
-          id={id}
-          value={typeof form[id] === 'boolean' ? '' : String(form[id])}
-          onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
-          disabled={isPending}
-          className={`w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm ${
-            errors[id]
-              ? 'border-danger focus:ring-danger/20 focus:border-danger'
-              : 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
-          }`}
-          {...(props as any)}
-        />
-      )}
-      {errors[id] && <p className="text-xs text-danger font-medium mt-0.5">{errors[id]}</p>}
-    </div>
-  )
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-full relative">
       {/* Content Area */}
@@ -201,21 +202,37 @@ export function ProductForm({
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {field('name', 'Nama Produk *', {
-                  placeholder: 'Contoh: Pukis Coklat Keju',
-                  required: true,
-                })}
-                {field('sku', 'SKU (Opsional)', { placeholder: 'Contoh: PKS-CKJ-01' })}
+                <FormField
+                  id="name"
+                  label="Nama Produk *"
+                  value={form.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  error={errors.name}
+                  placeholder="Contoh: Pukis Coklat Keju"
+                  required
+                  disabled={isPending}
+                />
+                <FormField
+                  id="sku"
+                  label="SKU (Opsional)"
+                  value={form.sku}
+                  onChange={(e) => handleFieldChange('sku', e.target.value)}
+                  error={errors.sku}
+                  placeholder="Contoh: PKS-CKJ-01"
+                  disabled={isPending}
+                />
               </div>
 
-              {field(
-                'description',
-                'Deskripsi (Opsional)',
-                {
-                  placeholder: 'Tuliskan detail produk di sini...',
-                },
-                true,
-              )}
+              <FormField
+                id="description"
+                label="Deskripsi (Opsional)"
+                value={form.description}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                error={errors.description}
+                placeholder="Tuliskan detail produk di sini..."
+                disabled={isPending}
+                isTextarea
+              />
             </div>
 
             {/* Harga & Modal */}
@@ -225,22 +242,34 @@ export function ProductForm({
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {field('hpp', 'Modal Dasar (HPP) *', {
-                  type: 'number',
-                  inputMode: 'numeric',
-                  min: 0,
-                  placeholder: 'Contoh: 3000',
-                  required: true,
-                })}
+                <FormField
+                  id="hpp"
+                  label="Modal Dasar (HPP) *"
+                  value={form.hpp}
+                  onChange={(e) => handleFieldChange('hpp', e.target.value)}
+                  error={errors.hpp}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="Contoh: 3000"
+                  required
+                  disabled={isPending}
+                />
 
                 <div className="flex flex-col">
-                  {field('selling_price', 'Harga Jual *', {
-                    type: 'number',
-                    inputMode: 'numeric',
-                    min: 0,
-                    placeholder: 'Contoh: 5000',
-                    required: true,
-                  })}
+                  <FormField
+                    id="selling_price"
+                    label="Harga Jual *"
+                    value={form.selling_price}
+                    onChange={(e) => handleFieldChange('selling_price', e.target.value)}
+                    error={errors.selling_price}
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder="Contoh: 5000"
+                    required
+                    disabled={isPending}
+                  />
 
                   {/* Margin Visualizer */}
                   {hpp > 0 && sellingPrice > 0 && (
@@ -272,14 +301,14 @@ export function ProductForm({
           type="button"
           onClick={onSuccess}
           disabled={isPending}
-          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-50 active:scale-95"
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-50 active:scale-95 cursor-pointer"
         >
           Batal
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[140px]"
+          className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[140px] cursor-pointer"
         >
           {isPending ? 'Menyimpan...' : 'Simpan Produk'}
         </button>

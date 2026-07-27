@@ -95,6 +95,7 @@ export interface Database {
           recorded_by: string
           transaction_at: string
           expense_category: 'operasional' | 'bahan_baku' | 'lainnya' | null
+          expense_items: Json | null
           notes: string | null
           created_at: string
           updated_at: string
@@ -108,6 +109,7 @@ export interface Database {
           recorded_by: string
           transaction_at?: string
           expense_category?: 'operasional' | 'bahan_baku' | 'lainnya' | null
+          expense_items?: Json | null
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -119,6 +121,7 @@ export interface Database {
           total_profit?: number
           transaction_at?: string
           expense_category?: 'operasional' | 'bahan_baku' | 'lainnya' | null
+          expense_items?: Json | null
           notes?: string | null
           updated_at?: string
         }

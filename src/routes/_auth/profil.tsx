@@ -46,10 +46,6 @@ function ProfilPage() {
       {
         onSuccess: () => {
           setIsEditing(false)
-          toast.success('Profil berhasil diperbarui')
-        },
-        onError: () => {
-          toast.error('Gagal memperbarui profil')
         },
       },
     )

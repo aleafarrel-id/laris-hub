@@ -47,12 +47,12 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
         visible: {
           y: 0,
           opacity: 1,
-          transition: { type: 'spring' as const, damping: 30, stiffness: 350, mass: 0.8 },
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
         },
         exit: {
           y: '100%',
           opacity: 0.8,
-          transition: { type: 'spring' as const, damping: 35, stiffness: 400, mass: 0.7 },
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
         },
       }
     : {
@@ -61,7 +61,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           scale: 1,
           opacity: 1,
           y: 0,
-          transition: { type: 'spring' as const, damping: 28, stiffness: 380, bounce: 0 },
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
         },
         exit: {
           scale: 0.96,

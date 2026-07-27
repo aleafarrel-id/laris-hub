@@ -145,6 +145,9 @@ export async function getTransactions(
   if (filters.search) {
     query = query.ilike('description', `%${filters.search}%`)
   }
+  if (filters.limit) {
+    query = query.limit(filters.limit)
+  }
 
   const { data, error } = await query
   if (error) throw error

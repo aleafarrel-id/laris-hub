@@ -11,7 +11,7 @@ import {
   Trash2,
   TrendingUp,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -74,27 +74,28 @@ function ProdukPage() {
     return list
   }, [products, search])
 
-  const activeCount = products.filter((p) => p.is_active).length
+  const activeCount = useMemo(() => products.filter((p) => p.is_active).length, [products])
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = useCallback((id: string, name: string) => {
     setConfirmState({ isOpen: true, id, name })
-  }
+  }, [])
 
-  const executeDelete = () => {
+  const executeDelete = useCallback(() => {
     if (confirmState.id) {
       deleteProduct(confirmState.id)
     }
     setConfirmState({ isOpen: false, id: '', name: '' })
-  }
+  }, [confirmState.id, deleteProduct])
 
-  const openCreate = () => {
+  const openCreate = useCallback(() => {
     setEditProduct(null)
     setShowForm(true)
-  }
-  const openEdit = (p: Product) => {
+  }, [])
+
+  const openEdit = useCallback((p: Product) => {
     setEditProduct(p)
     setShowForm(true)
-  }
+  }, [])
 
   return (
     <div className="page-container">

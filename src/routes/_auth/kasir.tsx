@@ -65,13 +65,13 @@ function KasirPage() {
           <motion.button
             type="button"
             onClick={() => setShowSaleModal(true)}
-            className="w-full flex items-center justify-between p-4 sm:p-5 bg-primary text-white rounded-2xl shadow-action relative overflow-hidden group"
+            className="w-full flex items-center justify-between p-4 sm:p-5 bg-primary text-white rounded-2xl shadow-action relative overflow-hidden group cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 16 },
               visible: {
                 opacity: 1,
                 y: 0,
-                transition: { type: 'spring', damping: 20, stiffness: 300 },
+                transition: { type: 'spring', duration: 0.3, bounce: 0 },
               },
             }}
             whileTap={{ scale: 0.98 }}
@@ -102,13 +102,13 @@ function KasirPage() {
           <motion.button
             type="button"
             onClick={() => setShowExpenseModal(true)}
-            className="w-full flex items-center justify-between p-4 sm:p-5 bg-white border border-danger/20 text-neutral-800 rounded-2xl shadow-sm hover:border-danger hover:shadow-md transition-all group overflow-hidden relative"
+            className="w-full flex items-center justify-between p-4 sm:p-5 bg-white border border-danger/20 text-neutral-800 rounded-2xl shadow-sm hover:border-danger hover:shadow-md transition-all group overflow-hidden relative cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 16 },
               visible: {
                 opacity: 1,
                 y: 0,
-                transition: { type: 'spring', damping: 20, stiffness: 300 },
+                transition: { type: 'spring', duration: 0.3, bounce: 0 },
               },
             }}
             whileTap={{ scale: 0.98 }}

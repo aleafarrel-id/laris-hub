@@ -1,15 +1,17 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Calendar, DollarSign, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react'
+import { Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionBadge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { supabase } from '@/lib/supabase'
-import { formatRupiah } from '@/lib/utils'
+import { formatRupiah, formatTime } from '@/lib/utils'
+import { useTransactions } from '@/hooks/useTransactions'
 
 // ============================================================
 // /dashboard — Admin only
@@ -52,6 +54,7 @@ function DashboardPage() {
   const { data: kpi, isLoading: kpiLoading } = useKPISummary(period)
   const { data: trend, isLoading: trendLoading } = useMonthlyTrend()
   const { data: topProducts, isLoading: topProductsLoading } = useTopProducts('month')
+  const { data: recentTransactions, isLoading: recentLoading } = useTransactions({ limit: 10 })
 
   const netCashflow = (kpi?.omset ?? 0) - (kpi?.pengeluaran ?? 0)
 
@@ -193,6 +196,121 @@ function DashboardPage() {
             />
           )}
         </div>
+      </div>
+
+      {/* Recent Transactions Widget */}
+      <div className="mt-6 app-card p-6">
+        <h2 className="text-sm font-semibold text-neutral-900 mb-5">10 Transaksi Terbaru</h2>
+
+        {recentLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((k) => (
+              <div key={k} className="flex items-center gap-4">
+                <Skeleton className="w-10 h-10 rounded-xl flex-shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+                <Skeleton className="h-5 w-24 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : recentTransactions?.length ? (
+          <>
+            {/* Mobile View: Card List */}
+            <div className="flex flex-col gap-3 md:hidden">
+              {recentTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        tx.type === 'penjualan' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                      }`}
+                    >
+                      {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-neutral-900 truncate">
+                        {tx.type === 'penjualan'
+                          ? tx.transaction_items?.map((i) => i.product_name).join(', ') || 'Penjualan'
+                          : tx.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-neutral-500 mt-0.5">
+                        <span className="tabular-nums font-medium">{formatTime(tx.transaction_at)}</span>
+                        <span>•</span>
+                        <span className="truncate">{tx.profiles?.full_name ?? 'Sistem'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-sm font-bold tabular-nums ml-3 flex-shrink-0 ${
+                      tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                    }`}
+                  >
+                    {tx.type === 'penjualan' ? '+' : '−'}
+                    {formatRupiah(tx.total_amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View: Compact Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-50/80 border-b border-neutral-200">
+                  <tr>
+                    <th className="text-left py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tl-lg">
+                      Waktu
+                    </th>
+                    <th className="text-left py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Keterangan
+                    </th>
+                    <th className="text-left py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                      Tipe
+                    </th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg">
+                      Jumlah
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {recentTransactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-neutral-50/80 transition-colors">
+                      <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
+                        {formatTime(tx.transaction_at)}
+                      </td>
+                      <td className="py-2.5 px-4 text-neutral-900 font-medium max-w-[200px] truncate">
+                        {tx.type === 'penjualan'
+                          ? tx.transaction_items?.map((i) => i.product_name).join(', ') || 'Penjualan'
+                          : tx.description}
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <TransactionBadge type={tx.type} />
+                      </td>
+                      <td
+                        className={`py-2.5 px-4 text-right font-bold tabular-nums ${
+                          tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                        }`}
+                      >
+                        {tx.type === 'penjualan' ? '+' : '−'}
+                        {formatRupiah(tx.total_amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            icon={ShoppingBag}
+            title="Belum ada transaksi"
+            description="Transaksi terbaru akan muncul di sini"
+          />
+        )}
       </div>
     </div>
   )
