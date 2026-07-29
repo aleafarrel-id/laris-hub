@@ -1,9 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
@@ -12,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { useCashiers } from '@/hooks/useProfile'
-import { useTransactions } from '@/hooks/useTransactions'
+import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTime } from '@/lib/utils'
@@ -101,6 +102,9 @@ function DashboardPage() {
     limit: 10,
     recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
   })
+
+  const deleteTxMutation = useDeleteTransaction()
+  const [deletingTxId, setDeletingTxId] = useState<string | null>(null)
 
   const netCashflow = (kpi?.omzet ?? 0) - (kpi?.pengeluaran ?? 0)
 
@@ -357,9 +361,19 @@ function DashboardPage() {
                     )}
 
                     <div className="flex items-end justify-between mt-1.5 gap-2">
-                      <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5">
-                        {formatTime(tx.transaction_at)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5">
+                          {formatTime(tx.transaction_at)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingTxId(tx.id)}
+                          className="p-1 rounded-md text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
+                          title="Hapus Transaksi"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                       <div className="flex flex-col items-end leading-tight">
                         <span
                           className={`text-sm font-bold tabular-nums whitespace-nowrap ${
@@ -392,8 +406,10 @@ function DashboardPage() {
                     <th className="text-left py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Kasir
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg">
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
+                    </th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-10">
                     </th>
                   </tr>
                 </thead>
@@ -471,6 +487,16 @@ function DashboardPage() {
                         {tx.type === 'penjualan' ? '+' : '−'}
                         {formatRupiah(tx.total_amount)}
                       </td>
+                      <td className="py-2.5 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setDeletingTxId(tx.id)}
+                          className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
+                          title="Hapus Transaksi"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -490,6 +516,21 @@ function DashboardPage() {
         isOpen={!!selectedKasirProfile}
         onClose={() => setSelectedKasirProfile(null)}
         profile={selectedKasirProfile}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deletingTxId}
+        title="Hapus Transaksi?"
+        description="Data transaksi ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan dan akan mempengaruhi laporan keuangan."
+        confirmText={deleteTxMutation.isPending ? 'Menghapus...' : 'Hapus'}
+        onConfirm={() => {
+          if (deletingTxId) {
+            deleteTxMutation.mutate(deletingTxId, {
+              onSuccess: () => setDeletingTxId(null),
+            })
+          }
+        }}
+        onCancel={() => setDeletingTxId(null)}
       />
     </div>
   )

@@ -204,6 +204,9 @@ export async function updateTransaction(
  * Delete a transaction. Admin only (RLS).
  */
 export async function deleteTransaction(id: string): Promise<void> {
+  const { error: itemsError } = await db.from('transaction_items').delete().eq('transaction_id', id)
+  if (itemsError) throw itemsError
+
   const { error } = await db.from('transactions').delete().eq('id', id)
   if (error) throw error
 }
