@@ -29,12 +29,12 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
   if (error) throw error
 
   if (!data) {
-    return { omset: 0, pengeluaran: 0, profit: 0, transactionCount: 0 }
+    return { omzet: 0, pengeluaran: 0, profit: 0, transactionCount: 0 }
   }
 
   const row = data as DailySummaryRow
   return {
-    omset: Number(row.total_revenue),
+    omzet: Number(row.total_revenue),
     pengeluaran: Number(row.total_expense),
     profit: Number(row.total_gross_profit),
     transactionCount: Number(row.total_sales_count),
@@ -71,7 +71,7 @@ export async function getKPISummaryForRange(
   return ((data ?? []) as Row[]).reduce(
     (acc, tx) => {
       if (tx.type === 'penjualan') {
-        acc.omset += Number(tx.total_amount)
+        acc.omzet += Number(tx.total_amount)
         acc.profit += Number(tx.total_profit)
         acc.transactionCount += 1
       } else {
@@ -79,13 +79,13 @@ export async function getKPISummaryForRange(
       }
       return acc
     },
-    { omset: 0, pengeluaran: 0, profit: 0, transactionCount: 0 },
+    { omzet: 0, pengeluaran: 0, profit: 0, transactionCount: 0 },
   )
 }
 
 export interface DailyTrendPoint {
   date: string
-  omset: number
+  omzet: number
   profit: number
   pengeluaran: number
 }
@@ -114,7 +114,7 @@ export async function getMonthlyTrend(days = 30): Promise<DailyTrendPoint[]> {
   >
   return ((data ?? []) as TrendRow[]).map((row) => ({
     date: row.date,
-    omset: Number(row.total_revenue),
+    omzet: Number(row.total_revenue),
     profit: Number(row.total_gross_profit),
     pengeluaran: Number(row.total_expense),
   }))
@@ -142,7 +142,7 @@ export async function getMonthlyTrendByKasir(
     const d = new Date(from)
     d.setDate(d.getDate() + i)
     const dateStr = d.toISOString().split('T')[0]
-    trendMap.set(dateStr, { date: dateStr, omset: 0, profit: 0, pengeluaran: 0 })
+    trendMap.set(dateStr, { date: dateStr, omzet: 0, profit: 0, pengeluaran: 0 })
   }
 
   // Aggregate
@@ -154,7 +154,7 @@ export async function getMonthlyTrendByKasir(
     const point = trendMap.get(dateStr)
     if (point) {
       if (tx.type === 'penjualan') {
-        point.omset += Number(tx.total_amount)
+        point.omzet += Number(tx.total_amount)
         point.profit += Number(tx.total_profit)
       } else {
         point.pengeluaran += Number(tx.total_amount)

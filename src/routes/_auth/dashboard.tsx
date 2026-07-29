@@ -1,14 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import {
-  Calendar,
-  DollarSign,
-  ShoppingBag,
-  ShoppingCart,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { useState } from 'react'
 import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
@@ -26,7 +18,22 @@ import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTime } from '@/lib/utils'
 import type { Profile } from '@/types'
 
+type DashboardSearch = {
+  period?: DashboardPeriod
+  kasir?: string
+  customFrom?: string
+  customTo?: string
+}
+
 export const Route = createFileRoute('/_auth/dashboard')({
+  validateSearch: (search: Record<string, unknown>): DashboardSearch => {
+    return {
+      period: (search.period as DashboardPeriod) || 'today',
+      kasir: (search.kasir as string) || 'all',
+      customFrom: search.customFrom as string | undefined,
+      customTo: search.customTo as string | undefined,
+    }
+  },
   beforeLoad: async () => {
     const {
       data: { session },
@@ -54,33 +61,39 @@ const PERIOD_LABELS: Record<DashboardPeriod, string> = {
   custom: 'Custom',
 }
 
-const DISPLAY_PERIODS: DashboardPeriod[] = ['today', 'week', 'month']
+const DISPLAY_PERIODS: DashboardPeriod[] = ['today', 'week', 'month', 'custom']
 
 function DashboardPage() {
   const { profile } = useAuth()
-  const [period, setPeriod] = useState<DashboardPeriod>(() => {
-    return (localStorage.getItem('dashboard_period') as DashboardPeriod) || 'today'
-  })
-  const [kasirFilter, setKasirFilter] = useState<string>(() => {
-    return localStorage.getItem('dashboard_kasir') || 'all'
-  })
-  const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
+  const navigate = Route.useNavigate()
+  const search = Route.useSearch()
+  
+  const period = search.period || 'today'
+  const kasirFilter = search.kasir || 'all'
+  
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  
+  const customFrom = search.customFrom || todayStart.toISOString().split('T')[0]
+  const customTo = search.customTo || new Date().toISOString().split('T')[0]
 
+  const setPeriod = (p: DashboardPeriod) => navigate({ search: (prev) => ({ ...prev, period: p }) })
+  const setKasirFilter = (k: string) => navigate({ search: (prev) => ({ ...prev, kasir: k }) })
+  const setCustomFrom = (date: string) => navigate({ search: (prev) => ({ ...prev, customFrom: date }) })
+  const setCustomTo = (date: string) => navigate({ search: (prev) => ({ ...prev, customTo: date }) })
+
+  const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
   const { data: cashiers } = useCashiers()
 
-  useEffect(() => {
-    localStorage.setItem('dashboard_period', period)
-  }, [period])
+  const customRange = period === 'custom' 
+    ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) } 
+    : undefined
 
-  useEffect(() => {
-    localStorage.setItem('dashboard_kasir', kasirFilter)
-  }, [kasirFilter])
-
-  const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, undefined, kasirFilter)
+  const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, customRange, kasirFilter)
   const { data: trend, isLoading: trendLoading } = useMonthlyTrend(30, kasirFilter)
   const { data: topProducts, isLoading: topProductsLoading } = useTopProducts(
-    'month',
-    undefined,
+    period,
+    customRange,
     5,
     kasirFilter,
   )
@@ -89,69 +102,89 @@ function DashboardPage() {
     recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
-  const netCashflow = (kpi?.omset ?? 0) - (kpi?.pengeluaran ?? 0)
+  const netCashflow = (kpi?.omzet ?? 0) - (kpi?.pengeluaran ?? 0)
 
   return (
     <div className="page-container">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">
-            Selamat datang, {profile?.full_name ?? '—'}
-          </p>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
+            <p className="text-sm text-neutral-500 mt-0.5">
+              Selamat datang, {profile?.full_name ?? '—'}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {period === 'custom' && (
+              <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-xl p-1.5 shadow-sm">
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
+                />
+                <span className="text-neutral-400 text-xs font-semibold px-1">s/d</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
+                />
+              </div>
+            )}
+            
+            <CustomSelect
+              value={kasirFilter}
+              onChange={setKasirFilter}
+              options={[
+                { value: 'all', label: 'Semua Kasir' },
+                ...(cashiers?.map((c) => ({ value: c.id, label: c.full_name })) ?? []),
+              ]}
+            />
+            <CustomSelect
+              value={period}
+              onChange={(val) => setPeriod(val as DashboardPeriod)}
+              options={DISPLAY_PERIODS.map((p) => ({ value: p, label: PERIOD_LABELS[p] }))}
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <CustomSelect
-            value={kasirFilter}
-            onChange={setKasirFilter}
-            options={[
-              { value: 'all', label: 'Semua Kasir' },
-              ...(cashiers?.map((c) => ({ value: c.id, label: c.full_name })) ?? []),
-            ]}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+          <KPICard
+            label="Total Omzet"
+            value={kpi ? formatRupiah(kpi.omzet) : null}
+            isLoading={kpiLoading}
+            icon={TrendingUp}
+            iconColor="text-primary"
+            iconBg="bg-primary/10"
           />
-          <CustomSelect
-            value={period}
-            onChange={(val) => setPeriod(val as DashboardPeriod)}
-            options={DISPLAY_PERIODS.map((p) => ({ value: p, label: PERIOD_LABELS[p] }))}
+          <KPICard
+            label="Total Pengeluaran"
+            value={kpi ? formatRupiah(kpi.pengeluaran) : null}
+            isLoading={kpiLoading}
+            icon={TrendingDown}
+            iconColor="text-danger"
+            iconBg="bg-danger/10"
+          />
+          <KPICard
+            label="Profit Kotor"
+            value={kpi ? formatRupiah(kpi.profit) : null}
+            isLoading={kpiLoading}
+            icon={ArrowLeftRight}
+            iconColor="text-success"
+            iconBg="bg-success/10"
+          />
+          <KPICard
+            label="Profit Bersih"
+            value={kpi ? formatRupiah(netCashflow) : null}
+            isLoading={kpiLoading}
+            icon={DollarSign}
+            iconColor={netCashflow >= 0 ? 'text-success' : 'text-danger'}
+            iconBg={netCashflow >= 0 ? 'bg-success/10' : 'bg-danger/10'}
+            sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-        <KPICard
-          label="Total Omset"
-          value={kpi ? formatRupiah(kpi.omset) : null}
-          isLoading={kpiLoading}
-          icon={TrendingUp}
-          iconColor="text-primary"
-          iconBg="bg-primary/10"
-        />
-        <KPICard
-          label="Profit Kotor"
-          value={kpi ? formatRupiah(kpi.profit) : null}
-          isLoading={kpiLoading}
-          icon={DollarSign}
-          iconColor="text-success"
-          iconBg="bg-success/10"
-        />
-        <KPICard
-          label="Total Pengeluaran"
-          value={kpi ? formatRupiah(kpi.pengeluaran) : null}
-          isLoading={kpiLoading}
-          icon={TrendingDown}
-          iconColor="text-danger"
-          iconBg="bg-danger/10"
-        />
-        <KPICard
-          label="Profit Bersih"
-          value={kpi ? formatRupiah(netCashflow) : null}
-          isLoading={kpiLoading}
-          icon={ShoppingBag}
-          iconColor={netCashflow >= 0 ? 'text-success' : 'text-danger'}
-          iconBg={netCashflow >= 0 ? 'bg-success/10' : 'bg-danger/10'}
-          sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
-        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -465,7 +498,7 @@ function DashboardPage() {
 function TrendBars({
   data,
 }: {
-  data: Array<{ date: string; omset: number; profit: number; pengeluaran: number }>
+  data: Array<{ date: string; omzet: number; profit: number; pengeluaran: number }>
 }) {
   const last7 = data.slice(-7).map((d) => ({
     ...d,
@@ -526,7 +559,7 @@ function TrendBars({
               }}
             />
             <ReferenceLine y={0} stroke="#E5E5E5" />
-            <Bar dataKey="omset" name="Omset" fill="rgba(40, 94, 175, 0.2)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="omzet" name="Omzet" fill="rgba(40, 94, 175, 0.2)" radius={[4, 4, 0, 0]} />
             <Bar dataKey="profit" name="Profit" fill="#285EAF" radius={[4, 4, 4, 4]} />
           </BarChart>
         </ResponsiveContainer>
@@ -535,7 +568,7 @@ function TrendBars({
       <div className="flex gap-4 text-xs text-neutral-500 pt-2">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-primary/20 inline-block" />
-          Omset
+          Omzet
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-primary inline-block" />

@@ -46,14 +46,14 @@ export interface TransactionFilters {
 
 export interface DailySummary {
   date: string
-  total_omset: number
+  total_omzet: number
   total_pengeluaran: number
   total_profit: number
   transaction_count: number
 }
 
 export interface KPISummary {
-  omset: number
+  omzet: number
   pengeluaran: number
   profit: number
   transactionCount: number

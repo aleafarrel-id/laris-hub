@@ -22,7 +22,24 @@ import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionFilters, TransactionWithItems } from '@/types'
 
+type BukuKasSearch = {
+  quickRange?: QuickRange
+  customFrom?: string
+  customTo?: string
+  typeFilter?: TransactionFilters['type']
+  kasirFilter?: string
+}
+
 export const Route = createFileRoute('/_auth/buku-kas')({
+  validateSearch: (search: Record<string, unknown>): BukuKasSearch => {
+    return {
+      quickRange: search.quickRange as QuickRange | undefined,
+      customFrom: search.customFrom as string | undefined,
+      customTo: search.customTo as string | undefined,
+      typeFilter: search.typeFilter as TransactionFilters['type'] | undefined,
+      kasirFilter: search.kasirFilter as string | undefined,
+    }
+  },
   component: BukuKasPage,
 })
 
@@ -63,11 +80,22 @@ function getDateRange(range: QuickRange): { from: Date; to: Date } {
 
 function BukuKasPage() {
   const { isAdmin } = useAuth()
-  const [quickRange, setQuickRange] = useState<QuickRange>('today')
-  const [customFrom, setCustomFrom] = useState(() => todayStart().toISOString().split('T')[0])
-  const [customTo, setCustomTo] = useState(() => new Date().toISOString().split('T')[0])
-  const [typeFilter, setTypeFilter] = useState<TransactionFilters['type']>('all')
-  const [kasirFilter, setKasirFilter] = useState<string>('all')
+  
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  const quickRange = search.quickRange || 'today'
+  const customFrom = search.customFrom || todayStart().toISOString().split('T')[0]
+  const customTo = search.customTo || new Date().toISOString().split('T')[0]
+  const typeFilter = search.typeFilter || 'all'
+  const kasirFilter = search.kasirFilter || 'all'
+
+  const setQuickRange = (range: QuickRange) => navigate({ search: (prev) => ({ ...prev, quickRange: range }) })
+  const setCustomFrom = (val: string) => navigate({ search: (prev) => ({ ...prev, customFrom: val }) })
+  const setCustomTo = (val: string) => navigate({ search: (prev) => ({ ...prev, customTo: val }) })
+  const setTypeFilter = (val: TransactionFilters['type']) => navigate({ search: (prev) => ({ ...prev, typeFilter: val }) })
+  const setKasirFilter = (val: string) => navigate({ search: (prev) => ({ ...prev, kasirFilter: val }) })
+
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
 
   const [listRef] = useAutoAnimate()
@@ -85,7 +113,7 @@ function BukuKasPage() {
     recordedBy: isAdmin && kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
-  const { omset, pengeluaran, profit, net } = useMemo(() => {
+  const { omzet, pengeluaran, profit, net } = useMemo(() => {
     let o = 0
     let p = 0
     let pr = 0
@@ -103,7 +131,7 @@ function BukuKasPage() {
     }
 
     return {
-      omset: o,
+      omzet: o,
       pengeluaran: p,
       profit: pr,
       net: o - p,
@@ -195,27 +223,19 @@ function BukuKasPage() {
         }}
       >
         <SummaryCard
-          label="Omset"
-          value={formatRupiah(omset)}
+          label="Omzet"
+          value={formatRupiah(omzet)}
           icon={TrendingUp}
           color="text-primary"
           bg="bg-primary/10"
           isLoading={isLoading}
         />
         <SummaryCard
-          label="Pengeluaran"
+          label="Total Pengeluaran"
           value={formatRupiah(pengeluaran)}
           icon={TrendingDown}
           color="text-danger"
           bg="bg-danger/10"
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          label="Profit Bersih"
-          value={formatRupiah(net)}
-          icon={DollarSign}
-          color={net >= 0 ? 'text-success' : 'text-danger'}
-          bg={net >= 0 ? 'bg-success/10' : 'bg-danger/10'}
           isLoading={isLoading}
         />
         <SummaryCard
@@ -224,6 +244,14 @@ function BukuKasPage() {
           icon={ArrowLeftRight}
           color="text-success"
           bg="bg-success/10"
+          isLoading={isLoading}
+        />
+        <SummaryCard
+          label="Profit Bersih"
+          value={formatRupiah(net)}
+          icon={DollarSign}
+          color={net >= 0 ? 'text-success' : 'text-danger'}
+          bg={net >= 0 ? 'bg-success/10' : 'bg-danger/10'}
           isLoading={isLoading}
         />
       </motion.div>

@@ -21,21 +21,21 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
   })
 
   const stats = useMemo(() => {
-    if (!transactions) return { omset: 0, count: 0, profit: 0 }
+    if (!transactions) return { omzet: 0, count: 0, profit: 0 }
 
-    let omset = 0
+    let omzet = 0
     let count = 0
     let profit = 0
 
     for (const tx of transactions) {
       if (tx.type === 'penjualan') {
-        omset += tx.total_amount
+        omzet += tx.total_amount
         profit += tx.total_profit
         count++
       }
     }
 
-    return { omset, count, profit }
+    return { omzet, count, profit }
   }, [transactions])
 
   if (!profile) return null
@@ -84,13 +84,13 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
               <TrendingUp size={20} />
             </div>
             <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-              Total Omset
+              Total Omzet
             </p>
             {isLoading ? (
               <Skeleton className="w-20 h-6" />
             ) : (
               <p className="text-lg font-bold text-success tabular-nums">
-                {formatRupiah(stats.omset)}
+                {formatRupiah(stats.omzet)}
               </p>
             )}
           </div>

@@ -24,7 +24,7 @@ function KasirPage() {
   const [showSaleModal, setShowSaleModal] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
 
-  const todayOmset =
+  const todayOmzet =
     todayTx?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
 
   const todayPengeluaran =
@@ -81,9 +81,9 @@ function KasirPage() {
                   Catat Penjualan
                 </p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 text-primary-100">
-                  <span className="text-xs sm:text-sm font-medium">Omset Hari Ini:</span>
+                  <span className="text-xs sm:text-sm font-medium">Omzet Hari Ini:</span>
                   <span className="text-sm font-bold tabular-nums text-white">
-                    {isLoading ? <span className="opacity-50">...</span> : formatRupiah(todayOmset)}
+                    {isLoading ? <span className="opacity-50">...</span> : formatRupiah(todayOmzet)}
                   </span>
                 </div>
               </div>
