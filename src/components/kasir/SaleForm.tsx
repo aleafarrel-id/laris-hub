@@ -1,9 +1,8 @@
-
 import { CheckCircle, Minus, Package, Plus, Search, Tag } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
-import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useProducts } from '@/hooks/useProducts'
 import { useCreateSale } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
@@ -14,7 +13,6 @@ interface CartItem {
   quantity: number
 }
 
-// Hoist static data outside component
 const PRODUCT_COLORS = [
   'from-amber-400/20 to-orange-500/20',
   'from-emerald-400/20 to-teal-500/20',
@@ -42,7 +40,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
     let items = 0
     const arr: CartItem[] = []
 
-    // Iterate over Map values once
     for (const item of cart.values()) {
       amount += item.product.selling_price * item.quantity
       items += item.quantity
@@ -105,7 +102,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
 
   return (
     <div className="flex flex-col min-h-[60vh] max-h-full">
-      {/* Search - Sticky Top */}
       <div className="sticky top-0 z-10 px-4 py-3 bg-white border-b border-neutral-100">
         <div className="relative">
           <Search
@@ -122,7 +118,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
         </div>
       </div>
 
-      {/* Product Grid */}
       <div className="p-4 bg-neutral-50/50 flex-1">
         {productsLoading ? (
           <div className="flex flex-col gap-3">
@@ -161,7 +156,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                       : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
                   }`}
                 >
-                  {/* Image / Thumbnail */}
                   <div
                     className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group`}
                   >
@@ -186,19 +180,18 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
                     )}
                   </div>
 
-                  {/* Product Info & Controls */}
                   <div className="flex flex-col flex-1 min-w-0 py-0.5 self-stretch justify-center">
                     <p className="text-sm sm:text-base font-bold text-neutral-900 leading-tight mb-1 line-clamp-1">
                       {product.name}
                     </p>
-                    
+
                     {product.sku && (
                       <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1.5">
                         <Tag size={12} className="text-neutral-400" />
                         <span className="truncate">{product.sku}</span>
                       </div>
                     )}
-                    
+
                     <p className="text-sm font-bold text-primary mt-auto">
                       {formatRupiah(product.selling_price)}
                     </p>
@@ -258,7 +251,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
         )}
       </div>
 
-      {/* Footer / Checkout Strip - Sticky Bottom */}
       <div className="sticky bottom-0 z-10 bg-white border-t border-neutral-200 p-4 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] mt-auto">
         <AnimatePresence mode="wait">
           {cart.size > 0 ? (
@@ -270,7 +262,6 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.2, ease: 'easeOut' as const }}
             >
-              {/* Note input */}
               <input
                 type="text"
                 placeholder="Catatan transaksi (opsional)"

@@ -8,9 +8,6 @@ import type {
   TransactionWithItems,
 } from '@/types'
 
-// Note: `as any` casts bypass strict Supabase SDK type inference from
-// manually-maintained database types. Safe — RLS enforces access at DB level.
-
 const db = supabase as any
 
 export interface CreateSalePayload {

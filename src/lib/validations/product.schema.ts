@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-// ============================================================
-// Product Schemas
-// ============================================================
-
 export const productSchema = z.object({
   name: z
     .string()

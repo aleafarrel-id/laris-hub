@@ -9,19 +9,14 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useTodayTransactions } from '@/hooks/useTransactions'
-import { formatRupiah, formatTime } from '@/lib/utils'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { formatRupiah, formatTime } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
-
-// ============================================================
-// /kasir — POS page (all authenticated users)
-// ============================================================
 
 export const Route = createFileRoute('/_auth/kasir')({
   component: KasirPage,
 })
 
-// ─── Main Page ───────────────────────────────────────────────
 function KasirPage() {
   const { profile, isAdmin } = useAuth()
   const { data: todayTx, isLoading } = useTodayTransactions(isAdmin ? undefined : profile?.id)
@@ -37,7 +32,6 @@ function KasirPage() {
 
   return (
     <>
-      {/* Header */}
       <header className="bg-white border-b border-neutral-200 px-4 py-3.5 flex items-center justify-between sticky top-0 z-20">
         <div>
           <h1 className="text-base font-bold text-neutral-900">Kasir</h1>
@@ -52,7 +46,6 @@ function KasirPage() {
       </header>
 
       <div className="page-container max-w-3xl mx-auto space-y-6">
-        {/* Action Buttons */}
         <motion.div
           className="flex flex-col gap-4 mb-8"
           initial="hidden"
@@ -62,7 +55,6 @@ function KasirPage() {
             visible: { transition: { staggerChildren: 0.1 } },
           }}
         >
-          {/* Penjualan + Omset Card */}
           <motion.button
             type="button"
             onClick={() => setShowSaleModal(true)}
@@ -78,7 +70,6 @@ function KasirPage() {
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.01, boxShadow: '0 12px 24px -6px rgba(40,94,175,0.45)' }}
           >
-            {/* Decorative background circle */}
             <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
 
             <div className="flex items-center gap-4 relative z-10">
@@ -99,7 +90,6 @@ function KasirPage() {
             </div>
           </motion.button>
 
-          {/* Pengeluaran Card */}
           <motion.button
             type="button"
             onClick={() => setShowExpenseModal(true)}
@@ -115,7 +105,6 @@ function KasirPage() {
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.01 }}
           >
-            {/* Decorative background circle */}
             <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-danger/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
 
             <div className="flex items-center gap-4 relative z-10">
@@ -141,7 +130,6 @@ function KasirPage() {
           </motion.button>
         </motion.div>
 
-        {/* Recent Transactions */}
         <div>
           <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
             Transaksi Hari Ini
@@ -183,30 +171,39 @@ function KasirPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' as const, delay: idx * 0.04 }}
                 >
                   <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
-                      }`}
-                    >
-                      {tx.type === 'penjualan' ? (
-                        <ShoppingCart size={14} className="text-success" />
-                      ) : (
-                        <Wallet size={14} className="text-danger" />
-                      )}
-                    </div>
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
+                    }`}
+                  >
+                    {tx.type === 'penjualan' ? (
+                      <ShoppingCart size={14} className="text-success" />
+                    ) : (
+                      <Wallet size={14} className="text-danger" />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <div className="text-sm font-medium text-neutral-900">
                       {tx.type === 'penjualan' ? (
                         <div className="flex flex-col gap-0.5">
-                          {(tx as TransactionWithItems).transaction_items && (tx as TransactionWithItems).transaction_items.length > 1 ? (
+                          {(tx as TransactionWithItems).transaction_items &&
+                          (tx as TransactionWithItems).transaction_items.length > 1 ? (
                             (tx as TransactionWithItems).transaction_items.map((i, idx) => (
                               <div key={idx} className="flex items-start gap-1.5 min-w-0">
                                 <span className="text-neutral-400 flex-shrink-0">•</span>
-                                <span className="truncate">{i.product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{i.quantity}</span></span>
+                                <span className="truncate">
+                                  {i.product_name}{' '}
+                                  <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                                    x{i.quantity}
+                                  </span>
+                                </span>
                               </div>
                             ))
                           ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
                             <p className="truncate">
-                              {(tx as TransactionWithItems).transaction_items[0].product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{(tx as TransactionWithItems).transaction_items[0].quantity}</span>
+                              {(tx as TransactionWithItems).transaction_items[0].product_name}{' '}
+                              <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                                x{(tx as TransactionWithItems).transaction_items[0].quantity}
+                              </span>
                             </p>
                           ) : (
                             <p className="truncate">Penjualan</p>
@@ -216,7 +213,7 @@ function KasirPage() {
                         <p className="truncate">{tx.description}</p>
                       )}
                     </div>
-                    
+
                     {(tx.expense_category || tx.notes) && (
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         {tx.type === 'pengeluaran' && tx.expense_category && (
@@ -225,13 +222,11 @@ function KasirPage() {
                           </span>
                         )}
                         {tx.notes && (
-                          <p className="text-xs text-neutral-500 truncate italic">
-                            "{tx.notes}"
-                          </p>
+                          <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
                         )}
                       </div>
                     )}
-                    
+
                     <div className="flex items-end justify-between mt-1.5 gap-2">
                       <p className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
                         {formatTime(tx.transaction_at)}
@@ -255,7 +250,6 @@ function KasirPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <Modal isOpen={showSaleModal} onClose={() => setShowSaleModal(false)} title="Catat Penjualan">
         <SaleForm onSuccess={() => setShowSaleModal(false)} recordedBy={profile?.id ?? ''} />
       </Modal>

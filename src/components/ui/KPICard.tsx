@@ -12,11 +12,6 @@ interface KPICardProps {
   trend?: { value: number; label: string } // positive = up, negative = down
 }
 
-/**
- * KPI metric card — used in Dashboard.
- * Icon uses currentColor via iconColor class.
- * Trend shows % change vs previous period.
- */
 export function KPICard({
   label,
   value,

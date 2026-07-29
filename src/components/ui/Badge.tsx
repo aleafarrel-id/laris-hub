@@ -9,9 +9,6 @@ const BADGE_CONFIG = {
   pengeluaran: { label: 'Pengeluaran', className: 'bg-danger/10 text-danger' },
 } as const
 
-/**
- * Badge for transaction type — consistent across all pages.
- */
 export function TransactionBadge({ type }: BadgeProps) {
   const config = BADGE_CONFIG[type as keyof typeof BADGE_CONFIG] ?? {
     label: type,

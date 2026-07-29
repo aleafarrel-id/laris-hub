@@ -2,10 +2,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
 
-// Note: The `as any` casts here work around strict Supabase SDK type inference
-// when using manually-maintained database types instead of auto-generated CLI types.
-// Replace with: pnpm supabase gen types typescript --project-id <ID> > src/types/database.types.ts
-
 /**
  * Fetch profile by user ID.
  */

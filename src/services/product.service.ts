@@ -3,9 +3,6 @@ import { supabase } from '@/lib/supabase'
 import type { ProductFormData } from '@/lib/validations/product.schema'
 import type { Product } from '@/types'
 
-// Note: `as any` casts bypass strict Supabase SDK type inference from
-// manually-maintained database types. Safe — RLS enforces access at DB level.
-
 const db = supabase as any
 
 /**

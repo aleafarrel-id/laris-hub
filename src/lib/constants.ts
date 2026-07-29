@@ -1,7 +1,3 @@
-// ============================================================
-// Application-wide Constants — Laris Hub
-// ============================================================
-
 // App metadata
 export const APP_NAME = 'Laris Hub'
 export const APP_VERSION = '1.0.0'

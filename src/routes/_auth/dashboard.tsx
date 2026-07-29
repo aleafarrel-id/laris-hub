@@ -1,26 +1,30 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import {
+  Calendar,
+  DollarSign,
+  ShoppingBag,
+  ShoppingCart,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { TransactionBadge } from '@/components/ui/Badge'
+import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { TransactionBadge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { useCashiers } from '@/hooks/useProfile'
+import { useTransactions } from '@/hooks/useTransactions'
+import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTime } from '@/lib/utils'
-import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
-import { useTransactions } from '@/hooks/useTransactions'
-import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import type { Profile } from '@/types'
-
-// ============================================================
-// /dashboard — Admin only
-// ============================================================
 
 export const Route = createFileRoute('/_auth/dashboard')({
   beforeLoad: async () => {
@@ -74,17 +78,21 @@ function DashboardPage() {
 
   const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, undefined, kasirFilter)
   const { data: trend, isLoading: trendLoading } = useMonthlyTrend(30, kasirFilter)
-  const { data: topProducts, isLoading: topProductsLoading } = useTopProducts('month', undefined, 5, kasirFilter)
-  const { data: recentTransactions, isLoading: recentLoading } = useTransactions({ 
+  const { data: topProducts, isLoading: topProductsLoading } = useTopProducts(
+    'month',
+    undefined,
+    5,
+    kasirFilter,
+  )
+  const { data: recentTransactions, isLoading: recentLoading } = useTransactions({
     limit: 10,
-    recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined
+    recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
   const netCashflow = (kpi?.omset ?? 0) - (kpi?.pengeluaran ?? 0)
 
   return (
     <div className="page-container">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
@@ -93,7 +101,6 @@ function DashboardPage() {
           </p>
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-3">
           <CustomSelect
             value={kasirFilter}
@@ -111,7 +118,6 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
         <KPICard
           label="Total Omset"
@@ -148,9 +154,7 @@ function DashboardPage() {
         />
       </div>
 
-      {/* Charts + Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trend Chart */}
         <div className="lg:col-span-2 app-card p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-semibold text-neutral-900">Tren 30 Hari Terakhir</h2>
@@ -185,7 +189,6 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Top Products */}
         <div className="app-card p-6">
           <h2 className="text-sm font-semibold text-neutral-900 mb-5">Produk Terlaris</h2>
           {topProductsLoading ? (
@@ -230,7 +233,6 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Transactions Widget */}
       <div className="mt-6 app-card p-6">
         <h2 className="text-sm font-semibold text-neutral-900 mb-5">10 Transaksi Terbaru</h2>
 
@@ -249,7 +251,6 @@ function DashboardPage() {
           </div>
         ) : recentTransactions?.length ? (
           <>
-            {/* Mobile View: Card List */}
             <div className="flex flex-col gap-3 md:hidden">
               {recentTransactions.map((tx) => (
                 <div
@@ -258,7 +259,9 @@ function DashboardPage() {
                 >
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      tx.type === 'penjualan' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                      tx.type === 'penjualan'
+                        ? 'bg-success/10 text-success'
+                        : 'bg-danger/10 text-danger'
                     }`}
                   >
                     {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
@@ -271,12 +274,20 @@ function DashboardPage() {
                             tx.transaction_items.map((i, idx) => (
                               <div key={idx} className="flex items-start gap-1.5 min-w-0">
                                 <span className="text-neutral-400 flex-shrink-0">•</span>
-                                <span className="truncate">{i.product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{i.quantity}</span></span>
+                                <span className="truncate">
+                                  {i.product_name}{' '}
+                                  <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                                    x{i.quantity}
+                                  </span>
+                                </span>
                               </div>
                             ))
                           ) : tx.transaction_items?.length === 1 ? (
                             <p className="truncate">
-                              {tx.transaction_items[0].product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{tx.transaction_items[0].quantity}</span>
+                              {tx.transaction_items[0].product_name}{' '}
+                              <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                                x{tx.transaction_items[0].quantity}
+                              </span>
                             </p>
                           ) : (
                             <p className="truncate">Penjualan</p>
@@ -286,7 +297,7 @@ function DashboardPage() {
                         <p className="truncate">{tx.description}</p>
                       )}
                     </div>
-                    
+
                     {(tx.expense_category || tx.notes) && (
                       <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                         {tx.type === 'pengeluaran' && tx.expense_category && (
@@ -295,9 +306,7 @@ function DashboardPage() {
                           </span>
                         )}
                         {tx.notes && (
-                          <p className="text-xs text-neutral-500 truncate italic">
-                            "{tx.notes}"
-                          </p>
+                          <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
                         )}
                       </div>
                     )}
@@ -313,7 +322,7 @@ function DashboardPage() {
                         </button>
                       </div>
                     )}
-                    
+
                     <div className="flex items-end justify-between mt-1.5 gap-2">
                       <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5">
                         {formatTime(tx.transaction_at)}
@@ -334,7 +343,6 @@ function DashboardPage() {
               ))}
             </div>
 
-            {/* Desktop View: Compact Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-neutral-50/80 border-b border-neutral-200">
@@ -371,12 +379,20 @@ function DashboardPage() {
                                   tx.transaction_items.map((i, idx) => (
                                     <div key={idx} className="flex items-center gap-1.5">
                                       <span className="text-neutral-400">•</span>
-                                      <span>{i.product_name} <span className="text-neutral-400 tabular-nums">x{i.quantity}</span></span>
+                                      <span>
+                                        {i.product_name}{' '}
+                                        <span className="text-neutral-400 tabular-nums">
+                                          x{i.quantity}
+                                        </span>
+                                      </span>
                                     </div>
                                   ))
                                 ) : tx.transaction_items?.length === 1 ? (
                                   <span>
-                                    {tx.transaction_items[0].product_name} <span className="text-neutral-400 tabular-nums">x{tx.transaction_items[0].quantity}</span>
+                                    {tx.transaction_items[0].product_name}{' '}
+                                    <span className="text-neutral-400 tabular-nums">
+                                      x{tx.transaction_items[0].quantity}
+                                    </span>
                                   </span>
                                 ) : (
                                   <span>Penjualan</span>
@@ -387,7 +403,11 @@ function DashboardPage() {
                                 <span>{tx.description}</span>
                                 {tx.type === 'pengeluaran' && tx.expense_category && (
                                   <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                                    {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
+                                    {
+                                      EXPENSE_CATEGORY_LABELS[
+                                        tx.expense_category as ExpenseCategory
+                                      ]
+                                    }
                                   </span>
                                 )}
                               </div>
@@ -395,9 +415,7 @@ function DashboardPage() {
                           </div>
                         </div>
                         {tx.notes && (
-                          <p className="text-xs text-neutral-500 truncate italic">
-                            "{tx.notes}"
-                          </p>
+                          <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
                         )}
                       </td>
                       <td className="py-2.5 px-4">
@@ -435,8 +453,7 @@ function DashboardPage() {
         )}
       </div>
 
-      {/* Cashier Profile Modal */}
-      <CashierProfileModal 
+      <CashierProfileModal
         isOpen={!!selectedKasirProfile}
         onClose={() => setSelectedKasirProfile(null)}
         profile={selectedKasirProfile}
@@ -445,9 +462,6 @@ function DashboardPage() {
   )
 }
 
-// ============================================================
-// Simple bar sparkline — no external chart lib needed
-// ============================================================
 function TrendBars({
   data,
 }: {
@@ -460,21 +474,20 @@ function TrendBars({
 
   return (
     <div className="space-y-3 h-full flex flex-col justify-end pt-4">
-      {/* Recharts Bar Chart */}
       <div className="flex-1 min-h-[14rem] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={last7} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-            <XAxis 
-              dataKey="shortDate" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fontSize: 11, fill: '#A3A3A3' }} 
+            <XAxis
+              dataKey="shortDate"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: '#A3A3A3' }}
               dy={10}
             />
-            <YAxis 
+            <YAxis
               width={50}
-              axisLine={false} 
-              tickLine={false} 
+              axisLine={false}
+              tickLine={false}
               tick={{ fontSize: 11, fill: '#A3A3A3' }}
               tickFormatter={(val) => {
                 if (val >= 1000000) return `Rp${(val / 1000000).toFixed(1)}M`
@@ -482,7 +495,7 @@ function TrendBars({
                 return val
               }}
             />
-            <Tooltip 
+            <Tooltip
               cursor={{ fill: '#f5f5f5' }}
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
@@ -490,10 +503,13 @@ function TrendBars({
                     <div className="bg-white p-3 rounded-xl shadow-lg border border-neutral-100 text-sm">
                       <p className="font-bold text-neutral-900 mb-2">{label}</p>
                       {payload.map((entry) => (
-                        <div key={entry.dataKey} className="flex items-center justify-between gap-4 py-1">
+                        <div
+                          key={entry.dataKey}
+                          className="flex items-center justify-between gap-4 py-1"
+                        >
                           <span className="flex items-center gap-1.5 text-neutral-500">
-                            <span 
-                              className="w-2.5 h-2.5 rounded-sm inline-block" 
+                            <span
+                              className="w-2.5 h-2.5 rounded-sm inline-block"
                               style={{ backgroundColor: entry.color }}
                             />
                             {entry.name}
@@ -516,7 +532,6 @@ function TrendBars({
         </ResponsiveContainer>
       </div>
 
-      {/* Legend */}
       <div className="flex gap-4 text-xs text-neutral-500 pt-2">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-primary/20 inline-block" />

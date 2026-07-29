@@ -12,7 +12,6 @@ interface ExpenseLineItem {
   unit_price: number
 }
 
-// Hoist static object entries
 const EXPENSE_CATEGORY_ENTRIES = Object.entries(EXPENSE_CATEGORIES) as [string, ExpenseCategory][]
 
 export function ExpenseForm({
@@ -88,7 +87,6 @@ export function ExpenseForm({
 
   return (
     <div className="px-5 py-5 space-y-6">
-      {/* Description */}
       <div>
         <label htmlFor="expense-desc" className="block text-sm font-semibold text-neutral-700 mb-2">
           Keterangan <span className="text-danger">*</span>
@@ -104,7 +102,6 @@ export function ExpenseForm({
         />
       </div>
 
-      {/* Category */}
       <div>
         <label htmlFor="expense-cat" className="block text-sm font-semibold text-neutral-700 mb-2">
           Kategori
@@ -130,7 +127,6 @@ export function ExpenseForm({
         </div>
       </div>
 
-      {/* Detail Items */}
       <div
         className="animate-fade-in animate-slide-up"
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
@@ -224,7 +220,6 @@ export function ExpenseForm({
           </div>
         )}
 
-        {/* Running total */}
         {items.length > 0 && (
           <div className="mt-2 bg-neutral-50 rounded-xl px-3 py-2 flex justify-between items-center">
             <span className="text-xs text-neutral-500">Total</span>
@@ -244,7 +239,6 @@ export function ExpenseForm({
         </button>
       </div>
 
-      {/* Notes */}
       <div>
         <label
           htmlFor="expense-notes"
@@ -263,7 +257,6 @@ export function ExpenseForm({
         />
       </div>
 
-      {/* Submit */}
       <button
         type="button"
         onClick={handleSubmit}

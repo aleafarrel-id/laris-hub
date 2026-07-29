@@ -44,9 +44,7 @@ export function CustomSelect({
     if (isOpen && ref.current) {
       const rect = ref.current.getBoundingClientRect()
       const screenWidth = window.innerWidth
-      
-      // Smart positioning: if the button is on the right half of the screen,
-      // anchor the dropdown to the right. Otherwise, anchor to the left.
+
       if (rect.left > screenWidth / 2) {
         setDropdownStyle({ left: 'auto', right: '0px', transformOrigin: 'top right' })
       } else {

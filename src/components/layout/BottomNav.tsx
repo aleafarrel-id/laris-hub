@@ -15,12 +15,6 @@ const KASIR_NAV_ITEMS = [
   { to: '/profil', label: 'Profil', icon: User },
 ] as const
 
-/**
- * Bottom navigation (mobile-first).
- * Displayed only on screens < md.
- * Uses Lucide icons — no emoji.
- * Min hit area 48px per item (touch-friendly).
- */
 export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
   const { location } = useRouterState()
   const pathname = location.pathname
@@ -48,7 +42,6 @@ export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
                 size={22}
                 strokeWidth={isActive ? 2.5 : 1.75}
                 className="transition-[stroke-width]"
-                // Active state: filled feel via thicker stroke
               />
               <span className={`text-[10px] font-medium ${isActive ? 'text-primary' : ''}`}>
                 {label}

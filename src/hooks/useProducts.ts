@@ -12,10 +12,6 @@ import {
 } from '@/services/product.service'
 import { useAuthStore } from '@/store/auth.store'
 
-// ============================================================
-// useProducts — list query
-// ============================================================
-
 export function useProducts(activeOnly = false) {
   return useQuery({
     queryKey: [...QUERY_KEYS.PRODUCTS, { activeOnly }],
@@ -23,10 +19,6 @@ export function useProducts(activeOnly = false) {
     staleTime: 1000 * 60 * 5, // 5 min — product catalog changes rarely
   })
 }
-
-// ============================================================
-// useCreateProduct — mutation
-// ============================================================
 
 export function useCreateProduct() {
   const queryClient = useQueryClient()
@@ -47,10 +39,6 @@ export function useCreateProduct() {
   })
 }
 
-// ============================================================
-// useUpdateProduct — mutation
-// ============================================================
-
 export function useUpdateProduct() {
   const queryClient = useQueryClient()
 
@@ -66,10 +54,6 @@ export function useUpdateProduct() {
   })
 }
 
-// ============================================================
-// useDeleteProduct — mutation
-// ============================================================
-
 export function useDeleteProduct() {
   const queryClient = useQueryClient()
 
@@ -84,10 +68,6 @@ export function useDeleteProduct() {
     },
   })
 }
-
-// ============================================================
-// useToggleProductStatus — mutation
-// ============================================================
 
 export function useToggleProductStatus() {
   const queryClient = useQueryClient()

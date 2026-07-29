@@ -82,7 +82,6 @@ export function ProductForm({
 
   const [errors, setErrors] = useState<Partial<LocalProductFormData>>({})
 
-  // Image Upload States
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.image_url ?? null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -153,10 +152,8 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-full relative">
-      {/* Content Area */}
       <div className="flex-1 p-5 sm:p-6 lg:p-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 max-w-5xl mx-auto">
-          {/* Left Column: Image & Status */}
           <div className="flex flex-col gap-6">
             <div className="bg-white rounded-2xl border border-neutral-100 p-5 shadow-sm">
               <label className="block text-xs font-semibold text-neutral-600 mb-3 uppercase tracking-wider">
@@ -193,9 +190,7 @@ export function ProductForm({
             </div>
           </div>
 
-          {/* Right Column: Detailed Info */}
           <div className="flex flex-col gap-6">
-            {/* Informasi Dasar */}
             <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm space-y-5">
               <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
                 Informasi Dasar
@@ -235,7 +230,6 @@ export function ProductForm({
               />
             </div>
 
-            {/* Harga & Modal */}
             <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm space-y-5">
               <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
                 Harga & Modal
@@ -271,7 +265,6 @@ export function ProductForm({
                     disabled={isPending}
                   />
 
-                  {/* Margin Visualizer */}
                   {hpp > 0 && sellingPrice > 0 && (
                     <div className="mt-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-between text-xs">
                       <span className="font-semibold text-neutral-600">Margin Keuntungan:</span>
@@ -295,7 +288,6 @@ export function ProductForm({
         </div>
       </div>
 
-      {/* Sticky Bottom Actions */}
       <div className="sticky bottom-0 z-10 border-t border-neutral-200 bg-white/90 backdrop-blur-md px-6 py-4 flex justify-end gap-3 shrink-0 rounded-b-2xl mt-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
         <button
           type="button"

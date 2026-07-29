@@ -10,10 +10,6 @@ interface EmptyStateProps {
   }
 }
 
-/**
- * Empty state display — for empty lists and zero data.
- * Always uses a Lucide icon, never emoji.
- */
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">

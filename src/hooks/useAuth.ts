@@ -7,15 +7,6 @@ import { translateError } from '@/lib/utils'
 import { getProfile, signIn, signOut } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
 
-// ============================================================
-// useAuth — primary auth hook for components
-// ============================================================
-
-/**
- * Returns the current auth state and actions.
- * Must be called inside the QueryClientProvider.
- * The actual session listener lives in AuthProvider.
- */
 export function useAuth() {
   const { user, profile, isLoading, isInitialized } = useAuthStore()
 
@@ -32,10 +23,6 @@ export function useAuth() {
     role: profile?.role ?? null,
   }
 }
-
-// ============================================================
-// useAuthActions — mutations for auth operations
-// ============================================================
 
 export function useAuthActions() {
   const queryClient = useQueryClient()
@@ -75,14 +62,6 @@ export function useAuthActions() {
   return { signIn: handleSignIn, signOut: handleSignOut }
 }
 
-// ============================================================
-// useAuthListener — used internally by AuthProvider
-// ============================================================
-
-/**
- * Sets up the Supabase auth state change listener.
- * Should only be mounted once at the app root (AuthProvider).
- */
 export function useAuthListener() {
   const queryClient = useQueryClient()
   const { setUser, setProfile, setInitialized, setLoading, clearAuth } = useAuthStore()

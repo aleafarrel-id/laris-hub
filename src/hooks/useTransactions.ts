@@ -17,10 +17,6 @@ import {
 import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
-// ============================================================
-// useTransactions — list with filters (Buku Kas)
-// ============================================================
-
 export function useTransactions(filters: TransactionFilters = {}) {
   return useQuery({
     queryKey: [...QUERY_KEYS.TRANSACTIONS, filters],
@@ -28,10 +24,6 @@ export function useTransactions(filters: TransactionFilters = {}) {
     staleTime: 1000 * 30, // 30s — transactions change frequently
   })
 }
-
-// ============================================================
-// useTodayTransactions — kasir mini-list
-// ============================================================
 
 export function useTodayTransactions(recordedBy?: string) {
   return useQuery({
@@ -41,10 +33,6 @@ export function useTodayTransactions(recordedBy?: string) {
     refetchInterval: 1000 * 60, // Auto-refresh every minute
   })
 }
-
-// ============================================================
-// useCreateSaleTransaction — mutation (used in Buku Kas admin)
-// ============================================================
 
 export function useCreateSaleTransaction() {
   const queryClient = useQueryClient()
@@ -68,10 +56,6 @@ export function useCreateSaleTransaction() {
     },
   })
 }
-
-// ============================================================
-// useCreateExpenseTransaction — mutation (used in Buku Kas admin)
-// ============================================================
 
 export function useCreateExpenseTransaction() {
   const queryClient = useQueryClient()
@@ -102,10 +86,6 @@ export function useCreateExpenseTransaction() {
   })
 }
 
-// ============================================================
-// useUpdateTransaction — admin mutation
-// ============================================================
-
 export function useUpdateTransaction() {
   const queryClient = useQueryClient()
 
@@ -123,10 +103,6 @@ export function useUpdateTransaction() {
   })
 }
 
-// ============================================================
-// useDeleteTransaction — admin mutation
-// ============================================================
-
 export function useDeleteTransaction() {
   const queryClient = useQueryClient()
 
@@ -142,13 +118,6 @@ export function useDeleteTransaction() {
     },
   })
 }
-
-// ============================================================
-// useCreateSale — Kasir POS sale form
-// NOTE: Toast is handled here (NOT in the component) to avoid
-//       duplicate notifications. The component only calls onSuccess
-//       for side-effects like closing the modal.
-// ============================================================
 
 type CreateSaleArgs = {
   payload: Parameters<typeof createSaleTransaction>[0]
@@ -175,11 +144,6 @@ export function useCreateSale() {
     },
   })
 }
-
-// ============================================================
-// useCreateExpense — Kasir expense form
-// NOTE: Toast is handled here (NOT in the component).
-// ============================================================
 
 type CreateExpenseArgs = {
   payload: Parameters<typeof createExpenseTransaction>[0]

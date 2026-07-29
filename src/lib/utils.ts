@@ -1,10 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-// ============================================================
-// Class Name Utility
-// ============================================================
-
 /**
  * Merge Tailwind CSS classes with clsx and tailwind-merge.
  * Handles conditional classes and resolves conflicts.
@@ -12,10 +8,6 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
 }
-
-// ============================================================
-// Currency Formatting
-// ============================================================
 
 const rupiahFormatter = new Intl.NumberFormat('id-ID', {
   style: 'currency',
@@ -59,10 +51,6 @@ export function parseRupiah(value: string): number {
   const cleaned = value.replace(/[Rp\s.]/g, '').replace(',', '.')
   return Number.parseFloat(cleaned) || 0
 }
-
-// ============================================================
-// Date Formatting
-// ============================================================
 
 const dateFormatter = new Intl.DateTimeFormat('id-ID', {
   day: 'numeric',
@@ -130,10 +118,6 @@ export function isToday(date: Date | string): boolean {
   )
 }
 
-// ============================================================
-// Error Handling
-// ============================================================
-
 /**
  * Translate Supabase/generic errors to user-friendly Bahasa Indonesia messages.
  */
@@ -194,10 +178,6 @@ export function translateError(error: unknown): string {
   return 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.'
 }
 
-// ============================================================
-// String Utilities
-// ============================================================
-
 /**
  * Get initials from full name.
  * @example getInitials("Andi Pratama") → "AP"
@@ -224,10 +204,6 @@ export function truncate(text: string, maxLength: number): string {
 export function generateId(): string {
   return Math.random().toString(36).slice(2, 9)
 }
-
-// ============================================================
-// Number Utilities
-// ============================================================
 
 /**
  * Calculate margin percentage.

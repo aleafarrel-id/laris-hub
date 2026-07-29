@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
-    // Check auth state and redirect accordingly
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -12,7 +11,6 @@ export const Route = createFileRoute('/')({
       throw redirect({ to: '/login' })
     }
 
-    // Get profile to determine role
     const { data } = await supabase
       .from('profiles')
       .select('role')

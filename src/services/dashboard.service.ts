@@ -2,9 +2,6 @@
 import { supabase } from '@/lib/supabase'
 import type { KPISummary } from '@/types'
 
-// Note: `as any` casts bypass strict Supabase SDK type inference for views and RPC.
-// Replace database.types.ts with auto-generated types for full type safety.
-
 const db = supabase as any
 
 interface DailySummaryRow {
@@ -48,7 +45,11 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
  * Get KPI summary for a custom date range.
  * Aggregates directly from transactions table.
  */
-export async function getKPISummaryForRange(from: Date, to: Date, kasirId?: string): Promise<KPISummary> {
+export async function getKPISummaryForRange(
+  from: Date,
+  to: Date,
+  kasirId?: string,
+): Promise<KPISummary> {
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
@@ -119,14 +120,14 @@ export async function getMonthlyTrend(days = 30): Promise<DailyTrendPoint[]> {
   }))
 }
 
-/**
- * JS-aggregated trend for a specific kasir
- */
-export async function getMonthlyTrendByKasir(days = 30, kasirId: string): Promise<DailyTrendPoint[]> {
+export async function getMonthlyTrendByKasir(
+  days = 30,
+  kasirId: string,
+): Promise<DailyTrendPoint[]> {
   const from = new Date()
   from.setDate(from.getDate() - days + 1)
   from.setHours(0, 0, 0, 0)
-  
+
   const { data, error } = await db
     .from('transactions')
     .select('transaction_at, type, total_amount, total_profit')
@@ -149,7 +150,7 @@ export async function getMonthlyTrendByKasir(days = 30, kasirId: string): Promis
     const d = new Date(tx.transaction_at)
     // shift to local date string equivalent
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    
+
     const point = trendMap.get(dateStr)
     if (point) {
       if (tx.type === 'penjualan') {
@@ -190,10 +191,12 @@ export async function getTopProducts(from: Date, to: Date, limit = 5): Promise<T
   return (data ?? []) as TopProduct[]
 }
 
-/**
- * JS-aggregated top products for a specific kasir
- */
-export async function getTopProductsByKasir(from: Date, to: Date, kasirId: string, limit = 5): Promise<TopProduct[]> {
+export async function getTopProductsByKasir(
+  from: Date,
+  to: Date,
+  kasirId: string,
+  limit = 5,
+): Promise<TopProduct[]> {
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
@@ -220,7 +223,7 @@ export async function getTopProductsByKasir(from: Date, to: Date, kasirId: strin
         product_name: item.product_name,
         total_qty: 0,
         total_revenue: 0,
-        total_profit: 0
+        total_profit: 0,
       })
     }
     const p = productMap.get(id)!
@@ -228,7 +231,7 @@ export async function getTopProductsByKasir(from: Date, to: Date, kasirId: strin
     const rev = Number(item.quantity) * Number(item.selling_price)
     const cost = Number(item.quantity) * Number(item.product_hpp)
     p.total_revenue += rev
-    p.total_profit += (rev - cost)
+    p.total_profit += rev - cost
   }
 
   return Array.from(productMap.values())

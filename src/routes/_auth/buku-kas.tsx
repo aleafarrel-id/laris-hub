@@ -11,20 +11,16 @@ import {
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { TransactionBadge } from '@/components/ui/Badge'
+import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useCashiers } from '@/hooks/useProfile'
 import { useTransactions } from '@/hooks/useTransactions'
-import { formatDateTime, formatRupiah } from '@/lib/utils'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionFilters, TransactionWithItems } from '@/types'
-import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
-
-// ============================================================
-// /buku-kas — Transaction history (admin: all, kasir: own)
-// ============================================================
 
 export const Route = createFileRoute('/_auth/buku-kas')({
   component: BukuKasPage,
@@ -61,7 +57,6 @@ function getDateRange(range: QuickRange): { from: Date; to: Date } {
     from.setHours(0, 0, 0, 0)
     return { from, to }
   }
-  // today
   const from = todayStart()
   return { from, to }
 }
@@ -74,7 +69,7 @@ function BukuKasPage() {
   const [typeFilter, setTypeFilter] = useState<TransactionFilters['type']>('all')
   const [kasirFilter, setKasirFilter] = useState<string>('all')
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
-  
+
   const [listRef] = useAutoAnimate()
 
   const { data: cashiers } = useCashiers()
@@ -90,7 +85,6 @@ function BukuKasPage() {
     recordedBy: isAdmin && kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
-  // Summary
   const { omset, pengeluaran, profit, net } = useMemo(() => {
     let o = 0
     let p = 0
@@ -118,7 +112,6 @@ function BukuKasPage() {
 
   return (
     <div className="page-container">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
           <BookOpen size={18} className="text-primary" strokeWidth={2} />
@@ -131,7 +124,6 @@ function BukuKasPage() {
         </div>
       </div>
 
-      {/* Quick Range Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 w-full min-w-0">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full min-w-0">
           <Filter size={14} className="text-neutral-400 flex-shrink-0" />
@@ -151,7 +143,6 @@ function BukuKasPage() {
           ))}
         </div>
 
-        {/* Type & Kasir filters */}
         <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
           {isAdmin && (
             <CustomSelect
@@ -176,7 +167,6 @@ function BukuKasPage() {
         </div>
       </div>
 
-      {/* Custom date range */}
       {quickRange === 'custom' && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4 bg-white border border-neutral-200 rounded-xl p-2 sm:p-1.5 shadow-sm w-full sm:max-w-fit">
           <input
@@ -195,7 +185,6 @@ function BukuKasPage() {
         </div>
       )}
 
-      {/* Summary Cards */}
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"
         initial="hidden"
@@ -239,10 +228,8 @@ function BukuKasPage() {
         />
       </motion.div>
 
-      {/* Transaction List Loading State */}
       {isLoading && (
         <>
-          {/* Mobile Skeleton */}
           <div className="space-y-2 md:hidden">
             {[1, 2, 3, 4, 5].map((k) => (
               <div key={k} className="app-card p-3.5 flex items-center gap-3">
@@ -259,7 +246,6 @@ function BukuKasPage() {
             ))}
           </div>
 
-          {/* Desktop Skeleton Table */}
           <div className="app-card overflow-hidden hidden md:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -337,7 +323,6 @@ function BukuKasPage() {
 
       {!isLoading && transactions && transactions.length > 0 && (
         <>
-          {/* Mobile card list */}
           <div ref={listRef} className="space-y-2 md:hidden">
             {transactions.map((tx, idx) => (
               <motion.div
@@ -362,16 +347,25 @@ function BukuKasPage() {
                   <div className="text-sm font-medium text-neutral-900">
                     {tx.type === 'penjualan' ? (
                       <div className="flex flex-col gap-0.5">
-                        {(tx as TransactionWithItems).transaction_items && (tx as TransactionWithItems).transaction_items.length > 1 ? (
+                        {(tx as TransactionWithItems).transaction_items &&
+                        (tx as TransactionWithItems).transaction_items.length > 1 ? (
                           (tx as TransactionWithItems).transaction_items.map((i, idx) => (
                             <div key={idx} className="flex items-start gap-1.5 min-w-0">
                               <span className="text-neutral-400 flex-shrink-0">•</span>
-                              <span className="truncate">{i.product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{i.quantity}</span></span>
+                              <span className="truncate">
+                                {i.product_name}{' '}
+                                <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                                  x{i.quantity}
+                                </span>
+                              </span>
                             </div>
                           ))
                         ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
                           <p className="truncate">
-                            {(tx as TransactionWithItems).transaction_items[0].product_name} <span className="text-neutral-400 font-normal tabular-nums text-xs">x{(tx as TransactionWithItems).transaction_items[0].quantity}</span>
+                            {(tx as TransactionWithItems).transaction_items[0].product_name}{' '}
+                            <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                              x{(tx as TransactionWithItems).transaction_items[0].quantity}
+                            </span>
                           </p>
                         ) : (
                           <p className="truncate">Penjualan</p>
@@ -381,7 +375,7 @@ function BukuKasPage() {
                       <p className="truncate">{tx.description}</p>
                     )}
                   </div>
-                  
+
                   {(tx.expense_category || tx.notes) && (
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       {tx.type === 'pengeluaran' && tx.expense_category && (
@@ -390,9 +384,7 @@ function BukuKasPage() {
                         </span>
                       )}
                       {tx.notes && (
-                        <p className="text-xs text-neutral-500 truncate italic">
-                          "{tx.notes}"
-                        </p>
+                        <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
                       )}
                     </div>
                   )}
@@ -413,7 +405,7 @@ function BukuKasPage() {
                     <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
                       {formatDateTime(tx.transaction_at)}
                     </span>
-                    
+
                     <div className="flex flex-col items-end leading-tight flex-shrink-0">
                       <span
                         className={`text-sm font-bold tabular-nums whitespace-nowrap ${
@@ -435,7 +427,6 @@ function BukuKasPage() {
             ))}
           </div>
 
-          {/* Desktop table */}
           <div className="app-card overflow-hidden hidden md:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -476,16 +467,25 @@ function BukuKasPage() {
                           <div className="text-sm font-medium text-neutral-900">
                             {tx.type === 'penjualan' ? (
                               <div className="flex flex-col gap-0.5">
-                                {(tx as TransactionWithItems).transaction_items && (tx as TransactionWithItems).transaction_items.length > 1 ? (
+                                {(tx as TransactionWithItems).transaction_items &&
+                                (tx as TransactionWithItems).transaction_items.length > 1 ? (
                                   (tx as TransactionWithItems).transaction_items.map((i, idx) => (
                                     <div key={idx} className="flex items-center gap-1.5">
                                       <span className="text-neutral-400">•</span>
-                                      <span>{i.product_name} <span className="text-neutral-400 tabular-nums">x{i.quantity}</span></span>
+                                      <span>
+                                        {i.product_name}{' '}
+                                        <span className="text-neutral-400 tabular-nums">
+                                          x{i.quantity}
+                                        </span>
+                                      </span>
                                     </div>
                                   ))
                                 ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
                                   <span>
-                                    {(tx as TransactionWithItems).transaction_items[0].product_name} <span className="text-neutral-400 tabular-nums">x{(tx as TransactionWithItems).transaction_items[0].quantity}</span>
+                                    {(tx as TransactionWithItems).transaction_items[0].product_name}{' '}
+                                    <span className="text-neutral-400 tabular-nums">
+                                      x{(tx as TransactionWithItems).transaction_items[0].quantity}
+                                    </span>
                                   </span>
                                 ) : (
                                   <span>Penjualan</span>
@@ -496,7 +496,11 @@ function BukuKasPage() {
                                 <span>{tx.description}</span>
                                 {tx.type === 'pengeluaran' && tx.expense_category && (
                                   <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                                    {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
+                                    {
+                                      EXPENSE_CATEGORY_LABELS[
+                                        tx.expense_category as ExpenseCategory
+                                      ]
+                                    }
                                   </span>
                                 )}
                               </div>
@@ -548,8 +552,7 @@ function BukuKasPage() {
         </>
       )}
 
-      {/* Cashier Profile Modal */}
-      <CashierProfileModal 
+      <CashierProfileModal
         isOpen={!!selectedKasirProfile}
         onClose={() => setSelectedKasirProfile(null)}
         profile={selectedKasirProfile}

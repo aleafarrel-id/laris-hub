@@ -23,7 +23,6 @@ export function ConfirmDialog({
   onCancel,
   variant = 'danger',
 }: ConfirmDialogProps) {
-  // Prevent body scroll and close on Escape
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => {
@@ -46,7 +45,6 @@ export function ConfirmDialog({
           role="alertdialog"
           aria-modal="true"
         >
-          {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -55,8 +53,7 @@ export function ConfirmDialog({
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           />
 
-          {/* Dialog Wrapper (captures outside clicks) */}
-          <div 
+          <div
             className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
             onClick={onCancel}
           >
@@ -69,7 +66,6 @@ export function ConfirmDialog({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col items-center text-center">
-                {/* Icon */}
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 sm:mb-5 ${
                     variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
@@ -78,12 +74,14 @@ export function ConfirmDialog({
                   <AlertCircle size={28} strokeWidth={2} />
                 </div>
 
-                {/* Text */}
-                <h3 className="text-xl font-bold text-neutral-900 mb-2 sm:mb-3 text-balance tracking-tight">{title}</h3>
-                <p className="text-[14px] sm:text-[15px] text-neutral-500 leading-relaxed mb-6 sm:mb-8 text-pretty px-1 sm:px-0">{description}</p>
+                <h3 className="text-xl font-bold text-neutral-900 mb-2 sm:mb-3 text-balance tracking-tight">
+                  {title}
+                </h3>
+                <p className="text-[14px] sm:text-[15px] text-neutral-500 leading-relaxed mb-6 sm:mb-8 text-pretty px-1 sm:px-0">
+                  {description}
+                </p>
               </div>
 
-              {/* Actions */}
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
                 <button
                   type="button"

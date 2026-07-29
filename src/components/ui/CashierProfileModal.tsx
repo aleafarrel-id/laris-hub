@@ -2,10 +2,10 @@ import { MapPin, Phone, ShoppingCart, TrendingUp, User } from 'lucide-react'
 import { useMemo } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useTransactions } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
 import type { Profile } from '@/types'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 interface CashierProfileModalProps {
   isOpen: boolean
@@ -16,19 +16,17 @@ interface CashierProfileModalProps {
 export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfileModalProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
-  // Fetch ALL transactions for this cashier to calculate stats
-  // In a real huge production app, we'd use an aggregate RPC, but for now this is fine.
   const { data: transactions, isLoading } = useTransactions({
     recordedBy: profile?.id,
   })
 
   const stats = useMemo(() => {
     if (!transactions) return { omset: 0, count: 0, profit: 0 }
-    
+
     let omset = 0
     let count = 0
     let profit = 0
-    
+
     for (const tx of transactions) {
       if (tx.type === 'penjualan') {
         omset += tx.total_amount
@@ -36,21 +34,25 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
         count++
       }
     }
-    
+
     return { omset, count, profit }
   }, [transactions])
 
   if (!profile) return null
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Profil Akun Kasir" variant={isDesktop ? 'center' : 'bottom'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Profil Akun Kasir"
+      variant={isDesktop ? 'center' : 'bottom'}
+    >
       <div className="p-6 flex flex-col items-center text-center">
-        {/* Avatar */}
         <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4 overflow-hidden border-4 border-white shadow-sm ring-1 ring-neutral-100">
           {profile.avatar_url ? (
-            <img 
-              src={profile.avatar_url} 
-              alt={profile.full_name || 'Kasir'} 
+            <img
+              src={profile.avatar_url}
+              alt={profile.full_name || 'Kasir'}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -58,7 +60,6 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
           )}
         </div>
 
-        {/* Info */}
         <h3 className="text-xl font-bold text-neutral-900 mb-1">{profile.full_name || 'Sistem'}</h3>
         <div className="flex items-center gap-1.5 text-sm text-neutral-500 mb-6 bg-neutral-100 px-3 py-1 rounded-full">
           <MapPin size={14} />
@@ -77,25 +78,30 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
           </div>
         )}
 
-        {/* Stats Grid */}
         <div className="w-full grid grid-cols-2 gap-3">
           <div className="bg-success/5 border border-success/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
             <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center mb-2">
               <TrendingUp size={20} />
             </div>
-            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">Total Omset</p>
+            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
+              Total Omset
+            </p>
             {isLoading ? (
               <Skeleton className="w-20 h-6" />
             ) : (
-              <p className="text-lg font-bold text-success tabular-nums">{formatRupiah(stats.omset)}</p>
+              <p className="text-lg font-bold text-success tabular-nums">
+                {formatRupiah(stats.omset)}
+              </p>
             )}
           </div>
-          
+
           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
             <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
               <ShoppingCart size={20} />
             </div>
-            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">Total Transaksi</p>
+            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
+              Total Transaksi
+            </p>
             {isLoading ? (
               <Skeleton className="w-12 h-6" />
             ) : (

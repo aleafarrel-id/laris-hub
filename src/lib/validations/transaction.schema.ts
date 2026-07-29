@@ -1,10 +1,6 @@
 import { z } from 'zod'
 import { EXPENSE_CATEGORIES } from '@/lib/constants'
 
-// ============================================================
-// Transaction Schemas
-// ============================================================
-
 // Single item in a sale transaction
 const saleItemSchema = z.object({
   product_id: z.string().uuid('ID produk tidak valid'),

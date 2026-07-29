@@ -29,7 +29,6 @@ export function Sidebar({
 
   return (
     <aside className="hidden md:flex flex-col w-64 min-h-dvh bg-white border-r border-neutral-200 fixed left-0 top-0 z-30 shadow-sm">
-      {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-neutral-100">
         <div className="w-10 h-10 rounded-xl bg-white border border-neutral-200 flex items-center justify-center flex-shrink-0 shadow-sm">
           <img src="/favicon.svg" alt="Laris Hub Logo" className="w-6 h-6 object-contain" />
@@ -42,7 +41,6 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-4 py-6 space-y-1" aria-label="Navigasi Desktop">
         {navItems.map(({ to, label, icon: Icon }) => {
           const isActive = pathname === to || (pathname.startsWith(to) && to !== '/kasir')
@@ -64,7 +62,6 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Footer */}
       <div className="px-4 pb-6 border-t border-neutral-100 pt-4">
         <Link
           to="/profil"

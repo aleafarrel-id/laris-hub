@@ -9,9 +9,6 @@ import ReactDOM from 'react-dom/client'
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
-// ============================================================
-// TanStack Query Client
-// ============================================================
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -32,9 +29,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// ============================================================
-// TanStack Router
-// ============================================================
 const router = createRouter({
   routeTree,
   context: {
@@ -52,9 +46,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// ============================================================
-// Root render
-// ============================================================
 const rootElement = document.getElementById('root')
 if (!rootElement) {
   throw new Error('[main] Root element #root not found in DOM')

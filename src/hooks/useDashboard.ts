@@ -10,10 +10,6 @@ import {
 } from '@/services/dashboard.service'
 import type { DateRange } from '@/types'
 
-// ============================================================
-// Period options for the dashboard filter
-// ============================================================
-
 export type DashboardPeriod = 'today' | 'week' | 'month' | 'custom'
 
 function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from: Date; to: Date } {
@@ -41,11 +37,11 @@ function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from:
   }
 }
 
-// ============================================================
-// useKPISummary — dashboard KPI cards
-// ============================================================
-
-export function useKPISummary(period: DashboardPeriod = 'today', customRange?: DateRange, kasirId: string = 'all') {
+export function useKPISummary(
+  period: DashboardPeriod = 'today',
+  customRange?: DateRange,
+  kasirId: string = 'all',
+) {
   const range = getDateRange(period, customRange)
   const isToday = period === 'today'
 
@@ -55,15 +51,13 @@ export function useKPISummary(period: DashboardPeriod = 'today', customRange?: D
       if (kasirId !== 'all') {
         return getKPISummaryForRange(range.from, range.to, kasirId)
       }
-      return isToday ? getKPISummaryForDate(new Date()) : getKPISummaryForRange(range.from, range.to)
+      return isToday
+        ? getKPISummaryForDate(new Date())
+        : getKPISummaryForRange(range.from, range.to)
     },
     staleTime: 1000 * 60, // 1 min
   })
 }
-
-// ============================================================
-// useMonthlyTrend — line chart data (last 30 days)
-// ============================================================
 
 export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
   return useQuery({
@@ -77,10 +71,6 @@ export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
     staleTime: 1000 * 60 * 5, // 5 min — chart doesn't need to be ultra-fresh
   })
 }
-
-// ============================================================
-// useTopProducts — horizontal bar chart
-// ============================================================
 
 export function useTopProducts(
   period: DashboardPeriod = 'month',

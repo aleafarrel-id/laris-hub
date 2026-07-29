@@ -9,10 +9,6 @@ import { supabase } from '@/lib/supabase'
 import type { LoginFormData } from '@/lib/validations/auth.schema'
 import { loginSchema } from '@/lib/validations/auth.schema'
 
-// ============================================================
-// /login — Public, redirect to home if already authenticated
-// ============================================================
-
 export const Route = createFileRoute('/login')({
   validateSearch: z.object({
     redirect: z.string().optional(),
@@ -21,9 +17,8 @@ export const Route = createFileRoute('/login')({
     const {
       data: { session },
     } = await supabase.auth.getSession()
-    if (!session) return // Not logged in, show login page
+    if (!session) return
 
-    // Already logged in — redirect to appropriate page
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -56,7 +51,6 @@ function LoginPage() {
     setServerError('')
     setErrors({})
 
-    // Client-side validation
     const result = loginSchema.safeParse(form)
     if (!result.success) {
       const fieldErrors: Partial<LoginFormData> = {}
@@ -86,7 +80,6 @@ function LoginPage() {
     }
   }
 
-  // Stagger animation helpers
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 16 },
     animate: { opacity: 1, y: 0 },
@@ -96,7 +89,6 @@ function LoginPage() {
   return (
     <div className="min-h-dvh flex items-center justify-center p-4 bg-neutral-50/50">
       <div className="w-full max-w-[400px]">
-        {/* Logo Section */}
         <motion.div className="text-center mb-8 flex flex-col items-center" {...fadeUp(0)}>
           <motion.div
             className="w-16 h-16 rounded-2xl bg-white border border-neutral-200 shadow-sm flex items-center justify-center mb-5"
@@ -114,7 +106,6 @@ function LoginPage() {
           <p className="text-sm text-neutral-500 mt-2">Masuk ke akun Anda untuk melanjutkan</p>
         </motion.div>
 
-        {/* Card Form */}
         <motion.div
           className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-xl shadow-neutral-200/40"
           {...fadeUp(0.08)}
@@ -144,7 +135,6 @@ function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} noValidate>
-            {/* Email field */}
             <div className="mb-5">
               <label htmlFor="email" className="block text-sm font-semibold text-neutral-700 mb-2">
                 Email
@@ -167,7 +157,6 @@ function LoginPage() {
               )}
             </div>
 
-            {/* Password field */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="password" className="text-sm font-semibold text-neutral-700">
@@ -247,7 +236,6 @@ function LoginPage() {
           </form>
         </motion.div>
 
-        {/* Footer Text */}
         <motion.p
           className="text-center text-xs text-neutral-400 mt-8 font-medium"
           {...fadeUp(0.16)}
@@ -255,7 +243,6 @@ function LoginPage() {
           &copy; {new Date().getFullYear()} Laris Hub. All rights reserved.
         </motion.p>
 
-        {/* Forgot Password Modal */}
         <Modal
           isOpen={showForgotModal}
           onClose={() => setShowForgotModal(false)}

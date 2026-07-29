@@ -4,9 +4,6 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS } from '@/lib/constants'
 import type { Profile } from '@/types'
 
-// ============================================================
-// Auth Store
-// ============================================================
 interface AuthState {
   user: User | null
   profile: Profile | null

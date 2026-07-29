@@ -12,21 +12,17 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useDeleteProduct, useProducts, useToggleProductStatus } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { calcMargin, formatRupiah } from '@/lib/utils'
 import type { Product } from '@/types'
-
-// ============================================================
-// /produk — Product management (admin only)
-// ============================================================
 
 export const Route = createFileRoute('/_auth/produk/')({
   beforeLoad: async () => {
@@ -57,7 +53,6 @@ function ProdukPage() {
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'list'>('laris-hub-view-mode', 'grid')
 
-  // Confirm Dialog State
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: string; name: string }>({
     isOpen: false,
     id: '',
@@ -100,7 +95,6 @@ function ProdukPage() {
 
   return (
     <div className="page-container">
-      {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -113,7 +107,6 @@ function ProdukPage() {
         </div>
       </div>
 
-      {/* Search, Filter & View Mode */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search
@@ -158,7 +151,6 @@ function ProdukPage() {
         </div>
       </div>
 
-      {/* Loading State */}
       {isLoading && (
         <div
           className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
@@ -193,7 +185,6 @@ function ProdukPage() {
         </div>
       )}
 
-      {/* Empty State */}
       {!isLoading && !filtered.length && (
         <EmptyState
           icon={Package}
@@ -207,7 +198,6 @@ function ProdukPage() {
         />
       )}
 
-      {/* Product List/Grid */}
       {!isLoading && filtered.length > 0 && (
         <div
           className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
@@ -226,7 +216,6 @@ function ProdukPage() {
                 key={product.id}
                 className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
               >
-                {/* Image Section */}
                 <div
                   className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-square border-b border-neutral-100'}`}
                 >
@@ -242,7 +231,6 @@ function ProdukPage() {
                     </div>
                   )}
 
-                  {/* Status Badge */}
                   <div className="absolute top-2 right-2">
                     <button
                       type="button"
@@ -262,10 +250,7 @@ function ProdukPage() {
                   </div>
                 </div>
 
-                {/* Content Section */}
-                <div
-                  className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0"
-                >
+                <div className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0">
                   <div className="flex flex-col gap-1.5">
                     <h3
                       className="font-bold text-neutral-900 leading-snug line-clamp-2"
@@ -288,8 +273,12 @@ function ProdukPage() {
                   <div className="flex flex-col gap-2.5 mt-auto">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">Harga Jual</p>
-                        <div className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}>
+                        <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">
+                          Harga Jual
+                        </p>
+                        <div
+                          className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}
+                        >
                           <TrendingUp size={10} />
                           <span className="text-[9px] font-bold tabular-nums leading-none">
                             {margin.toFixed(0)}%
@@ -302,7 +291,6 @@ function ProdukPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
                     <button
                       type="button"
@@ -328,7 +316,6 @@ function ProdukPage() {
         </div>
       )}
 
-      {/* Product Form Modal */}
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
@@ -337,7 +324,6 @@ function ProdukPage() {
         <ProductForm product={editProduct} onSuccess={() => setShowForm(false)} />
       </Modal>
 
-      {/* Custom Confirm Dialog for Delete */}
       <ConfirmDialog
         isOpen={confirmState.isOpen}
         title="Hapus Produk"

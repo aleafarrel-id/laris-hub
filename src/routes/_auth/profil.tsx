@@ -7,10 +7,6 @@ import { useAuth, useAuthActions } from '@/hooks/useAuth'
 import { useUpdateProfile } from '@/hooks/useProfile'
 import { getInitials } from '@/lib/utils'
 
-// ============================================================
-// /profil — User profile page (all authenticated users)
-// ============================================================
-
 export const Route = createFileRoute('/_auth/profil')({
   component: ProfilPage,
 })
@@ -56,7 +52,6 @@ function ProfilPage() {
       <h1 className="text-2xl font-bold mb-6">Profil Saya</h1>
 
       <div className="app-card p-6 mb-4">
-        {/* Avatar */}
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
             {profile ? getInitials(profile.full_name) : '?'}
@@ -76,7 +71,6 @@ function ProfilPage() {
           </div>
         </div>
 
-        {/* Profile info */}
         {!isEditing ? (
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
@@ -155,7 +149,6 @@ function ProfilPage() {
         )}
       </div>
 
-      {/* Logout button */}
       <button
         type="button"
         onClick={() => setShowLogoutModal(true)}

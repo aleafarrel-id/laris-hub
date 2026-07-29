@@ -6,10 +6,6 @@ import { getProfile, updateProfile } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { Profile } from '@/types'
 
-// ============================================================
-// useProfile — current user profile query
-// ============================================================
-
 export function useProfile() {
   const userId = useAuthStore((s) => s.user?.id)
 
@@ -23,10 +19,6 @@ export function useProfile() {
     staleTime: 1000 * 60 * 5,
   })
 }
-
-// ============================================================
-// useCashiers — fetch all active cashiers (Admin only)
-// ============================================================
 
 export function useCashiers() {
   const { user } = useAuthStore()
@@ -50,10 +42,6 @@ export function useCashiers() {
     staleTime: 1000 * 60 * 60, // 1 hour
   })
 }
-
-// ============================================================
-// useUpdateProfile — mutation
-// ============================================================
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient()
