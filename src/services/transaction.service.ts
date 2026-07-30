@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
 import type { SaleItemFormData } from '@/lib/validations/transaction.schema'
 import type {
@@ -7,8 +6,6 @@ import type {
   TransactionUpdate,
   TransactionWithItems,
 } from '@/types'
-
-const db = supabase as any
 
 export interface CreateSalePayload {
   items: SaleItemFormData[]
@@ -27,13 +24,25 @@ export interface CreateExpensePayload {
 }
 
 /**
+ * Get the authenticated user's ID from the current session.
+ * This is authoritative — cannot be spoofed by client-side arguments.
+ * Prevents IDOR (Insecure Direct Object Reference) attacks.
+ */
+async function getAuthenticatedUserId(): Promise<string> {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) throw new Error('Sesi tidak valid. Silakan login ulang.')
+  return user.id
+}
+
+/**
  * Create a sale transaction with multiple items.
  * DB trigger auto-calculates subtotal & profit per item.
+ * Security: recorded_by is fetched from the authenticated session,
+ * not accepted as an argument, to prevent IDOR spoofing.
  */
-export async function createSaleTransaction(
-  payload: CreateSalePayload,
-  recordedBy: string,
-): Promise<Transaction> {
+export async function createSaleTransaction(payload: CreateSalePayload): Promise<Transaction> {
+  const recordedBy = await getAuthenticatedUserId()
+
   const totalAmount = payload.items.reduce(
     (sum, item) => sum + item.selling_price * item.quantity,
     0,
@@ -43,7 +52,7 @@ export async function createSaleTransaction(
     0,
   )
 
-  const { data: transaction, error: txError } = await db
+  const { data: transaction, error: txError } = await supabase
     .from('transactions')
     .insert([
       {
@@ -71,10 +80,11 @@ export async function createSaleTransaction(
     quantity: item.quantity,
   }))
 
-  const { error: itemsError } = await db.from('transaction_items').insert(itemsPayload)
+  const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
 
   if (itemsError) {
-    await db.from('transactions').delete().eq('id', tx.id)
+    // Compensating delete to avoid orphan transaction records
+    await supabase.from('transactions').delete().eq('id', tx.id)
     throw itemsError
   }
 
@@ -83,12 +93,12 @@ export async function createSaleTransaction(
 
 /**
  * Create an expense transaction.
+ * Security: recorded_by is fetched from the authenticated session.
  */
-export async function createExpenseTransaction(
-  payload: CreateExpensePayload,
-  recordedBy: string,
-): Promise<Transaction> {
-  const { data, error } = await db
+export async function createExpenseTransaction(payload: CreateExpensePayload): Promise<Transaction> {
+  const recordedBy = await getAuthenticatedUserId()
+
+  const { data, error } = await supabase
     .from('transactions')
     .insert([
       {
@@ -116,7 +126,7 @@ export async function createExpenseTransaction(
 export async function getTransactions(
   filters: TransactionFilters = {},
 ): Promise<TransactionWithItems[]> {
-  let query = db
+  let query = supabase
     .from('transactions')
     .select(`
       *,
@@ -148,7 +158,7 @@ export async function getTransactions(
 
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []) as TransactionWithItems[]
+  return (data ?? []) as unknown as TransactionWithItems[]
 }
 
 /**
@@ -168,7 +178,7 @@ export async function getTodayTransactions(recordedBy?: string): Promise<Transac
  * Get a single transaction with its items.
  */
 export async function getTransactionWithItems(id: string): Promise<TransactionWithItems> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('transactions')
     .select(`
       *,
@@ -179,7 +189,7 @@ export async function getTransactionWithItems(id: string): Promise<TransactionWi
     .single()
 
   if (error) throw error
-  return data as TransactionWithItems
+  return data as unknown as TransactionWithItems
 }
 
 /**
@@ -189,7 +199,7 @@ export async function updateTransaction(
   id: string,
   updates: TransactionUpdate,
 ): Promise<Transaction> {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('transactions')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
@@ -204,9 +214,12 @@ export async function updateTransaction(
  * Delete a transaction. Admin only (RLS).
  */
 export async function deleteTransaction(id: string): Promise<void> {
-  const { error: itemsError } = await db.from('transaction_items').delete().eq('transaction_id', id)
+  const { error: itemsError } = await supabase
+    .from('transaction_items')
+    .delete()
+    .eq('transaction_id', id)
   if (itemsError) throw itemsError
 
-  const { error } = await db.from('transactions').delete().eq('id', id)
+  const { error } = await supabase.from('transactions').delete().eq('id', id)
   if (error) throw error
 }

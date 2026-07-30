@@ -11,9 +11,12 @@ export const Route = createFileRoute('/_auth')({
     } = await supabase.auth.getSession()
 
     if (!session) {
+      // Security: only pass internal paths as redirect to prevent open redirect.
+      const href = location.href
+      const safeRedirect = href.startsWith('/') ? href : '/login'
       throw redirect({
         to: '/login',
-        search: { redirect: location.href },
+        search: { redirect: safeRedirect },
       })
     }
   },

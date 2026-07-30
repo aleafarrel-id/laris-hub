@@ -1,8 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
 import type { KPISummary } from '@/types'
-
-const db = supabase as any
 
 interface DailySummaryRow {
   date: string
@@ -20,7 +17,7 @@ interface DailySummaryRow {
 export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPISummary> {
   const dateStr = date.toISOString().split('T')[0]
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('daily_summary')
     .select('*')
     .eq('date', dateStr)
@@ -53,7 +50,7 @@ export async function getKPISummaryForRange(
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
-  let query = db
+  let query = supabase
     .from('transactions')
     .select('type, total_amount, total_profit')
     .gte('transaction_at', from.toISOString())
@@ -100,7 +97,7 @@ export async function getMonthlyTrend(days = 30): Promise<DailyTrendPoint[]> {
   from.setHours(0, 0, 0, 0)
   const fromStr = from.toISOString().split('T')[0]
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('daily_summary')
     .select('date, total_revenue, total_gross_profit, total_expense')
     .gte('date', fromStr)
@@ -128,7 +125,7 @@ export async function getMonthlyTrendByKasir(
   from.setDate(from.getDate() - days + 1)
   from.setHours(0, 0, 0, 0)
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('transactions')
     .select('transaction_at, type, total_amount, total_profit')
     .gte('transaction_at', from.toISOString())
@@ -181,7 +178,7 @@ export async function getTopProducts(from: Date, to: Date, limit = 5): Promise<T
   const startDate = from.toISOString().split('T')[0]
   const endDate = to.toISOString().split('T')[0]
 
-  const { data, error } = await db.rpc('get_top_products', {
+  const { data, error } = await supabase.rpc('get_top_products', {
     start_date: startDate,
     end_date: endDate,
     limit_n: limit,
@@ -200,7 +197,7 @@ export async function getTopProductsByKasir(
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('transaction_items')
     .select(`
       quantity, selling_price, product_hpp, product_name, product_id,
@@ -217,6 +214,7 @@ export async function getTopProductsByKasir(
 
   for (const item of data ?? []) {
     const id = item.product_id
+    if (!id) continue
     if (!productMap.has(id)) {
       productMap.set(id, {
         product_id: id,

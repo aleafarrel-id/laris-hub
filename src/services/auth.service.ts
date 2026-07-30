@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
 
@@ -6,7 +5,7 @@ import type { Profile } from '@/types'
  * Fetch profile by user ID.
  */
 export async function getProfile(userId: string): Promise<Profile> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -44,12 +43,22 @@ export async function getSession() {
 
 /**
  * Update profile fields.
+ *
+ * Security: validates that the calling user's session matches userId to prevent
+ * client-side IDOR (Insecure Direct Object Reference).
+ * RLS on the 'profiles' table provides the server-side enforcement.
  */
 export async function updateProfile(
   userId: string,
   updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'>,
 ): Promise<Profile> {
-  const { data, error } = await (supabase as any)
+  // Authoritative check: ensure the caller owns this profile
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.id !== userId) {
+    throw new Error('Unauthorized: Tidak dapat mengubah profil pengguna lain.')
+  }
+
+  const { data, error } = await supabase
     .from('profiles')
     .update({
       full_name: updates.full_name,

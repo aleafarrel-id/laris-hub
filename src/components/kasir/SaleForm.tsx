@@ -21,7 +21,7 @@ const PRODUCT_COLORS = [
   'from-purple-400/20 to-fuchsia-500/20',
 ]
 
-export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; recordedBy: string }) {
+export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
   const { data: products = [], isLoading: productsLoading } = useProducts(true)
   const { mutate: createSale, isPending } = useCreateSale()
 
@@ -80,7 +80,7 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
   }, [])
 
   const handleSubmit = useCallback(() => {
-    if (cart.size === 0 || !recordedBy) return
+    if (cart.size === 0) return
 
     createSale(
       {
@@ -94,11 +94,10 @@ export function SaleForm({ onSuccess, recordedBy }: { onSuccess: () => void; rec
           })),
           notes: notes.trim() || null,
         },
-        recordedBy,
       },
       { onSuccess: () => onSuccess() },
     )
-  }, [cart, cartArray, notes, recordedBy, createSale, onSuccess])
+  }, [cart, cartArray, notes, createSale, onSuccess])
 
   return (
     <div className="flex flex-col min-h-[60vh] max-h-full">

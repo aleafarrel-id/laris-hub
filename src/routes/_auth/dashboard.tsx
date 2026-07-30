@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Bar, BarChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -227,39 +227,25 @@ function DashboardPage() {
         </div>
 
         <div className="app-card p-6">
-          <h2 className="text-sm font-semibold text-neutral-900 mb-5">Produk Terlaris</h2>
+          <h2 className="text-sm font-semibold text-neutral-900 mb-1">Produk Terlaris</h2>
+          <p className="text-xs text-neutral-400 mb-4">
+            Distribusi penjualan {PERIOD_LABELS[period].toLowerCase()}
+          </p>
           {topProductsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((k) => (
-                <div key={k} className="flex items-center gap-3">
-                  <Skeleton className="w-5 h-5 rounded-full flex-shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/3" />
+            <div className="flex flex-col items-center gap-4">
+              <Skeleton className="w-40 h-40 rounded-full" />
+              <div className="w-full space-y-2">
+                {[1, 2, 3, 4, 5].map((k) => (
+                  <div key={k} className="flex items-center gap-2">
+                    <Skeleton className="w-3 h-3 rounded-sm flex-shrink-0" />
+                    <Skeleton className="h-3 flex-1" />
+                    <Skeleton className="h-3 w-10 flex-shrink-0" />
                   </div>
-                  <Skeleton className="h-4 w-16 flex-shrink-0" />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : topProducts?.length ? (
-            <ul className="space-y-3">
-              {topProducts.map((p, idx) => (
-                <li key={p.product_id} className="flex items-center gap-3">
-                  <span className="w-5 h-5 rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-500 flex items-center justify-center flex-shrink-0 tabular-nums">
-                    {idx + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-800 font-medium truncate">
-                      {p.product_name}
-                    </p>
-                    <p className="text-xs text-neutral-400 tabular-nums">{p.total_qty}x terjual</p>
-                  </div>
-                  <span className="text-xs font-semibold text-success tabular-nums flex-shrink-0">
-                    {formatRupiah(p.total_revenue)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <TopProductsDonutChart products={topProducts} />
           ) : (
             <EmptyState
               icon={ShoppingBag}
@@ -535,6 +521,101 @@ function DashboardPage() {
     </div>
   )
 }
+
+// ─── Donut Chart: Top Products ────────────────────────────────────────────────
+
+/** Harmonious 5-color palette aligned to the Laris Hub brand */
+const CHART_COLORS = ['#0F766E', '#285EAF', '#6366F1', '#10B981', '#F59E0B']
+
+function TopProductsDonutChart({ products }: { products: Array<{ product_id: string; product_name: string; total_qty: number; total_revenue: number }> }) {
+  const totalRevenue = products.reduce((sum, p) => sum + p.total_revenue, 0)
+  const totalQty = products.reduce((sum, p) => sum + p.total_qty, 0)
+
+  const chartData = products.map((p, idx) => ({
+    ...p,
+    color: CHART_COLORS[idx % CHART_COLORS.length],
+    percentage: totalRevenue > 0 ? Math.round((p.total_revenue / totalRevenue) * 100) : 0,
+  }))
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Donut chart */}
+      <div className="relative flex items-center justify-center">
+        {/* Center label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+          <span className="text-xl font-bold text-neutral-900 tabular-nums leading-none">{totalQty}</span>
+          <span className="text-[10px] text-neutral-400 font-medium mt-0.5">total terjual</span>
+        </div>
+
+        <ResponsiveContainer width="100%" height={180} className="z-10">
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={82}
+              paddingAngle={3}
+              dataKey="total_revenue"
+              strokeWidth={0}
+              animationBegin={0}
+              animationDuration={700}
+            >
+              {chartData.map((entry) => (
+                <Cell 
+                  key={entry.product_id} 
+                  fill={entry.color} 
+                  style={{ outline: 'none' }} 
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              wrapperStyle={{ zIndex: 50 }}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const d = payload[0].payload
+                return (
+                  <div className="bg-white border border-neutral-100 rounded-xl shadow-lg p-3 text-xs min-w-[160px]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
+                      <span className="font-semibold text-neutral-900 truncate">{d.product_name}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 text-neutral-500">
+                      <span>Terjual</span>
+                      <span className="font-semibold tabular-nums text-neutral-900">{d.total_qty}x</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 text-neutral-500 mt-0.5">
+                      <span>Revenue</span>
+                      <span className="font-semibold tabular-nums text-success">{formatRupiah(d.total_revenue)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 text-neutral-500 mt-0.5">
+                      <span>Porsi</span>
+                      <span className="font-bold tabular-nums text-primary">{d.percentage}%</span>
+                    </div>
+                  </div>
+                )
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend */}
+      <div className="space-y-2">
+        {chartData.map((p) => (
+          <div key={p.product_id} className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
+            <span className="text-xs text-neutral-700 flex-1 truncate font-medium">{p.product_name}</span>
+            <span className="text-[10px] text-neutral-400 tabular-nums flex-shrink-0">{p.total_qty}x</span>
+            <span className="text-xs font-semibold text-success tabular-nums flex-shrink-0">{formatRupiah(p.total_revenue)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Bar Chart: 30-Day Trend ──────────────────────────────────────────────────
 
 function TrendBars({
   data,

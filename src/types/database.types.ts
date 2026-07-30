@@ -45,6 +45,7 @@ export interface Database {
           is_active?: boolean
           updated_at?: string
         }
+        Relationships: []
       }
       products: {
         Row: {
@@ -84,6 +85,7 @@ export interface Database {
           is_active?: boolean
           updated_at?: string
         }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -125,6 +127,7 @@ export interface Database {
           notes?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
       transaction_items: {
         Row: {
@@ -156,6 +159,7 @@ export interface Database {
           subtotal?: number
           profit?: number
         }
+        Relationships: []
       }
     }
     Views: {
@@ -168,6 +172,7 @@ export interface Database {
           total_expense: number
           net_cashflow: number
         }
+        Relationships: []
       }
     }
     Functions: {
@@ -187,6 +192,9 @@ export interface Database {
       }
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }

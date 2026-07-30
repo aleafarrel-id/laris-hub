@@ -14,7 +14,6 @@ import {
   getTransactions,
   updateTransaction,
 } from '@/services/transaction.service'
-import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
 export function useTransactions(filters: TransactionFilters = {}) {
@@ -36,16 +35,16 @@ export function useTodayTransactions(recordedBy?: string) {
 
 export function useCreateSaleTransaction() {
   const queryClient = useQueryClient()
-  const user = useAuthStore((s) => s.user)
 
   return useMutation({
-    mutationFn: (data: SaleTransactionFormData) => {
-      if (!user) throw new Error('Belum login')
-      return createSaleTransaction(
-        { items: data.items, notes: data.notes, transaction_at: data.transaction_at },
-        user.id,
-      )
-    },
+    mutationFn: (data: SaleTransactionFormData) =>
+      // Security: recordedBy is now fetched inside the service from the live session,
+      // preventing any client-side IDOR spoofing.
+      createSaleTransaction({
+        items: data.items,
+        notes: data.notes,
+        transaction_at: data.transaction_at,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
@@ -59,22 +58,17 @@ export function useCreateSaleTransaction() {
 
 export function useCreateExpenseTransaction() {
   const queryClient = useQueryClient()
-  const user = useAuthStore((s) => s.user)
 
   return useMutation({
-    mutationFn: (data: ExpenseTransactionFormData) => {
-      if (!user) throw new Error('Belum login')
-      return createExpenseTransaction(
-        {
-          description: data.description,
-          total_amount: data.total_amount,
-          expense_category: data.expense_category,
-          notes: data.notes,
-          transaction_at: data.transaction_at,
-        },
-        user.id,
-      )
-    },
+    mutationFn: (data: ExpenseTransactionFormData) =>
+      // Security: recordedBy is now fetched inside the service from the live session.
+      createExpenseTransaction({
+        description: data.description,
+        total_amount: data.total_amount,
+        expense_category: data.expense_category,
+        notes: data.notes,
+        transaction_at: data.transaction_at,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
@@ -121,15 +115,15 @@ export function useDeleteTransaction() {
 
 type CreateSaleArgs = {
   payload: Parameters<typeof createSaleTransaction>[0]
-  recordedBy: string
 }
 
 export function useCreateSale() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ payload, recordedBy }: CreateSaleArgs) =>
-      createSaleTransaction(payload, recordedBy),
+    mutationFn: ({ payload }: CreateSaleArgs) =>
+      // Security: recordedBy fetched from session inside service
+      createSaleTransaction(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
@@ -147,15 +141,15 @@ export function useCreateSale() {
 
 type CreateExpenseArgs = {
   payload: Parameters<typeof createExpenseTransaction>[0]
-  recordedBy: string
 }
 
 export function useCreateExpense() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ payload, recordedBy }: CreateExpenseArgs) =>
-      createExpenseTransaction(payload, recordedBy),
+    mutationFn: ({ payload }: CreateExpenseArgs) =>
+      // Security: recordedBy fetched from session inside service
+      createExpenseTransaction(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })

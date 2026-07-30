@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { BarChart2, BookOpen, LogOut, Package, ShoppingCart, User } from 'lucide-react'
+import { BarChart2, BookOpen, LogOut, Package, ShoppingCart, User, Users } from 'lucide-react'
 import { useAuthActions } from '@/hooks/useAuth'
 
 const ADMIN_NAV_ITEMS = [
@@ -7,6 +7,7 @@ const ADMIN_NAV_ITEMS = [
   { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
   { to: '/buku-kas', label: 'Buku Kas', icon: BookOpen },
   { to: '/produk', label: 'Produk', icon: Package },
+  { to: '/manajemen-kasir', label: 'Tim Kasir', icon: Users },
 ] as const
 
 const KASIR_NAV_ITEMS = [

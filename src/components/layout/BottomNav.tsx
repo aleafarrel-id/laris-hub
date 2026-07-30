@@ -1,12 +1,12 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { BarChart2, BookOpen, Package, ShoppingCart, User } from 'lucide-react'
+import { BarChart2, BookOpen, Package, ShoppingCart, User, Users } from 'lucide-react'
 
 const ADMIN_NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
   { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
   { to: '/buku-kas', label: 'Buku Kas', icon: BookOpen },
   { to: '/produk', label: 'Produk', icon: Package },
-  { to: '/profil', label: 'Profil', icon: User },
+  { to: '/manajemen-kasir', label: 'Tim Kasir', icon: Users },
 ] as const
 
 const KASIR_NAV_ITEMS = [

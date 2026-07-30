@@ -16,10 +16,8 @@ const EXPENSE_CATEGORY_ENTRIES = Object.entries(EXPENSE_CATEGORIES) as [string, 
 
 export function ExpenseForm({
   onSuccess,
-  recordedBy,
 }: {
   onSuccess: () => void
-  recordedBy: string
 }) {
   const { mutate: createExpense, isPending } = useCreateExpense()
   const [parentRef] = useAutoAnimate()
@@ -60,7 +58,7 @@ export function ExpenseForm({
 
   const handleSubmit = useCallback(() => {
     const desc = description.trim()
-    if (!desc || !recordedBy) return
+    if (!desc) return
 
     const safeTotal = Number.isFinite(totalAmount) && totalAmount > 0 ? totalAmount : 0
     if (safeTotal <= 0) return
@@ -76,11 +74,10 @@ export function ExpenseForm({
             : [],
           notes: notes.trim() || null,
         },
-        recordedBy,
       },
       { onSuccess: () => onSuccess() },
     )
-  }, [description, totalAmount, category, items, notes, recordedBy, createExpense, onSuccess])
+  }, [description, totalAmount, category, items, notes, createExpense, onSuccess])
 
   const isSubmitDisabled =
     !description.trim() || !(Number.isFinite(totalAmount) && totalAmount > 0) || isPending

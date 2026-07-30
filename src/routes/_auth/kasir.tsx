@@ -251,7 +251,7 @@ function KasirPage() {
       </div>
 
       <Modal isOpen={showSaleModal} onClose={() => setShowSaleModal(false)} title="Catat Penjualan">
-        <SaleForm onSuccess={() => setShowSaleModal(false)} recordedBy={profile?.id ?? ''} />
+        <SaleForm onSuccess={() => setShowSaleModal(false)} />
       </Modal>
 
       <Modal
@@ -259,7 +259,7 @@ function KasirPage() {
         onClose={() => setShowExpenseModal(false)}
         title="Catat Pengeluaran"
       >
-        <ExpenseForm onSuccess={() => setShowExpenseModal(false)} recordedBy={profile?.id ?? ''} />
+        <ExpenseForm onSuccess={() => setShowExpenseModal(false)} />
       </Modal>
     </>
   )
