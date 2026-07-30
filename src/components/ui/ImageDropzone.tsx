@@ -114,7 +114,7 @@ export function ImageDropzone({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="p-3 bg-danger text-white rounded-full hover:bg-danger/90 hover:scale-105 active:scale-95 transition-all shadow-xl"
+                  className="p-3 bg-danger text-white rounded-full hover:bg-danger/90 hover:scale-105 active:scale-[0.96] transition-all shadow-xl"
                   title="Hapus Foto"
                 >
                   <X size={20} strokeWidth={3} />

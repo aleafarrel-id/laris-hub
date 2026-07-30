@@ -127,6 +127,12 @@ export function translateError(error: unknown): string {
   }
 
   const message = error.message.toLowerCase()
+  const rawMessage = error.message
+
+  // Suspended account — specific actionable message
+  if (rawMessage === 'ACCOUNT_SUSPENDED') {
+    return 'ACCOUNT_SUSPENDED'
+  }
 
   // Auth errors
   if (message.includes('invalid login credentials')) {

@@ -1,5 +1,5 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2 } from 'lucide-react'
+import { createFileRoute, redirect, Link } from '@tanstack/react-router'
+import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2, User } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
@@ -112,11 +112,16 @@ function DashboardPage() {
     <div className="page-container">
       <div className="flex flex-col gap-4 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
-            <p className="text-sm text-neutral-500 mt-0.5">
-              Selamat datang, {profile?.full_name ?? '—'}
-            </p>
+          <div className="flex items-center justify-between min-w-0 gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
+              <p className="text-sm text-neutral-500 mt-0.5">
+                Selamat datang, {profile?.full_name ?? '—'}
+              </p>
+            </div>
+            <Link to="/profil" className="md:hidden flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-[0.96] transition-all" aria-label="Profil Admin">
+              <User size={18} strokeWidth={2.5} />
+            </Link>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">

@@ -1,13 +1,15 @@
-// @ts-nocheck — This file runs on Deno (Supabase Edge Functions), not Node.js.
-// VS Code may show errors for Deno globals (Deno.serve, Deno.env) which is expected
-// in a Node-based project. The code is correct for the Deno runtime.
-// Deploy with: npx supabase functions deploy create-kasir --project-ref <project-ref>
+// @ts-nocheck — Deno runtime (Supabase Edge Function)
+// Deploy: npx supabase functions deploy create-kasir --project-ref <ref>
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Supabase JS client automatically sends x-app-name and x-app-version headers.
+// Both must be whitelisted here, otherwise the preflight OPTIONS request fails.
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-app-name, x-app-version',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 function json(body: unknown, status = 200): Response {
@@ -25,16 +27,14 @@ interface CreateKasirPayload {
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: CORS_HEADERS })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
 
   try {
-    // ── 1. Authenticate caller ──────────────────────────────────────
+    // Verify the calling user is an authenticated admin.
+    // The role is stored in app_metadata (set server-side, not forgeable by the client).
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return json({ error: 'Unauthorized: missing token' }, 401)
+      return json({ error: 'Unauthorized' }, 401)
     }
 
     const supabaseAdmin = createClient(
@@ -43,18 +43,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    const callerToken = authHeader.slice(7) // strip "Bearer "
-    const { data: { user: caller }, error: callerError } = await supabaseAdmin.auth.getUser(callerToken)
+    const callerToken = authHeader.slice(7)
+    const { data: { user: caller }, error: callerError } =
+      await supabaseAdmin.auth.getUser(callerToken)
 
-    if (callerError || !caller) {
-      return json({ error: 'Unauthorized: invalid session' }, 401)
-    }
-
+    if (callerError || !caller) return json({ error: 'Unauthorized' }, 401)
     if (caller.app_metadata?.role !== 'admin') {
       return json({ error: 'Forbidden: hanya admin yang dapat membuat akun kasir' }, 403)
     }
 
-    // ── 2. Validate payload ────────────────────────────────────────
+    // Parse and validate the request payload.
     let payload: CreateKasirPayload
     try {
       payload = await req.json()
@@ -68,8 +66,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ error: 'email, password, dan full_name wajib diisi' }, 400)
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return json({ error: 'Format email tidak valid' }, 400)
     }
 
@@ -77,27 +74,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ error: 'Password minimal 8 karakter' }, 400)
     }
 
-    // ── 3. Create auth user ────────────────────────────────────────
+    // Create the auth user with email pre-confirmed so they can login immediately.
     const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim().toLowerCase(),
       password,
-      email_confirm: true, // kasir can login immediately — no email verification needed
+      email_confirm: true,
       app_metadata: { role: 'kasir' },
     })
 
     if (createError) {
-      const isAlreadyRegistered =
+      const alreadyExists =
         createError.message.toLowerCase().includes('already registered') ||
         createError.message.toLowerCase().includes('already exists')
       return json(
-        { error: isAlreadyRegistered ? 'Email sudah terdaftar di sistem' : createError.message },
+        { error: alreadyExists ? 'Email sudah terdaftar di sistem' : createError.message },
         400,
       )
     }
 
     const newUserId = newUserData.user.id
 
-    // ── 4. Insert profile row ──────────────────────────────────────
+    // Insert the profile row. If this fails, delete the auth user to avoid orphaned accounts.
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
@@ -111,7 +108,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .single()
 
     if (profileError) {
-      // Rollback: delete auth user so we don't leave orphaned auth accounts
       await supabaseAdmin.auth.admin.deleteUser(newUserId)
       return json({ error: 'Gagal menyimpan profil kasir. Silakan coba lagi.' }, 500)
     }

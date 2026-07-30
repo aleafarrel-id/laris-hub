@@ -178,14 +178,14 @@ function ProfilPage() {
             <button
               type="button"
               onClick={() => setShowLogoutModal(false)}
-              className="flex-1 py-3 bg-neutral-100 text-neutral-700 font-bold rounded-xl active:scale-[0.98] transition-all"
+              className="flex-1 py-3 bg-neutral-100 text-neutral-700 font-bold rounded-xl active:scale-[0.96] transition-all"
             >
               Batal
             </button>
             <button
               type="button"
               onClick={handleLogout}
-              className="flex-1 py-3 bg-danger text-white font-bold rounded-xl shadow-lg shadow-danger/20 active:scale-[0.98] transition-all"
+              className="flex-1 py-3 bg-danger text-white font-bold rounded-xl shadow-lg shadow-danger/20 active:scale-[0.96] transition-all"
             >
               Keluar
             </button>

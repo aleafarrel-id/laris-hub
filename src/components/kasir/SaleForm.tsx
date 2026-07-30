@@ -162,10 +162,10 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-active:scale-95 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 group-active:scale-[0.96] group-hover:scale-105"
                       />
                     ) : (
-                      <div className="text-white/80 drop-shadow-sm transition-transform group-active:scale-95 group-hover:scale-110">
+                      <div className="text-white/80 drop-shadow-sm transition-transform group-active:scale-[0.96] group-hover:scale-110">
                         <Package size={32} strokeWidth={1.5} />
                       </div>
                     )}
@@ -204,7 +204,7 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
                           e.stopPropagation()
                           addToCart(product)
                         }}
-                        className="w-8 h-8 sm:w-auto sm:px-4 sm:h-9 bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center gap-2 text-xs font-bold rounded-xl active:scale-95 transition-colors"
+                        className="w-8 h-8 sm:w-auto sm:px-4 sm:h-9 bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center gap-2 text-xs font-bold rounded-xl active:scale-[0.96] transition-colors"
                       >
                         <Plus size={16} strokeWidth={2.5} />
                         <span className="hidden sm:inline">Tambah</span>
@@ -217,7 +217,7 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
                             e.stopPropagation()
                             changeQty(product.id, -1)
                           }}
-                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-[0.96] transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
                         >
                           <Minus size={14} strokeWidth={3} />
                         </button>
@@ -230,7 +230,7 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
                             e.stopPropagation()
                             changeQty(product.id, 1)
                           }}
-                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-90 transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white active:scale-[0.96] transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer"
                         >
                           <Plus size={14} strokeWidth={3} />
                         </button>

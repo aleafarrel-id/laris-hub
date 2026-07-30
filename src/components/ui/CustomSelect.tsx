@@ -60,7 +60,7 @@ export function CustomSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50 hover:border-neutral-300 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all active:scale-[0.98]"
+        className="inline-flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50 hover:border-neutral-300 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all active:scale-[0.96]"
       >
         <span className="flex items-center gap-2 truncate">
           {selectedOption?.icon}

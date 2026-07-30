@@ -8,6 +8,27 @@ export interface CreateKasirPayload {
   phone?: string | null
 }
 
+export interface UpdateKasirPayload {
+  id: string
+  full_name?: string
+  phone?: string | null
+  email?: string
+  password?: string
+}
+
+export interface KasirAuthDetails {
+  id: string
+  email: string | null
+  last_sign_in_at: string | null
+  created_at: string
+}
+
+export interface DeleteKasirError {
+  has_transactions: true
+  transaction_count: number
+  error: string
+}
+
 /**
  * Fetch all kasir profiles. Admin only (RLS enforced).
  */
@@ -23,8 +44,23 @@ export async function getKasirList(): Promise<Profile[]> {
 }
 
 /**
+ * Fetch kasir's auth details (email, last sign-in) from auth.users via Edge Function.
+ * Admin only. ID is passed via x-kasir-id header to avoid CORS issues with query params.
+ */
+export async function getKasirAuthDetails(kasirId: string): Promise<KasirAuthDetails> {
+  const { data, error } = await supabase.functions.invoke('update-kasir', {
+    method: 'GET',
+    headers: { 'x-kasir-id': kasirId },
+  })
+
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as KasirAuthDetails
+}
+
+/**
  * Create a new kasir account via Edge Function.
- * Uses service_role server-side — the anon key cannot create users.
+ * Uses service_role server-side — anon key cannot create auth users.
  */
 export async function createKasir(payload: CreateKasirPayload): Promise<Profile> {
   const { data, error } = await supabase.functions.invoke('create-kasir', {
@@ -33,8 +69,45 @@ export async function createKasir(payload: CreateKasirPayload): Promise<Profile>
 
   if (error) throw error
   if (data?.error) throw new Error(data.error)
-
   return data.profile as Profile
+}
+
+/**
+ * Update kasir profile fields and/or auth credentials via Edge Function.
+ */
+export async function updateKasir(payload: UpdateKasirPayload): Promise<Profile> {
+  const { data, error } = await supabase.functions.invoke('update-kasir', {
+    method: 'PATCH',
+    body: payload,
+  })
+
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data.profile as Profile
+}
+
+/**
+ * Permanently delete a kasir account (auth + profile).
+ * Will fail with has_transactions=true if kasir has recorded transactions — in that
+ * case the caller should use toggleKasirStatus(false) to suspend instead.
+ */
+export async function deleteKasir(id: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('update-kasir', {
+    method: 'DELETE',
+    body: { id },
+  })
+
+  if (error) throw error
+
+  // Edge Function signals a business-logic conflict (has transactions) via data.error + 409
+  if (data?.error) {
+    const err = new Error(data.error) as Error & DeleteKasirError
+    if (data.has_transactions) {
+      err.has_transactions = true
+      err.transaction_count = data.transaction_count
+    }
+    throw err
+  }
 }
 
 /**
@@ -52,9 +125,3 @@ export async function toggleKasirStatus(id: string, isActive: boolean): Promise<
   if (error) throw error
   return data as Profile
 }
-
-/**
- * Force sign-out a kasir so their current session is immediately invalidated.
- * Requires admin JWT. Called via Edge Function (service_role needed).
- * ponytail: skip until user requests it — Supabase token expiry is 1 hour.
- */

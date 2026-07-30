@@ -42,6 +42,7 @@ function LoginPage() {
   const [form, setForm] = useState<LoginFormData>({ email: '', password: '' })
   const [errors, setErrors] = useState<Partial<LoginFormData>>({})
   const [serverError, setServerError] = useState('')
+  const [isSuspended, setIsSuspended] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotModal, setShowForgotModal] = useState(false)
@@ -78,6 +79,7 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setServerError('')
+    setIsSuspended(false)
     setErrors({})
 
     if (isLockedOut) return
@@ -96,7 +98,6 @@ function LoginPage() {
     setIsLoading(true)
     try {
       const profile = await signIn(form.email, form.password)
-      // Reset failure counter on success
       setFailedAttempts(0)
       setLockoutUntil(null)
 
@@ -104,21 +105,26 @@ function LoginPage() {
       const dest = safeRedirectDest((search as { redirect?: string }).redirect, fallback)
       navigate({ to: dest })
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : ''
+
+      // Suspended account: don't count as brute-force attempt
+      if (errMsg === 'ACCOUNT_SUSPENDED') {
+        setIsSuspended(true)
+        return
+      }
+
       const newAttempts = failedAttempts + 1
       setFailedAttempts(newAttempts)
 
-      // Exponential backoff: lock after 3 failures (30s, 60s, 120s...)
       if (newAttempts >= 3) {
-        const lockSeconds = Math.min(30 * 2 ** (newAttempts - 3), 300) // cap at 5 min
+        const lockSeconds = Math.min(30 * 2 ** (newAttempts - 3), 300)
         const until = Date.now() + lockSeconds * 1000
         setLockoutUntil(until)
         setLockoutSeconds(lockSeconds)
       }
 
       setServerError(
-        error instanceof Error
-          ? error.message
-          : 'Login gagal. Periksa kembali email dan password Anda.',
+        errMsg || 'Login gagal. Periksa kembali email dan password Anda.',
       )
     } finally {
       setIsLoading(false)
@@ -155,27 +161,25 @@ function LoginPage() {
           className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-xl shadow-neutral-200/40"
           {...fadeUp(0.08)}
         >
-          {serverError && (
+          {/* Suspended account banner — shown when is_active = false */}
+          {isSuspended && (
             <motion.div
-              className="mb-6 p-4 bg-danger/5 border border-danger/20 rounded-xl text-sm text-danger font-medium flex items-start gap-3"
-              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="mb-5 text-sm text-amber-600 font-medium text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 flex-shrink-0 mt-0.5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>{serverError}</span>
+              Akun Anda ditangguhkan. Hubungi Admin.
+            </motion.div>
+          )}
+
+          {/* Generic error — wrong credentials etc */}
+          {serverError && !isSuspended && (
+            <motion.div
+              className="mb-5 text-sm text-danger font-medium text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {serverError}
             </motion.div>
           )}
 
@@ -203,19 +207,10 @@ function LoginPage() {
             </div>
 
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="text-sm font-semibold text-neutral-700">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                  onClick={() => setShowForgotModal(true)}
-                >
-                  Lupa password?
-                </button>
-              </div>
-              <div className="relative">
+              <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-2">
+                Password
+              </label>
+              <div className="relative mb-2">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -223,7 +218,7 @@ function LoginPage() {
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="••••••••"
-                  className={`flex h-12 w-full rounded-xl border bg-neutral-50/50 px-4 py-2 pr-11 text-sm placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all ${
+                  className={`flex h-12 w-full rounded-xl border bg-neutral-50/50 px-4 py-2 text-sm placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 pr-12 transition-all ${
                     errors.password
                       ? 'border-danger focus:border-danger focus:ring-danger/20'
                       : 'border-neutral-200 focus:border-primary focus:ring-primary/30 hover:border-neutral-300'
@@ -231,33 +226,35 @@ function LoginPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-0 top-0 h-full px-4 flex items-center justify-center text-neutral-400 hover:text-neutral-700 transition-colors"
-                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors p-1"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-xs font-medium text-danger mt-1.5">{errors.password}</p>
-              )}
+              <div className="flex justify-between items-start">
+                {errors.password ? (
+                  <p className="text-xs font-medium text-danger mt-1">{errors.password}</p>
+                ) : (
+                  <div />
+                )}
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors mt-1"
+                  onClick={() => setShowForgotModal(true)}
+                >
+                  Lupa password?
+                </button>
+              </div>
             </div>
 
-            {/* Lockout banner — shown after 3 failed attempts */}
             {isLockedOut && (
               <motion.div
-                className="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 flex items-center gap-3"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="mb-4 text-sm text-amber-600 font-medium text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-                <span>
-                  Terlalu banyak percobaan. Coba lagi dalam{' '}
-                  <span className="font-bold tabular-nums">{lockoutSeconds}s</span>
-                </span>
+                Terlalu banyak percobaan. Tunggu {lockoutSeconds}s.
               </motion.div>
             )}
 
@@ -295,10 +292,10 @@ function LoginPage() {
               ) : isLockedOut ? (
                 `Tunggu ${lockoutSeconds}s...`
               ) : (
-                'Masuk ke Dasbor'
+                'Masuk'
               )}
             </motion.button>
-          </form>
+</form>
         </motion.div>
 
         <motion.p
@@ -339,7 +336,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => setShowForgotModal(false)}
-              className="w-full py-3 bg-neutral-900 text-white rounded-xl text-sm font-semibold hover:bg-neutral-800 active:scale-[0.98] transition-all"
+              className="w-full py-3 bg-neutral-900 text-white rounded-xl text-sm font-semibold hover:bg-neutral-800 active:scale-[0.96] transition-all"
             >
               Saya Mengerti
             </button>

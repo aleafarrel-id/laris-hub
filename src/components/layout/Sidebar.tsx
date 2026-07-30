@@ -52,7 +52,7 @@ export function Sidebar({
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 isActive
                   ? 'bg-primary text-white shadow-md shadow-primary/20'
-                  : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 active:scale-[0.98]'
+                  : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 active:scale-[0.96]'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
@@ -69,7 +69,7 @@ export function Sidebar({
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 mb-1 ${
             pathname === '/profil'
               ? 'bg-primary text-white shadow-md shadow-primary/20'
-              : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 active:scale-[0.98]'
+              : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 active:scale-[0.96]'
           }`}
         >
           <User
@@ -82,7 +82,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={() => signOut()}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-neutral-500 hover:bg-danger/10 hover:text-danger active:scale-[0.98] transition-all duration-200"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-neutral-500 hover:bg-danger/10 hover:text-danger active:scale-[0.96] transition-all duration-200"
         >
           <LogOut size={20} strokeWidth={2} className="flex-shrink-0" />
           Keluar

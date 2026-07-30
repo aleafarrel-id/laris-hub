@@ -111,7 +111,7 @@ export function ExpenseForm({
                 key={val}
                 type="button"
                 onClick={() => setCategory(val)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all active:scale-95 ${
+                className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all active:scale-[0.96] ${
                   isSelected
                     ? 'border-primary bg-primary text-white shadow-md shadow-primary/20'
                     : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50'
@@ -229,7 +229,7 @@ export function ExpenseForm({
         <button
           type="button"
           onClick={addItem}
-          className="w-full mt-3 py-2.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl text-xs font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          className="w-full mt-3 py-2.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl text-xs font-bold active:scale-[0.96] transition-all flex items-center justify-center gap-2"
         >
           <PlusCircle size={16} />
           Tambah Item
@@ -258,7 +258,7 @@ export function ExpenseForm({
         type="button"
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className="w-full mt-2 py-3.5 bg-danger text-white rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-danger/20 flex items-center justify-between px-5 hover:bg-danger/90 hover:shadow-lg hover:shadow-danger/30"
+        className="w-full mt-2 py-3.5 bg-danger text-white rounded-xl active:scale-[0.96] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-danger/20 flex items-center justify-between px-5 hover:bg-danger/90 hover:shadow-lg hover:shadow-danger/30"
       >
         <span className="font-bold text-sm">
           {isPending ? 'Menyimpan...' : 'Catat Pengeluaran'}

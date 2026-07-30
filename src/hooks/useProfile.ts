@@ -24,7 +24,7 @@ export function useCashiers() {
   const { user } = useAuthStore()
 
   return useQuery({
-    queryKey: QUERY_KEYS.CASHIERS,
+    queryKey: [...QUERY_KEYS.CASHIERS, 'active-only'],
     queryFn: async () => {
       // Inline fetch for simplicity, can be moved to auth.service
       const { supabase } = await import('@/lib/supabase')

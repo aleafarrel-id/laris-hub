@@ -17,10 +17,28 @@ export async function getProfile(userId: string): Promise<Profile> {
 
 /**
  * Sign in with email and password.
+ *
+ * Security: after successful auth, checks profiles.is_active.
+ * Suspended accounts are signed out immediately before returning,
+ * preventing any access even with valid credentials.
  */
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
+
+  // Check if account is active before granting access
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_active')
+    .eq('id', data.user.id)
+    .single()
+
+  if (profile?.is_active === false) {
+    // Invalidate the session immediately — suspended users get no access
+    await supabase.auth.signOut()
+    throw new Error('ACCOUNT_SUSPENDED')
+  }
+
   return data
 }
 

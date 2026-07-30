@@ -36,11 +36,10 @@ const FormField = memo(function FormField({
   className = '',
   ...props
 }: FormFieldProps) {
-  const baseClassName = `w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm ${
-    error
+  const baseClassName = `w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm ${error
       ? 'border-danger focus:ring-danger/20 focus:border-danger'
       : 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
-  } ${isTextarea ? 'min-h-[100px] resize-y' : ''} ${className}`
+    } ${isTextarea ? 'min-h-[100px] resize-y' : ''} ${className}`
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -152,11 +151,13 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col min-h-full relative">
-      <div className="flex-1 p-5 sm:p-6 lg:p-8 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 max-w-5xl mx-auto">
-          <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-2xl border border-neutral-100 p-5 shadow-sm">
-              <label className="block text-xs font-semibold text-neutral-600 mb-3 uppercase tracking-wider">
+      <div className="flex-1 px-5 py-6 pb-24 max-w-5xl mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
+
+          {/* Left Column */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold text-neutral-700">
                 Foto Produk
               </label>
               <ImageDropzone
@@ -166,8 +167,16 @@ export function ProductForm({
               />
             </div>
 
-            <div className="bg-white rounded-2xl border border-neutral-100 p-5 shadow-sm hover:border-primary/20 transition-colors">
-              <label className="flex items-center gap-4 cursor-pointer group">
+            <div className="space-y-3 pt-2">
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="flex-1 pr-4">
+                  <span className="text-sm font-bold text-neutral-900 block">
+                    Status Produk Aktif
+                  </span>
+                  <span className="text-xs text-neutral-500 block mt-0.5">
+                    Tampil di menu Kasir
+                  </span>
+                </div>
                 <div className="relative flex items-center justify-center shrink-0">
                   <input
                     type="checkbox"
@@ -178,24 +187,17 @@ export function ProductForm({
                   />
                   <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary transition-colors cursor-pointer" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold text-neutral-900 group-hover:text-primary transition-colors block truncate">
-                    Status Produk Aktif
-                  </span>
-                  <span className="text-xs text-neutral-500 block truncate">
-                    Tampil di menu Kasir
-                  </span>
-                </div>
               </label>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm space-y-5">
+          {/* Right Column */}
+          <div className="space-y-8">
+
+            <div className="space-y-5">
               <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
                 Informasi Dasar
               </h3>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   id="name"
@@ -217,7 +219,6 @@ export function ProductForm({
                   disabled={isPending}
                 />
               </div>
-
               <FormField
                 id="description"
                 label="Deskripsi (Opsional)"
@@ -230,11 +231,10 @@ export function ProductForm({
               />
             </div>
 
-            <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
                 Harga & Modal
               </h3>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   id="hpp"
@@ -249,7 +249,6 @@ export function ProductForm({
                   required
                   disabled={isPending}
                 />
-
                 <div className="flex flex-col">
                   <FormField
                     id="selling_price"
@@ -264,18 +263,16 @@ export function ProductForm({
                     required
                     disabled={isPending}
                   />
-
                   {hpp > 0 && sellingPrice > 0 && (
                     <div className="mt-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-between text-xs">
-                      <span className="font-semibold text-neutral-600">Margin Keuntungan:</span>
+                      <span className="font-semibold text-neutral-600">Margin:</span>
                       <span
-                        className={`font-bold px-2.5 py-1 rounded-md ${
-                          margin >= MARGIN_GOOD_THRESHOLD
+                        className={`font-bold px-2.5 py-1 rounded-md ${margin >= MARGIN_GOOD_THRESHOLD
                             ? 'bg-success/15 text-success-700'
                             : margin >= MARGIN_WARNING_THRESHOLD
                               ? 'bg-amber-500/15 text-amber-700'
                               : 'bg-danger/15 text-danger-700'
-                        }`}
+                          }`}
                       >
                         {margin.toFixed(1)}% ({formatRupiah(sellingPrice - hpp)})
                       </span>
@@ -287,22 +284,21 @@ export function ProductForm({
           </div>
         </div>
       </div>
-
-      <div className="sticky bottom-0 z-10 border-t border-neutral-200 bg-white/90 backdrop-blur-md px-6 py-4 flex justify-end gap-3 shrink-0 rounded-b-2xl mt-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+      <div className="sticky bottom-0 z-10 border-t border-neutral-200 bg-white/90 backdrop-blur-md px-6 py-4 flex justify-end gap-3 shrink-0 mt-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
         <button
           type="button"
           onClick={onSuccess}
           disabled={isPending}
-          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-50 active:scale-95 cursor-pointer"
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-50 active:scale-[0.96] cursor-pointer"
         >
           Batal
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[140px] cursor-pointer"
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-all disabled:opacity-50 shadow-md shadow-primary/20 active:scale-[0.96] cursor-pointer"
         >
-          {isPending ? 'Menyimpan...' : 'Simpan Produk'}
+          {isPending ? 'Menyimpan...' : 'Simpan'}
         </button>
       </div>
     </form>
