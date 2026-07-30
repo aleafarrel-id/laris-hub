@@ -69,14 +69,14 @@ export function useAuthListener() {
   useEffect(() => {
     let mounted = true
 
-    // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Initial session check (using getUser for secure server-side validation)
+    supabase.auth.getUser().then(async ({ data: { user }, error }) => {
       if (!mounted) return
 
-      if (session?.user) {
-        setUser(session.user)
+      if (user && !error) {
+        setUser(user)
         try {
-          const profile = await getProfile(session.user.id)
+          const profile = await getProfile(user.id)
           if (mounted) setProfile(profile)
         } catch {
           // Profile fetch failed — still mark initialized

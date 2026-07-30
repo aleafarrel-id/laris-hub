@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
@@ -47,10 +47,31 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotModal, setShowForgotModal] = useState(false)
 
-  // Brute force protection state
-  const [failedAttempts, setFailedAttempts] = useState(0)
-  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
+  // Brute force protection state (persisted to prevent refresh bypass)
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    const saved = localStorage.getItem('laris_hub_failed_attempts')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    const saved = localStorage.getItem('laris_hub_lockout_until')
+    return saved ? parseInt(saved, 10) : null
+  })
   const [lockoutSeconds, setLockoutSeconds] = useState(0)
+
+  // Save to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('laris_hub_failed_attempts', failedAttempts.toString())
+  }, [failedAttempts])
+
+  useEffect(() => {
+    if (lockoutUntil) {
+      localStorage.setItem('laris_hub_lockout_until', lockoutUntil.toString())
+    } else {
+      localStorage.removeItem('laris_hub_lockout_until')
+    }
+  }, [lockoutUntil])
 
   // Countdown timer for lockout
   useEffect(() => {
@@ -69,6 +90,16 @@ function LoginPage() {
   }, [lockoutUntil])
 
   const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil
+
+  // Auto-hide errors and warnings after 5 seconds
+  useEffect(() => {
+    if (!serverError && !isSuspended) return
+    const timer = setTimeout(() => {
+      setServerError('')
+      setIsSuspended(false)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [serverError, isSuspended])
 
   // Security: only allow internal paths as post-login redirect destination
   const safeRedirectDest = (redirectParam: string | undefined, fallback: string): string => {
@@ -124,7 +155,7 @@ function LoginPage() {
       }
 
       setServerError(
-        errMsg || 'Login gagal. Periksa kembali email dan password Anda.',
+        errMsg || 'Email atau password salah.',
       )
     } finally {
       setIsLoading(false)
@@ -164,22 +195,28 @@ function LoginPage() {
           {/* Suspended account banner — shown when is_active = false */}
           {isSuspended && (
             <motion.div
-              className="mb-5 text-sm text-amber-600 font-medium text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              Akun Anda ditangguhkan. Hubungi Admin.
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <p className="text-sm text-amber-800 font-medium text-center leading-snug">
+                Akun ditangguhkan. Hubungi Admin.
+              </p>
             </motion.div>
           )}
 
           {/* Generic error — wrong credentials etc */}
           {serverError && !isSuspended && (
             <motion.div
-              className="mb-5 text-sm text-danger font-medium text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-danger/10 border border-danger/20 px-4 py-3"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              {serverError}
+              <AlertCircle className="w-5 h-5 text-danger shrink-0" />
+              <p className="text-sm text-danger font-medium text-center leading-snug">
+                {serverError}
+              </p>
             </motion.div>
           )}
 
@@ -250,11 +287,14 @@ function LoginPage() {
 
             {isLockedOut && (
               <motion.div
-                className="mb-4 text-sm text-amber-600 font-medium text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
               >
-                Terlalu banyak percobaan. Tunggu {lockoutSeconds}s.
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-800 font-medium text-center leading-snug">
+                  Coba lagi dalam {lockoutSeconds}s.
+                </p>
               </motion.div>
             )}
 
@@ -289,8 +329,6 @@ function LoginPage() {
                   </svg>
                   Memproses...
                 </>
-              ) : isLockedOut ? (
-                `Tunggu ${lockoutSeconds}s...`
               ) : (
                 'Masuk'
               )}

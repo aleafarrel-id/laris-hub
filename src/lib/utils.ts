@@ -136,7 +136,7 @@ export function translateError(error: unknown): string {
 
   // Auth errors
   if (message.includes('invalid login credentials')) {
-    return 'Email atau password tidak sesuai. Periksa kembali data Anda.'
+    return 'Email atau password salah.'
   }
   if (message.includes('email not confirmed')) {
     return 'Email Anda belum dikonfirmasi. Periksa inbox email Anda.'
