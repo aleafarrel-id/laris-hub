@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
@@ -11,6 +12,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void
   onCancel: () => void
   variant?: 'danger' | 'primary'
+  icon?: LucideIcon
 }
 
 export function ConfirmDialog({
@@ -22,6 +24,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   variant = 'danger',
+  icon: Icon = AlertCircle,
 }: ConfirmDialogProps) {
   useEffect(() => {
     if (!isOpen) return
@@ -71,7 +74,7 @@ export function ConfirmDialog({
                     variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
                   }`}
                 >
-                  <AlertCircle size={28} strokeWidth={2} />
+                  <Icon size={28} strokeWidth={2} />
                 </div>
 
                 <h3 className="text-xl font-bold text-neutral-900 mb-2 sm:mb-3 text-balance tracking-tight">

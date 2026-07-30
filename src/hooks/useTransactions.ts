@@ -13,6 +13,8 @@ import {
   getTodayTransactions,
   getTransactions,
   updateTransaction,
+  updateExpenseTransaction,
+  updateSaleTransaction,
 } from '@/services/transaction.service'
 import type { TransactionFilters } from '@/types'
 
@@ -159,6 +161,52 @@ export function useCreateExpense() {
     },
     onError: (error) => {
       toast.error('Gagal mencatat pengeluaran', {
+        description: translateError(error),
+      })
+    },
+  })
+}
+
+type UpdateSaleArgs = {
+  id: string
+  payload: Parameters<typeof updateSaleTransaction>[1]
+}
+
+export function useUpdateSale() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload }: UpdateSaleArgs) => updateSaleTransaction(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      toast.success('Transaksi penjualan berhasil diperbarui!')
+    },
+    onError: (error) => {
+      toast.error('Gagal memperbarui transaksi', {
+        description: translateError(error),
+      })
+    },
+  })
+}
+
+type UpdateExpenseArgs = {
+  id: string
+  payload: Parameters<typeof updateExpenseTransaction>[1]
+}
+
+export function useUpdateExpense() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload }: UpdateExpenseArgs) => updateExpenseTransaction(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      toast.success('Pengeluaran berhasil diperbarui!')
+    },
+    onError: (error) => {
+      toast.error('Gagal memperbarui pengeluaran', {
         description: translateError(error),
       })
     },

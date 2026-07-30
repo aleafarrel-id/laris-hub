@@ -193,7 +193,7 @@ export async function getTransactionWithItems(id: string): Promise<TransactionWi
 }
 
 /**
- * Update a transaction. Admin only (RLS).
+ * Update a transaction (generic). Admin only (RLS).
  */
 export async function updateTransaction(
   id: string,
@@ -208,6 +208,90 @@ export async function updateTransaction(
 
   if (error) throw error
   return data as Transaction
+}
+
+/**
+ * Update an expense transaction. Admin only.
+ */
+export async function updateExpenseTransaction(
+  id: string,
+  payload: CreateExpensePayload,
+): Promise<Transaction> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .update({
+      description: payload.description,
+      total_amount: payload.total_amount,
+      expense_category: payload.expense_category,
+      expense_items: payload.expense_items?.length ? payload.expense_items : null,
+      notes: payload.notes ?? null,
+      transaction_at: payload.transaction_at ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Transaction
+}
+
+/**
+ * Update a sale transaction. Admin only.
+ * This will replace the transaction items and recalculate totals.
+ */
+export async function updateSaleTransaction(
+  id: string,
+  payload: CreateSalePayload,
+): Promise<Transaction> {
+  const totalAmount = payload.items.reduce(
+    (sum, item) => sum + item.selling_price * item.quantity,
+    0,
+  )
+  const totalProfit = payload.items.reduce(
+    (sum, item) => sum + (item.selling_price - item.product_hpp) * item.quantity,
+    0,
+  )
+
+  const { data: transaction, error: txError } = await supabase
+    .from('transactions')
+    .update({
+      total_amount: totalAmount,
+      total_profit: totalProfit,
+      notes: payload.notes ?? null,
+      transaction_at: payload.transaction_at ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (txError) throw txError
+
+  // Delete old items
+  const { error: deleteError } = await supabase
+    .from('transaction_items')
+    .delete()
+    .eq('transaction_id', id)
+
+  if (deleteError) throw deleteError
+
+  const tx = transaction as Transaction
+
+  const itemsPayload = payload.items.map((item) => ({
+    transaction_id: tx.id,
+    product_id: item.product_id,
+    product_name: item.product_name,
+    product_hpp: item.product_hpp,
+    selling_price: item.selling_price,
+    quantity: item.quantity,
+  }))
+
+  const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
+
+  if (itemsError) throw itemsError
+
+  return tx
 }
 
 /**

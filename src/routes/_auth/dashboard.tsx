@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2, User } from 'lucide-react'
+import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2, User, Edit3 } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
@@ -9,6 +9,7 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
@@ -17,8 +18,7 @@ import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTime } from '@/lib/utils'
-import type { Profile } from '@/types'
-
+import type { Profile, TransactionWithItems } from '@/types'
 type DashboardSearch = {
   period?: DashboardPeriod
   kasir?: string
@@ -85,6 +85,8 @@ function DashboardPage() {
 
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
   const { data: cashiers } = useCashiers()
+  
+  const isAdmin = profile?.role === 'admin'
 
   const customRange = period === 'custom' 
     ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) } 
@@ -105,6 +107,7 @@ function DashboardPage() {
 
   const deleteTxMutation = useDeleteTransaction()
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null)
+  const [editingTx, setEditingTx] = useState<TransactionWithItems | null>(null)
 
   const netCashflow = (kpi?.omzet ?? 0) - (kpi?.pengeluaran ?? 0)
 
@@ -283,7 +286,7 @@ function DashboardPage() {
               {recentTransactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors"
+                  className="flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative"
                 >
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -294,8 +297,28 @@ function DashboardPage() {
                   >
                     {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
                   </div>
+                  {isAdmin && (
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditingTx(tx as TransactionWithItems)}
+                        className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                        title="Edit Transaksi"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingTxId(tx.id)}
+                        className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
+                        title="Hapus Transaksi"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <div className="text-sm font-medium text-neutral-900">
+                    <div className="text-sm font-medium text-neutral-900 pr-12">
                       {tx.type === 'penjualan' ? (
                         <div className="flex flex-col gap-0.5">
                           {tx.transaction_items && tx.transaction_items.length > 1 ? (
@@ -356,14 +379,6 @@ function DashboardPage() {
                         <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5">
                           {formatTime(tx.transaction_at)}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingTxId(tx.id)}
-                          className="p-1 rounded-md text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
-                          title="Hapus Transaksi"
-                        >
-                          <Trash2 size={13} />
-                        </button>
                       </div>
                       <div className="flex flex-col items-end leading-tight">
                         <span
@@ -400,7 +415,7 @@ function DashboardPage() {
                     <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-10">
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20">
                     </th>
                   </tr>
                 </thead>
@@ -479,14 +494,24 @@ function DashboardPage() {
                         {formatRupiah(tx.total_amount)}
                       </td>
                       <td className="py-2.5 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setDeletingTxId(tx.id)}
-                          className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
-                          title="Hapus Transaksi"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <div className="flex justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingTx(tx as TransactionWithItems)}
+                            className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors"
+                            title="Edit Transaksi"
+                          >
+                            <Edit3 size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingTxId(tx.id)}
+                            className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
+                            title="Hapus Transaksi"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -522,6 +547,12 @@ function DashboardPage() {
           }
         }}
         onCancel={() => setDeletingTxId(null)}
+      />
+
+      <EditTransactionModal
+        transaction={editingTx}
+        isOpen={!!editingTx}
+        onClose={() => setEditingTx(null)}
       />
     </div>
   )

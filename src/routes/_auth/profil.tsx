@@ -1,9 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { LogOut, Phone, Shield, User } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
-import { Modal } from '@/components/ui/Modal'
-import { useAuth, useAuthActions } from '@/hooks/useAuth'
+import { LogoutDialog } from '@/components/ui/LogoutDialog'
+import { useAuth } from '@/hooks/useAuth'
 import { useUpdateProfile } from '@/hooks/useProfile'
 import { getInitials } from '@/lib/utils'
 
@@ -13,9 +12,7 @@ export const Route = createFileRoute('/_auth/profil')({
 
 function ProfilPage() {
   const { profile } = useAuth()
-  const { signOut } = useAuthActions()
   const { mutate: updateProfile, isPending } = useUpdateProfile()
-  const navigate = useNavigate()
 
   const [isEditing, setIsEditing] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
@@ -23,13 +20,6 @@ function ProfilPage() {
     full_name: profile?.full_name ?? '',
     phone: profile?.phone ?? '',
   })
-
-  const handleLogout = async () => {
-    setShowLogoutModal(false)
-    await signOut()
-    navigate({ to: '/login' })
-    toast.success('Berhasil keluar dari akun')
-  }
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,40 +148,8 @@ function ProfilPage() {
         Keluar dari Akun
       </button>
 
-      <Modal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        title="Keluar dari Akun"
-        variant="center"
-      >
-        <div className="p-6 text-center space-y-5">
-          <div className="w-16 h-16 bg-danger/10 text-danger rounded-full flex items-center justify-center mx-auto">
-            <LogOut size={28} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-neutral-900 mb-1">Yakin ingin keluar?</h3>
-            <p className="text-sm text-neutral-500">
-              Anda harus login kembali untuk masuk ke sistem.
-            </p>
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setShowLogoutModal(false)}
-              className="flex-1 py-3 bg-neutral-100 text-neutral-700 font-bold rounded-xl active:scale-[0.96] transition-all"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex-1 py-3 bg-danger text-white font-bold rounded-xl shadow-lg shadow-danger/20 active:scale-[0.96] transition-all"
-            >
-              Keluar
-            </button>
-          </div>
-        </div>
-      </Modal>
+      <LogoutDialog isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </div>
   )
 }
+

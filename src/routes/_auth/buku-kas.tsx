@@ -8,6 +8,7 @@ import {
   TrendingDown,
   TrendingUp,
   Trash2,
+  Edit3,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
@@ -17,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useCashiers } from '@/hooks/useProfile'
 import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
@@ -106,6 +108,7 @@ function BukuKasPage() {
   
   const deleteTxMutation = useDeleteTransaction()
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null)
+  const [editingTx, setEditingTx] = useState<TransactionWithItems | null>(null)
 
   const dateRange =
     quickRange === 'custom'
@@ -360,7 +363,7 @@ function BukuKasPage() {
             {transactions.map((tx, idx) => (
               <motion.div
                 key={tx.id}
-                className="app-card p-3.5 flex items-center gap-3"
+                className="app-card p-3.5 flex items-center gap-3 relative"
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' as const, delay: idx * 0.03 }}
@@ -376,8 +379,28 @@ function BukuKasPage() {
                     <TrendingDown size={15} className="text-danger" />
                   )}
                 </div>
+                {isAdmin && (
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setEditingTx(tx as TransactionWithItems)}
+                      className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                      title="Edit Transaksi"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingTxId(tx.id)}
+                      className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
+                      title="Hapus Transaksi"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <div className="text-sm font-medium text-neutral-900">
+                  <div className="text-sm font-medium text-neutral-900 pr-12">
                     {tx.type === 'penjualan' ? (
                       <div className="flex flex-col gap-0.5">
                         {(tx as TransactionWithItems).transaction_items &&
@@ -439,16 +462,7 @@ function BukuKasPage() {
                       <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
                         {formatDateTime(tx.transaction_at)}
                       </span>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => setDeletingTxId(tx.id)}
-                          className="p-1 rounded-md text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
-                          title="Hapus Transaksi"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
+
                     </div>
 
                     <div className="flex flex-col items-end leading-tight flex-shrink-0">
@@ -500,7 +514,7 @@ function BukuKasPage() {
                       </th>
                     )}
                     {isAdmin && (
-                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-10">
+                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-20">
                         
                       </th>
                     )}
@@ -592,14 +606,24 @@ function BukuKasPage() {
                       )}
                       {isAdmin && (
                         <td className="py-3 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setDeletingTxId(tx.id)}
-                            className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
-                            title="Hapus Transaksi"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingTx(tx as TransactionWithItems)}
+                              className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors"
+                              title="Edit Transaksi"
+                            >
+                              <Edit3 size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingTxId(tx.id)}
+                              className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
+                              title="Hapus Transaksi"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -633,6 +657,12 @@ function BukuKasPage() {
           }
         }}
         onCancel={() => setDeletingTxId(null)}
+      />
+
+      <EditTransactionModal
+        transaction={editingTx}
+        isOpen={!!editingTx}
+        onClose={() => setEditingTx(null)}
       />
     </div>
   )

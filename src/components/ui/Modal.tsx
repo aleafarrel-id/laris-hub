@@ -66,7 +66,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
 
   const contentClass = isBottom
     ? 'absolute bottom-0 inset-x-0 bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col'
-    : 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-modal w-full max-w-md max-h-[90dvh] flex flex-col'
+    : 'relative bg-white rounded-2xl shadow-modal w-full max-w-md max-h-[90dvh] flex flex-col mx-auto'
 
   return (
     <AnimatePresence>
@@ -88,7 +88,11 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           />
 
           <div
-            className="absolute inset-0 flex flex-col justify-end sm:justify-center p-0 sm:p-4"
+            className={`absolute inset-0 flex ${
+              isBottom
+                ? 'flex-col justify-end sm:justify-center p-0 sm:p-4'
+                : 'items-center justify-center p-4 sm:p-6'
+            }`}
             onClick={onClose}
           >
             <motion.div
