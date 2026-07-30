@@ -601,7 +601,7 @@ function BukuKasPage() {
                       </td>
                       {isAdmin && (
                         <td className="py-3 px-4 text-right tabular-nums text-neutral-600">
-                          {tx.type === 'penjualan' ? formatRupiah(tx.total_profit) : '—'}
+                          {tx.type === 'penjualan' ? formatRupiah(tx.total_profit) : '-'}
                         </td>
                       )}
                       {isAdmin && (

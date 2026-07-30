@@ -1,4 +1,4 @@
-// @ts-nocheck — Deno runtime (Supabase Edge Function)
+// @ts-nocheck - Deno runtime (Supabase Edge Function)
 // Deploy: npx supabase functions deploy update-kasir --project-ref <ref>
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -48,7 +48,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (callerError || !caller) return json({ error: 'Unauthorized' }, 401)
     if (caller.app_metadata?.role !== 'admin') return json({ error: 'Forbidden' }, 403)
 
-    // GET — return auth details (email, last sign-in) for a specific kasir.
+    // GET - return auth details (email, last sign-in) for a specific kasir.
     // The kasir ID is passed via a custom header because supabase-js invoke()
     // does not reliably forward query string parameters.
     if (req.method === 'GET') {
@@ -68,7 +68,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       })
     }
 
-    // PATCH — update name, phone, email, and/or password.
+    // PATCH - update name, phone, email, and/or password.
     if (req.method === 'PATCH') {
       let body: UpdateKasirBody
       try {
@@ -120,7 +120,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ profile: updatedProfile })
     }
 
-    // DELETE — permanently remove a kasir's auth account and profile.
+    // DELETE - permanently remove a kasir's auth account and profile.
     // Blocked when the kasir has recorded transactions to protect data integrity.
     if (req.method === 'DELETE') {
       let body: { id: string }
@@ -141,7 +141,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         return json({ error: 'Tidak dapat menghapus akun admin' }, 403)
       }
 
-      // Refuse deletion when transactions exist — use Tangguhkan instead.
+      // Refuse deletion when transactions exist - use Tangguhkan instead.
       const { count, error: countError } = await supabaseAdmin
         .from('transactions')
         .select('id', { count: 'exact', head: true })

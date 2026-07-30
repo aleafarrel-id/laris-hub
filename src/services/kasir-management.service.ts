@@ -53,22 +53,56 @@ export async function getKasirAuthDetails(kasirId: string): Promise<KasirAuthDet
     headers: { 'x-kasir-id': kasirId },
   })
 
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+  if (error) {
+    if (error instanceof Error && 'context' in error) {
+      let context = (error as any).context
+      if (context instanceof Response) {
+        try { context = await context.clone().json() } catch {}
+      } else if (typeof context === 'string') {
+        try { context = JSON.parse(context) } catch {}
+      }
+      const err = new Error(context?.error || error.message)
+      ;(err as any).isUserFacing = true
+      throw err
+    }
+    throw error
+  }
+  if (data?.error) {
+    const err = new Error(data.error)
+    ;(err as any).isUserFacing = true
+    throw err
+  }
   return data as KasirAuthDetails
 }
 
 /**
  * Create a new kasir account via Edge Function.
- * Uses service_role server-side — anon key cannot create auth users.
+ * Uses service_role server-side - anon key cannot create auth users.
  */
 export async function createKasir(payload: CreateKasirPayload): Promise<Profile> {
   const { data, error } = await supabase.functions.invoke('create-kasir', {
     body: payload,
   })
 
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+  if (error) {
+    if (error instanceof Error && 'context' in error) {
+      let context = (error as any).context
+      if (context instanceof Response) {
+        try { context = await context.clone().json() } catch {}
+      } else if (typeof context === 'string') {
+        try { context = JSON.parse(context) } catch {}
+      }
+      const err = new Error(context?.error || error.message)
+      ;(err as any).isUserFacing = true
+      throw err
+    }
+    throw error
+  }
+  if (data?.error) {
+    const err = new Error(data.error)
+    ;(err as any).isUserFacing = true
+    throw err
+  }
   return data.profile as Profile
 }
 
@@ -81,14 +115,31 @@ export async function updateKasir(payload: UpdateKasirPayload): Promise<Profile>
     body: payload,
   })
 
-  if (error) throw error
-  if (data?.error) throw new Error(data.error)
+  if (error) {
+    if (error instanceof Error && 'context' in error) {
+      let context = (error as any).context
+      if (context instanceof Response) {
+        try { context = await context.clone().json() } catch {}
+      } else if (typeof context === 'string') {
+        try { context = JSON.parse(context) } catch {}
+      }
+      const err = new Error(context?.error || error.message)
+      ;(err as any).isUserFacing = true
+      throw err
+    }
+    throw error
+  }
+  if (data?.error) {
+    const err = new Error(data.error)
+    ;(err as any).isUserFacing = true
+    throw err
+  }
   return data.profile as Profile
 }
 
 /**
  * Permanently delete a kasir account (auth + profile).
- * Will fail with has_transactions=true if kasir has recorded transactions — in that
+ * Will fail with has_transactions=true if kasir has recorded transactions - in that
  * case the caller should use toggleKasirStatus(false) to suspend instead.
  */
 export async function deleteKasir(id: string): Promise<void> {
@@ -97,11 +148,36 @@ export async function deleteKasir(id: string): Promise<void> {
     body: { id },
   })
 
-  if (error) throw error
+  if (error) {
+    if (error instanceof Error) {
+      let context = (error as any).context
+      if (context instanceof Response) {
+        try { context = await context.clone().json() } catch {}
+      } else if (typeof context === 'string') {
+        try { context = JSON.parse(context) } catch {}
+      }
+      
+      // If context is empty, sometimes supabase-js puts the JSON in error.message
+      if (!context && typeof error.message === 'string' && error.message.startsWith('{')) {
+        try { context = JSON.parse(error.message) } catch {}
+      }
+      
+      const err = new Error(context?.error || error.message) as Error & DeleteKasirError
+      ;(err as any).isUserFacing = true
+      if (context?.has_transactions) {
+        err.has_transactions = true
+        err.transaction_count = context.transaction_count
+      }
+      throw err
+    }
+    throw error
+  }
 
   // Edge Function signals a business-logic conflict (has transactions) via data.error + 409
+  // but if it returned 200 OK with error payload we still handle it here:
   if (data?.error) {
     const err = new Error(data.error) as Error & DeleteKasirError
+    ;(err as any).isUserFacing = true
     if (data.has_transactions) {
       err.has_transactions = true
       err.transaction_count = data.transaction_count

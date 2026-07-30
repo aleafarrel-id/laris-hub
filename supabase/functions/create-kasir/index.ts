@@ -1,4 +1,4 @@
-// @ts-nocheck — Deno runtime (Supabase Edge Function)
+// @ts-nocheck - Deno runtime (Supabase Edge Function)
 // Deploy: npx supabase functions deploy create-kasir --project-ref <ref>
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'

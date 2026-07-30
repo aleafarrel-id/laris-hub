@@ -27,7 +27,7 @@ export function useKasirAuthDetails(kasirId: string | null) {
     queryKey: [...QUERY_KEYS.CASHIERS, 'auth', kasirId],
     queryFn: () => getKasirAuthDetails(kasirId!),
     enabled: !!kasirId,
-    staleTime: 1000 * 60 * 5, // 5 min — email rarely changes
+    staleTime: 1000 * 60 * 5, // 5 min - email rarely changes
     retry: 1,
   })
 }
@@ -100,7 +100,7 @@ export function useDeleteKasir(onSuccess?: () => void) {
     },
     onError: (error: Error & Partial<DeleteKasirError>) => {
       if (error.has_transactions) {
-        toast.error('Tidak bisa dihapus — ada transaksi tersimpan', {
+        toast.error('Tidak dapat dihapus, akun kasir ini masih memiliki riwayat transaksi', {
           description: `Kasir ini memiliki ${error.transaction_count} transaksi. Gunakan fitur Tangguhkan untuk menonaktifkan akun tanpa menghapus data.`,
           duration: 6000,
         })

@@ -1,5 +1,5 @@
 -- ============================================================
--- LARIS HUB — Complete Security & RLS Migration (v2)
+-- LARIS HUB - Complete Security & RLS Migration (v2)
 -- Replaces: 20260727000000_optimize_and_rls.sql
 -- Run this via Supabase SQL Editor or CLI migrations.
 -- ============================================================
@@ -36,13 +36,13 @@ CREATE INDEX IF NOT EXISTS idx_ti_product_id
   ON public.transaction_items (product_id);
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 3: DAILY SUMMARY VIEW — enforce security_invoker
+-- SECTION 3: DAILY SUMMARY VIEW - enforce security_invoker
 -- so RLS from the calling user's context is respected
 -- ────────────────────────────────────────────────────────────
 ALTER VIEW IF EXISTS public.daily_summary SET (security_invoker = true);
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 4: RLS POLICIES — PROFILES
+-- SECTION 4: RLS POLICIES - PROFILES
 -- ────────────────────────────────────────────────────────────
 
 -- Drop old policies
@@ -82,7 +82,7 @@ CREATE POLICY "profiles_update_own_safe"
   )
   WITH CHECK (
     id = auth.uid()
-    -- Freeze role and is_active to current values — no escalation possible
+    -- Freeze role and is_active to current values - no escalation possible
     AND role = (SELECT p.role FROM public.profiles p WHERE p.id = auth.uid())
     AND is_active = (SELECT p.is_active FROM public.profiles p WHERE p.id = auth.uid())
   );
@@ -94,7 +94,7 @@ CREATE POLICY "profiles_insert_admin"
   WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 5: RLS POLICIES — PRODUCTS
+-- SECTION 5: RLS POLICIES - PRODUCTS
 -- ────────────────────────────────────────────────────────────
 
 DROP POLICY IF EXISTS "products_select_admin_all" ON public.products;
@@ -132,7 +132,7 @@ CREATE POLICY "products_delete_admin"
   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 6: RLS POLICIES — TRANSACTIONS
+-- SECTION 6: RLS POLICIES - TRANSACTIONS
 -- ────────────────────────────────────────────────────────────
 
 DROP POLICY IF EXISTS "transactions_select_admin" ON public.transactions;
@@ -171,7 +171,7 @@ CREATE POLICY "transactions_delete_admin"
   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 7: RLS POLICIES — TRANSACTION ITEMS
+-- SECTION 7: RLS POLICIES - TRANSACTION ITEMS
 -- ────────────────────────────────────────────────────────────
 
 DROP POLICY IF EXISTS "ti_select_policy" ON public.transaction_items;
@@ -220,7 +220,7 @@ CREATE POLICY "ti_delete_admin"
   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 -- ────────────────────────────────────────────────────────────
--- SECTION 8: TRIGGER — Sync profile.role → auth JWT
+-- SECTION 8: TRIGGER - Sync profile.role → auth JWT
 -- SECURITY DEFINER with search_path prevents injection attacks
 -- ────────────────────────────────────────────────────────────
 
@@ -249,7 +249,7 @@ CREATE TRIGGER sync_role_on_profile_update
   EXECUTE FUNCTION public.sync_profile_role_to_auth();
 
 -- ────────────────────────────────────────────────────────────
--- CONFIRMATION QUERY — verify all policies are in place
+-- CONFIRMATION QUERY - verify all policies are in place
 -- ────────────────────────────────────────────────────────────
 SELECT tablename, policyname, cmd
 FROM pg_policies

@@ -88,7 +88,7 @@ function InfoRow({ icon: Icon, label, value, isLoading }: { icon: React.ElementT
         {isLoading ? (
           <Skeleton className="h-4 w-40 mt-1" />
         ) : (
-          <p className="text-sm font-medium text-neutral-900 mt-0.5 break-all">{value || '—'}</p>
+          <p className="text-sm font-medium text-neutral-900 mt-0.5 break-all">{value || '-'}</p>
         )}
       </div>
     </div>
@@ -126,7 +126,7 @@ function DeleteConfirmModal({
           Akun <strong className="text-neutral-900">{kasir.full_name}</strong> akan dihapus permanen dari sistem.
         </p>
         <p className="text-sm text-neutral-500 mb-5">
-          Jika kasir ini memiliki data transaksi, penghapusan akan ditolak secara otomatis — gunakan <strong>Tangguhkan</strong> saja.
+          Jika kasir ini memiliki data transaksi, penghapusan akan ditolak secara otomatis, gunakan <strong>Tangguhkan</strong> saja.
         </p>
         <div className="flex gap-2">
           <button
@@ -257,7 +257,7 @@ function KasirDetailDrawer({
                 {isLoadingEmail ? (
                   <Skeleton className="h-3.5 w-36 mt-1" />
                 ) : (
-                  <p className="text-sm text-neutral-500 mt-0.5 truncate">{authDetails?.email || '—'}</p>
+                  <p className="text-sm text-neutral-500 mt-0.5 truncate">{authDetails?.email || '-'}</p>
                 )}
                 <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                   {kasir.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
@@ -303,8 +303,8 @@ function KasirDetailDrawer({
                       onClick={() => onToggle(kasir.id, !kasir.is_active)}
                       disabled={isToggling}
                       className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.96] transition-all disabled:opacity-50 border ${kasir.is_active
-                          ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100'
-                          : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                        ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100'
+                        : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
                         }`}
                     >
                       {kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
@@ -425,7 +425,7 @@ function KasirDetailDrawer({
         </motion.aside>
       </motion.div>
 
-      {/* Delete confirmation modal — rendered above drawer (z-[60]) */}
+      {/* Delete confirmation modal - rendered above drawer (z-[60]) */}
       <AnimatePresence>
         {showDeleteConfirm && (
           <DeleteConfirmModal

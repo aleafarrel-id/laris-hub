@@ -34,7 +34,7 @@ export const saleTransactionSchema = z.object({
   transaction_at: z.string().optional(),
 })
 
-// Expense transaction schema — with optional detail items
+// Expense transaction schema - with optional detail items
 export const expenseTransactionSchema = z.object({
   type: z.literal('pengeluaran'),
   description: z

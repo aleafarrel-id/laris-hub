@@ -34,7 +34,7 @@ export async function signIn(email: string, password: string) {
     .single()
 
   if (profile?.is_active === false) {
-    // Invalidate the session immediately — suspended users get no access
+    // Invalidate the session immediately - suspended users get no access
     await supabase.auth.signOut()
     throw new Error('ACCOUNT_SUSPENDED')
   }

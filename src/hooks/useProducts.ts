@@ -16,7 +16,7 @@ export function useProducts(activeOnly = false) {
   return useQuery({
     queryKey: [...QUERY_KEYS.PRODUCTS, { activeOnly }],
     queryFn: () => getProducts(activeOnly),
-    staleTime: 1000 * 60 * 5, // 5 min — product catalog changes rarely
+    staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
   })
 }
 

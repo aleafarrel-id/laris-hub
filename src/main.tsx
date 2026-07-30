@@ -12,7 +12,7 @@ import './index.css'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute — aggressive caching
+      staleTime: 1000 * 60, // 1 minute - aggressive caching
       gcTime: 1000 * 60 * 5, // 5 minutes garbage collection
       retry: (failureCount, error) => {
         // Don't retry on auth errors
@@ -56,7 +56,7 @@ ReactDOM.createRoot(rootElement).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
 
-      {/* DevTools — only in development */}
+      {/* DevTools - only in development */}
       {import.meta.env.DEV && (
         <>
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />

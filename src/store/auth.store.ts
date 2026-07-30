@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
       name: `${STORAGE_KEYS.THEME}-auth`,
       storage: createJSONStorage(() => localStorage),
       // Security: do NOT persist profile (which contains role, phone, etc.)
-      // to localStorage — prevents role spoofing via tampered storage.
+      // to localStorage - prevents role spoofing via tampered storage.
       // Session hydration happens via useAuthListener on app init.
       partialize: () => ({}),
     },

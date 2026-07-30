@@ -22,7 +22,7 @@ export function useTransactions(filters: TransactionFilters = {}) {
   return useQuery({
     queryKey: [...QUERY_KEYS.TRANSACTIONS, filters],
     queryFn: () => getTransactions(filters),
-    staleTime: 1000 * 30, // 30s — transactions change frequently
+    staleTime: 1000 * 30, // 30s - transactions change frequently
   })
 }
 

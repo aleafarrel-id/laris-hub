@@ -129,7 +129,7 @@ export function translateError(error: unknown): string {
   const message = error.message.toLowerCase()
   const rawMessage = error.message
 
-  // Suspended account — specific actionable message
+  // Suspended account - specific actionable message
   if (rawMessage === 'ACCOUNT_SUSPENDED') {
     return 'ACCOUNT_SUSPENDED'
   }
@@ -180,8 +180,13 @@ export function translateError(error: unknown): string {
     return 'Data tidak dapat disimpan karena referensi tidak valid.'
   }
 
-  // Fallback
-  return 'Terjadi kesalahan. Silakan coba lagi atau hubungi administrator.'
+  // Fallback to the original error message ONLY if explicitly marked as safe for the user.
+  // This prevents raw Postgres errors or unexpected JSON from leaking into the UI.
+  if ((error as any).isUserFacing === true && typeof rawMessage === 'string') {
+    return rawMessage
+  }
+  
+  return 'Terjadi kesalahan sistem. Silakan coba lagi atau hubungi administrator.'
 }
 
 /**

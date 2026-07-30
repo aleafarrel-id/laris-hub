@@ -80,7 +80,7 @@ export function useAuthListener() {
           const profile = await getProfile(user.id)
           if (mounted) setProfile(profile)
         } catch {
-          // Profile fetch failed — still mark initialized
+          // Profile fetch failed - still mark initialized
         }
       }
 
@@ -102,7 +102,7 @@ export function useAuthListener() {
           const profile = await getProfile(session.user.id)
           if (mounted) setProfile(profile)
         } catch {
-          // Silently handle — user is logged in even if profile fetch fails
+          // Silently handle - user is logged in even if profile fetch fails
         }
       } else if (event === 'SIGNED_OUT') {
         clearAuth()

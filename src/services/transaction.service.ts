@@ -17,7 +17,7 @@ export interface CreateExpensePayload {
   description: string
   total_amount: number
   expense_category: 'operasional' | 'bahan_baku' | 'lainnya'
-  /** Optional breakdown items stored as JSONB — e.g. [{name:"Gas LPG",qty:2,unit_price:22000}] */
+  /** Optional breakdown items stored as JSONB - e.g. [{name:"Gas LPG",qty:2,unit_price:22000}] */
   expense_items?: Array<{ name: string; qty?: number; unit_price: number }>
   notes?: string | null
   transaction_at?: string
@@ -25,7 +25,7 @@ export interface CreateExpensePayload {
 
 /**
  * Get the authenticated user's ID from the current session.
- * This is authoritative — cannot be spoofed by client-side arguments.
+ * This is authoritative - cannot be spoofed by client-side arguments.
  * Prevents IDOR (Insecure Direct Object Reference) attacks.
  */
 async function getAuthenticatedUserId(): Promise<string> {

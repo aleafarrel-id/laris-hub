@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN TOKENS — Laris Hub Design System
+   DESIGN TOKENS - Laris Hub Design System
    ============================================================ */
 @theme {
-  /* === PRIMARY — Brand Blue === */
+  /* === PRIMARY - Brand Blue === */
   --color-primary-50:  #edf5fb;
   --color-primary-100: #c5e3f5;
   --color-primary-200: #9fd0f1;
@@ -17,7 +17,7 @@
   --color-primary-900: #14305b;
   --color-primary-950: #0a192e;
 
-  /* === PRIMARY SHORTHAND — needed for bg-primary, text-primary, etc. === */
+  /* === PRIMARY SHORTHAND - needed for bg-primary, text-primary, etc. === */
   --color-primary: #285eaf; /* Using 700 for good contrast with white text */
 
   /* === SEMANTIC COLORS === */
@@ -112,7 +112,7 @@
   }
 
   html {
-    font-size: 16px; /* Base — never below this */
+    font-size: 16px; /* Base - never below this */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     touch-action: manipulation; /* Prevent double-tap zoom on iOS */
@@ -127,7 +127,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100%;
-    min-height: 100dvh; /* Dynamic viewport height — handles mobile nav bars */
+    min-height: 100dvh; /* Dynamic viewport height - handles mobile nav bars */
     /* Safe area for notch/rounded corners */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -142,7 +142,7 @@
     flex-direction: column;
   }
 
-  /* Skip to content — accessibility */
+  /* Skip to content - accessibility */
   .skip-link {
     position: absolute;
     transform: translateY(-100%);
@@ -177,7 +177,7 @@
     line-height: 1.6;
   }
 
-  /* Numeric data — use monospace for financial numbers */
+  /* Numeric data - use monospace for financial numbers */
   .numeric, [data-numeric] {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
@@ -472,7 +472,7 @@
   .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-  /* Text gradient — for brand headings */
+  /* Text gradient - for brand headings */
   .text-gradient-primary {
     background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
     -webkit-background-clip: text;
@@ -480,7 +480,7 @@
     color: transparent;
   }
 
-  /* Fade-in + slide-up — single merged keyframe, no conflicts */
+  /* Fade-in + slide-up - single merged keyframe, no conflicts */
   .animate-fade-in {
     animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -490,12 +490,12 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Kept for backward compat — same as animate-fade-in now */
+  /* Kept for backward compat - same as animate-fade-in now */
   .animate-slide-up {
     animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  /* Scale-in — for cards and modals entering from scale */
+  /* Scale-in - for cards and modals entering from scale */
   .animate-scale-in {
     animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   }

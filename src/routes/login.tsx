@@ -192,7 +192,7 @@ function LoginPage() {
           className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-xl shadow-neutral-200/40"
           {...fadeUp(0.08)}
         >
-          {/* Suspended account banner — shown when is_active = false */}
+          {/* Suspended account banner - shown when is_active = false */}
           {isSuspended && (
             <motion.div
               className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3"
@@ -206,7 +206,7 @@ function LoginPage() {
             </motion.div>
           )}
 
-          {/* Generic error — wrong credentials etc */}
+          {/* Generic error - wrong credentials etc */}
           {serverError && !isSuspended && (
             <motion.div
               className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-danger/10 border border-danger/20 px-4 py-3"

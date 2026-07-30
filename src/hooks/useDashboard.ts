@@ -68,7 +68,7 @@ export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
       }
       return getMonthlyTrend(days)
     },
-    staleTime: 1000 * 60 * 5, // 5 min — chart doesn't need to be ultra-fresh
+    staleTime: 1000 * 60 * 5, // 5 min - chart doesn't need to be ultra-fresh
   })
 }
 
