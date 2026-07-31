@@ -60,6 +60,97 @@ $$;
 
 ALTER FUNCTION "public"."calculate_transaction_item_totals"() OWNER TO "postgres";
 
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."transactions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "type" "text" NOT NULL,
+    "description" "text",
+    "total_amount" integer DEFAULT 0 NOT NULL,
+    "total_profit" integer DEFAULT 0 NOT NULL,
+    "expense_category" "text",
+    "expense_items" "jsonb",
+    "notes" "text",
+    "recorded_by" "uuid" NOT NULL,
+    "transaction_at" timestamp with time zone DEFAULT "now"(),
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "transactions_expense_category_check" CHECK (("expense_category" = ANY (ARRAY['operasional'::"text", 'bahan_baku'::"text", 'lainnya'::"text"]))),
+    CONSTRAINT "transactions_type_check" CHECK (("type" = ANY (ARRAY['penjualan'::"text", 'pengeluaran'::"text"])))
+);
+
+
+ALTER TABLE "public"."transactions" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."transactions"."expense_items" IS 'Detail item pengeluaran: [{name,qty,unit_price}]';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_sale_transaction"("p_recorded_by" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") RETURNS "public"."transactions"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+  v_transaction public.transactions;
+  v_total_amount numeric := 0;
+  v_total_profit numeric := 0;
+  v_item jsonb;
+BEGIN
+  -- Calculate totals
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_total_amount := v_total_amount + ((v_item->>'selling_price')::numeric * (v_item->>'quantity')::integer);
+    v_total_profit := v_total_profit + (((v_item->>'selling_price')::numeric - (v_item->>'product_hpp')::numeric) * (v_item->>'quantity')::integer);
+  END LOOP;
+
+  -- Insert transaction
+  INSERT INTO public.transactions (
+    type,
+    total_amount,
+    total_profit,
+    notes,
+    recorded_by,
+    transaction_at
+  ) VALUES (
+    'penjualan',
+    v_total_amount,
+    v_total_profit,
+    p_notes,
+    auth.uid(),
+    COALESCE(p_transaction_at, now())
+
+  ) RETURNING * INTO v_transaction;
+
+  -- Insert items
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    INSERT INTO public.transaction_items (
+      transaction_id,
+      product_id,
+      product_name,
+      product_hpp,
+      selling_price,
+      quantity
+    ) VALUES (
+      v_transaction.id,
+      NULLIF(v_item->>'product_id', '')::uuid,
+      v_item->>'product_name',
+      (v_item->>'product_hpp')::numeric,
+      (v_item->>'selling_price')::numeric,
+      (v_item->>'quantity')::integer
+    );
+  END LOOP;
+
+  RETURN v_transaction;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."create_sale_transaction"("p_recorded_by" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") OWNER TO "postgres";
+
 
 CREATE OR REPLACE FUNCTION "public"."get_top_products"("period" "text") RETURNS TABLE("product_id" "uuid", "product_name" "text", "total_qty" bigint, "total_revenue" bigint)
     LANGUAGE "plpgsql"
@@ -183,34 +274,63 @@ $$;
 
 ALTER FUNCTION "public"."sync_profile_role_to_auth"() OWNER TO "postgres";
 
-SET default_tablespace = '';
 
-SET default_table_access_method = "heap";
+CREATE OR REPLACE FUNCTION "public"."update_sale_transaction"("p_transaction_id" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") RETURNS "public"."transactions"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  v_transaction public.transactions;
+  v_total_amount numeric := 0;
+  v_total_profit numeric := 0;
+  v_item jsonb;
+BEGIN
+  -- Calculate totals
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_total_amount := v_total_amount + ((v_item->>'selling_price')::numeric * (v_item->>'quantity')::integer);
+    v_total_profit := v_total_profit + (((v_item->>'selling_price')::numeric - (v_item->>'product_hpp')::numeric) * (v_item->>'quantity')::integer);
+  END LOOP;
+
+  -- Update transaction
+  UPDATE public.transactions
+  SET 
+    total_amount = v_total_amount,
+    total_profit = v_total_profit,
+    notes = p_notes,
+    transaction_at = COALESCE(p_transaction_at, transaction_at),
+    updated_at = now()
+  WHERE id = p_transaction_id
+  RETURNING * INTO v_transaction;
+
+  -- Delete existing items
+  DELETE FROM public.transaction_items WHERE transaction_id = p_transaction_id;
+
+  -- Insert new items
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    INSERT INTO public.transaction_items (
+      transaction_id,
+      product_id,
+      product_name,
+      product_hpp,
+      selling_price,
+      quantity
+    ) VALUES (
+      v_transaction.id,
+      NULLIF(v_item->>'product_id', '')::uuid,
+      v_item->>'product_name',
+      (v_item->>'product_hpp')::numeric,
+      (v_item->>'selling_price')::numeric,
+      (v_item->>'quantity')::integer
+    );
+  END LOOP;
+
+  RETURN v_transaction;
+END;
+$$;
 
 
-CREATE TABLE IF NOT EXISTS "public"."transactions" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "type" "text" NOT NULL,
-    "description" "text",
-    "total_amount" integer DEFAULT 0 NOT NULL,
-    "total_profit" integer DEFAULT 0 NOT NULL,
-    "expense_category" "text",
-    "expense_items" "jsonb",
-    "notes" "text",
-    "recorded_by" "uuid" NOT NULL,
-    "transaction_at" timestamp with time zone DEFAULT "now"(),
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    CONSTRAINT "transactions_expense_category_check" CHECK (("expense_category" = ANY (ARRAY['operasional'::"text", 'bahan_baku'::"text", 'lainnya'::"text"]))),
-    CONSTRAINT "transactions_type_check" CHECK (("type" = ANY (ARRAY['penjualan'::"text", 'pengeluaran'::"text"])))
-);
-
-
-ALTER TABLE "public"."transactions" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."transactions"."expense_items" IS 'Detail item pengeluaran: [{name,qty,unit_price}]';
-
+ALTER FUNCTION "public"."update_sale_transaction"("p_transaction_id" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") OWNER TO "postgres";
 
 
 CREATE OR REPLACE VIEW "public"."daily_summary" WITH ("security_invoker"='true') AS
@@ -734,6 +854,18 @@ GRANT ALL ON FUNCTION "public"."calculate_transaction_item_totals"() TO "service
 
 
 
+GRANT ALL ON TABLE "public"."transactions" TO "anon";
+GRANT ALL ON TABLE "public"."transactions" TO "authenticated";
+GRANT ALL ON TABLE "public"."transactions" TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."create_sale_transaction"("p_recorded_by" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."create_sale_transaction"("p_recorded_by" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_sale_transaction"("p_recorded_by" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_top_products"("period" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_top_products"("period" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_top_products"("period" "text") TO "service_role";
@@ -764,6 +896,9 @@ GRANT ALL ON FUNCTION "public"."sync_profile_role_to_auth"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."update_sale_transaction"("p_transaction_id" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."update_sale_transaction"("p_transaction_id" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_sale_transaction"("p_transaction_id" "uuid", "p_notes" "text", "p_transaction_at" timestamp with time zone, "p_items" "jsonb") TO "service_role";
 
 
 
@@ -779,9 +914,6 @@ GRANT ALL ON FUNCTION "public"."sync_profile_role_to_auth"() TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."transactions" TO "anon";
-GRANT ALL ON TABLE "public"."transactions" TO "authenticated";
-GRANT ALL ON TABLE "public"."transactions" TO "service_role";
 
 
 
@@ -871,6 +1003,45 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
+
+
+drop extension if exists "pg_net";
+
+
+  create policy "Admin bisa hapus gambar"
+  on "storage"."objects"
+  as permissive
+  for delete
+  to authenticated
+using ((bucket_id = 'product-images'::text));
+
+
+
+  create policy "Admin bisa update gambar"
+  on "storage"."objects"
+  as permissive
+  for update
+  to authenticated
+using ((bucket_id = 'product-images'::text));
+
+
+
+  create policy "Admin bisa upload gambar"
+  on "storage"."objects"
+  as permissive
+  for insert
+  to authenticated
+with check ((bucket_id = 'product-images'::text));
+
+
+
+  create policy "Public Access"
+  on "storage"."objects"
+  as permissive
+  for select
+  to public
+using ((bucket_id = 'product-images'::text));
 
 
 

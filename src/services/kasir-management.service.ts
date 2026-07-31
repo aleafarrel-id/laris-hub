@@ -45,6 +45,21 @@ export async function getKasirList(): Promise<Profile[]> {
 }
 
 /**
+ * Fetch active kasir profiles (for dropdowns).
+ */
+export async function getActiveCashiers(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, avatar_url, phone')
+    .eq('role', 'kasir')
+    .eq('is_active', true)
+    .order('full_name', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as Profile[]
+}
+
+/**
  * Fetch kasir's auth details (email, last sign-in) from auth.users via Edge Function.
  * Admin only. ID is passed via x-kasir-id header to avoid CORS issues with query params.
  */

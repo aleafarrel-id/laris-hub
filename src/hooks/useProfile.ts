@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
 import { translateError } from '@/lib/utils'
 import { getProfile, updateProfile } from '@/services/auth.service'
+import { getActiveCashiers } from '@/services/kasir-management.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { Profile } from '@/types'
 
@@ -25,19 +26,7 @@ export function useCashiers() {
 
   return useQuery({
     queryKey: [...QUERY_KEYS.CASHIERS, 'active-only'],
-    queryFn: async () => {
-      // Inline fetch for simplicity, can be moved to auth.service
-      const { supabase } = await import('@/lib/supabase')
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role, avatar_url, phone')
-        .eq('role', 'kasir')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true })
-
-      if (error) throw error
-      return data as Profile[]
-    },
+    queryFn: getActiveCashiers,
     enabled: !!user,
     staleTime: 1000 * 60 * 60, // 1 hour
   })

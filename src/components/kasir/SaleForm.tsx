@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useDeferredValue } from 'react'
 import { CheckoutPanel } from '@/components/kasir/CheckoutPanel'
 import { ProductCard } from '@/components/kasir/ProductCard'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -32,6 +32,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
   const { cart, setCart, addToCart, changeQty, totalAmount, totalItems, cartArray } = useSaleCart()
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState(transaction?.notes ?? '')
+  const deferredSearch = useDeferredValue(search)
 
   // Pre-populate cart when editing an existing transaction
   useEffect(() => {
@@ -64,7 +65,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
   }, [isEditing, transaction, products, productsLoading, setCart])
 
   // Simple derivations — no useMemo needed for cheap operations (Vercel guideline)
-  const query = search.trim().toLowerCase()
+  const query = deferredSearch.trim().toLowerCase()
   const filtered = query ? products.filter((p) => p.name.toLowerCase().includes(query)) : products
 
   // In edit mode, also show cart products that don't match the current filter
@@ -72,7 +73,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
   if (isEditing) {
     const all = [...filtered]
     cart.forEach((cartItem) => {
-      if (!all.find((p) => p.id === cartItem.product.id) && !search) {
+      if (!all.find((p) => p.id === cartItem.product.id) && !deferredSearch) {
         all.push(cartItem.product)
       }
     })

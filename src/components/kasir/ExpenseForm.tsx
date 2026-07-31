@@ -1,4 +1,4 @@
-import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { motion } from 'motion/react'
 import { PlusCircle, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -27,8 +27,6 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
   const { mutate: createExpense, isPending: isCreating } = useCreateExpense()
   const { mutate: updateExpense, isPending: isUpdating } = useUpdateExpense()
   const isPending = isCreating || isUpdating
-
-  const [parentRef] = useAutoAnimate()
 
   const [description, setDescription] = useState(transaction?.description ?? '')
   const [category, setCategory] = useState<ExpenseCategory>(
@@ -156,11 +154,16 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
         </div>
 
         {items.length > 0 ? (
-          <div ref={parentRef} className="space-y-3 pr-1 pb-2">
+          <div className="space-y-3 pr-1 pb-2">
             {items.map((item) => (
-              <div
+              <motion.div
                 key={item.id}
-                className="flex items-start gap-2 bg-neutral-50/80 rounded-xl p-3 border border-neutral-100 animate-fade-in"
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-2 bg-neutral-50/80 rounded-xl p-3 border border-neutral-100"
               >
                 <div className="flex-1 space-y-2">
                   <input
@@ -207,7 +210,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                 >
                   <X size={16} />
                 </button>
-              </div>
+              </motion.div>
             ))}
           </div>
         ) : (

@@ -29,9 +29,10 @@ export const Route = createFileRoute('/login')({
       .single()
 
     const profileData = profile as { role: 'admin' | 'kasir' } | null
-    const dest =
-      (search as { redirect?: string }).redirect ??
-      (profileData?.role === 'admin' ? '/dashboard' : '/kasir')
+    let dest = (search as { redirect?: string }).redirect
+    if (!dest || !dest.startsWith('/') || dest.startsWith('//')) {
+      dest = profileData?.role === 'admin' ? '/dashboard' : '/kasir'
+    }
     throw redirect({ to: dest })
   },
   component: LoginPage,

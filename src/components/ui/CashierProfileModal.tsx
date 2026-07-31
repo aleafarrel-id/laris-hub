@@ -29,16 +29,16 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
   })
 
   const stats = useMemo(() => {
-    if (!transactions) return { omzet: 0, count: 0, profit: 0 }
+    if (!transactions?.data) return { omzet: 0, count: 0, profit: 0 }
 
     let omzet = 0
     let count = 0
     let profit = 0
 
-    for (const tx of transactions) {
+    for (const tx of transactions.data) {
       if (tx.type === 'penjualan') {
         omzet += tx.total_amount
-        profit += tx.total_profit
+        profit += Number(tx.total_profit) || 0
         count++
       }
     }

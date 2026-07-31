@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
 import { translateError } from '@/lib/utils'
@@ -12,6 +12,7 @@ import {
   updateExpenseTransaction,
   updateSaleTransaction,
 } from '@/services/transaction.service'
+import { getKPISummaryForRange } from '@/services/dashboard.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
@@ -32,14 +33,49 @@ function onTransactionError(action: string) {
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
-export function useTransactions(filters: TransactionFilters = {}) {
+export function useTransactions(filters: TransactionFilters = {}, page = 1, pageSize = 20) {
   const user = useAuthStore((state) => state.user)
 
   return useQuery({
     enabled: !!user,
-    queryKey: [...QUERY_KEYS.TRANSACTIONS, filters],
-    queryFn: () => getTransactions(filters),
+    queryKey: [...QUERY_KEYS.TRANSACTIONS, filters, page, pageSize],
+    queryFn: () => getTransactions(filters, page, pageSize),
     staleTime: 1000 * 30, // 30s - transactions change frequently
+  })
+}
+
+export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSize = 20) {
+  const user = useAuthStore((state) => state.user)
+
+  return useInfiniteQuery({
+    enabled: !!user,
+    queryKey: [...QUERY_KEYS.TRANSACTIONS, 'infinite', filters, pageSize],
+    queryFn: ({ pageParam = 1 }) => getTransactions(filters, pageParam, pageSize),
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useTransactionSummary(filters: Pick<TransactionFilters, 'dateRange' | 'type' | 'recordedBy'> = {}) {
+  const user = useAuthStore((state) => state.user)
+
+  return useQuery({
+    enabled: !!user,
+    queryKey: [...QUERY_KEYS.TRANSACTIONS, 'summary', filters],
+    queryFn: async () => {
+      const from = filters.dateRange?.from || new Date(2000, 0, 1)
+      const to = filters.dateRange?.to || new Date()
+      // getKPISummaryForRange fetches lightweight aggregate columns (type, amount, profit) 
+      // instead of joining full transaction data
+      const kpi = await getKPISummaryForRange(from, to, filters.recordedBy)
+      return {
+        totalSales: filters.type === 'pengeluaran' ? 0 : kpi.omzet,
+        totalExpenses: filters.type === 'penjualan' ? 0 : kpi.pengeluaran,
+        totalProfit: filters.type === 'pengeluaran' ? 0 : kpi.profit,
+      }
+    },
+    staleTime: 1000 * 30,
   })
 }
 
