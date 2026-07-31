@@ -27,7 +27,7 @@ export function PaymentMethodModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={!isPending ? onClose : undefined}
-            className="fixed inset-0 z-50 bg-neutral-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-neutral-900/60"
           />
 
           {/* Modal */}
@@ -37,7 +37,7 @@ export function PaymentMethodModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-sm bg-white rounded-3xl shadow-2xl pointer-events-auto overflow-hidden flex flex-col"
+              className="w-full max-w-sm bg-white rounded-3xl shadow-2xl pointer-events-auto overflow-hidden flex flex-col will-change-transform"
             >
               {/* Header */}
               <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">

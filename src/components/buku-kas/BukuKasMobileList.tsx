@@ -2,8 +2,7 @@ import { Edit3, TrendingDown, TrendingUp, Trash2, CheckCircle2 } from 'lucide-re
 import { motion } from 'motion/react'
 import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
-import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
@@ -101,22 +100,10 @@ export function BukuKasMobileList({
 
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="text-sm font-medium text-neutral-900 pr-12">
-              <TransactionItemsMobileDisplay transaction={tx as unknown as TransactionWithItems} />
+              <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
             </div>
 
-            {(tx.expense_category || tx.notes) && (
-              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                {tx.type === 'pengeluaran' && tx.expense_category && (
-                  <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                    {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
-                  </span>
-                )}
-                {tx.notes && (
-                  <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
-                )}
-              </div>
-            )}
-            
+
             {tx.type === 'penjualan' && (
               <div className="flex items-center gap-1.5 mt-1.5">
                 <PaymentMethodBadge method={tx.payment_method} />

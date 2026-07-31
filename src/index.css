@@ -140,6 +140,17 @@
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     overflow-x: hidden;
+    
+    /* Prevent text selection and long-press menus on mobile */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow selection in inputs and textareas */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: auto;
+    user-select: auto;
   }
 
   #root {
@@ -256,9 +267,11 @@
     color: white;
   }
 
-  .btn-kasir-sale:hover {
-    background: var(--color-success-dark);
-    box-shadow: 0 12px 20px -4px rgb(22 163 74 / 0.4);
+  @media (hover: hover) {
+    .btn-kasir-sale:hover {
+      background: var(--color-success-dark);
+      box-shadow: 0 12px 20px -4px rgb(22 163 74 / 0.4);
+    }
   }
 
   .btn-kasir-expense {
@@ -266,9 +279,11 @@
     color: white;
   }
 
-  .btn-kasir-expense:hover {
-    background: var(--color-danger-dark);
-    box-shadow: 0 12px 20px -4px rgb(220 38 38 / 0.4);
+  @media (hover: hover) {
+    .btn-kasir-expense:hover {
+      background: var(--color-danger-dark);
+      box-shadow: 0 12px 20px -4px rgb(220 38 38 / 0.4);
+    }
   }
 
   /* === KPI CARD === */
@@ -281,9 +296,11 @@
     transition: box-shadow var(--transition-normal), transform var(--transition-normal);
   }
 
-  .kpi-card:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    .kpi-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-1px);
+    }
   }
 
   /* === APP CARD === */
@@ -428,9 +445,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .sidebar-item:hover {
-    background: var(--color-primary-50);
-    color: var(--color-primary-700);
+  @media (hover: hover) {
+    .sidebar-item:hover {
+      background: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
   }
 
   .sidebar-item.active {
@@ -448,8 +467,10 @@
     transition: box-shadow var(--transition-fast);
   }
 
-  .kpi-card:hover {
-    box-shadow: var(--shadow-card);
+  @media (hover: hover) {
+    .kpi-card:hover {
+      box-shadow: var(--shadow-card);
+    }
   }
 }
 

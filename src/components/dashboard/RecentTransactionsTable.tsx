@@ -2,8 +2,7 @@ import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from '
 import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
-import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatRupiah, formatTime } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
@@ -90,21 +89,10 @@ export function RecentTransactionsTable({
             )}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="text-sm font-medium text-neutral-900 pr-12">
-                <TransactionItemsMobileDisplay transaction={tx as unknown as TransactionWithItems} />
+                <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
               </div>
 
-              {(tx.expense_category || tx.notes) && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  {tx.type === 'pengeluaran' && tx.expense_category && (
-                    <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                      {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
-                    </span>
-                  )}
-                  {tx.notes && (
-                    <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
-                  )}
-                </div>
-              )}
+
 
               {tx.profiles && (
                 <div className="mt-1.5">
@@ -178,51 +166,10 @@ export function RecentTransactionsTable({
                 <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                   {formatTime(tx.transaction_at)}
                 </td>
-                <td className="py-2.5 px-4 max-w-[200px]">
-                  <div className="flex items-start gap-2 mb-0.5">
-                    <div className="text-sm font-medium text-neutral-900">
-                      {tx.type === 'penjualan' ? (
-                        <div className="flex flex-col gap-0.5">
-                          {tx.transaction_items && tx.transaction_items.length > 1 ? (
-                            tx.transaction_items.map((i, idx) => (
-                              <div key={idx} className="flex items-center gap-1.5">
-                                <span className="text-neutral-400">•</span>
-                                <span>
-                                  {i.product_name}{' '}
-                                  <span className="text-neutral-400 tabular-nums">
-                                    x{i.quantity}
-                                  </span>
-                                </span>
-                              </div>
-                            ))
-                          ) : tx.transaction_items?.length === 1 ? (
-                            <span>
-                              {tx.transaction_items[0].product_name}{' '}
-                              <span className="text-neutral-400 tabular-nums">
-                                x{tx.transaction_items[0].quantity}
-                              </span>
-                            </span>
-                          ) : (
-                            <span>Penjualan</span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>{tx.description}</span>
-                          {tx.type === 'pengeluaran' && tx.expense_category && (
-                            <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                              {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {tx.notes && (
-                    <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
-                  )}
+                <td className="py-2.5 px-4 max-w-[200px] align-top">
+                  <TransactionDetails transaction={tx as unknown as TransactionWithItems} />
                 </td>
-                <td className="py-2.5 px-4">
+                <td className="py-2.5 px-4 align-top">
                   <div className="flex flex-col items-start gap-1">
                     <TransactionBadge type={tx.type} />
                     {tx.type === 'penjualan' && (
@@ -233,7 +180,7 @@ export function RecentTransactionsTable({
                     )}
                   </div>
                 </td>
-                <td className="py-2.5 px-4 text-neutral-600 truncate max-w-[120px]">
+                <td className="py-2.5 px-4 text-neutral-600 truncate max-w-[120px] align-top">
                   <button
                     type="button"
                     onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
@@ -243,14 +190,14 @@ export function RecentTransactionsTable({
                   </button>
                 </td>
                 <td
-                  className={`py-2.5 px-4 text-right font-bold tabular-nums ${
+                  className={`py-2.5 px-4 text-right font-bold tabular-nums align-top ${
                     tx.type === 'penjualan' ? 'text-success' : 'text-danger'
                   }`}
                 >
                   {tx.type === 'penjualan' ? '+' : '−'}
                   {formatRupiah(tx.total_amount)}
                 </td>
-                <td className="py-2.5 px-4 text-right">
+                <td className="py-2.5 px-4 text-right align-top">
                   <div className="flex justify-end items-center gap-1">
                     {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button

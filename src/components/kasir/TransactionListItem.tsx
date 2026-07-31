@@ -2,7 +2,7 @@ import { CheckCircle2, ShoppingCart, Wallet } from 'lucide-react'
 import { motion } from 'motion/react'
 import { memo } from 'react'
 import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
-import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatRupiah, formatTime } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
 
@@ -40,49 +40,9 @@ export const TransactionListItem = memo(function TransactionListItem({
       
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
-          <div className="text-sm font-medium text-neutral-900">
-            {tx.type === 'penjualan' ? (
-              <div className="flex flex-col gap-0.5">
-                {tx.transaction_items && tx.transaction_items.length > 1 ? (
-                  tx.transaction_items.map((i, index) => (
-                    <div key={index} className="flex items-start gap-1.5 min-w-0">
-                      <span className="text-neutral-400 flex-shrink-0">•</span>
-                      <span className="truncate">
-                        {i.product_name}{' '}
-                        <span className="text-neutral-400 font-normal tabular-nums text-xs">
-                          x{i.quantity}
-                        </span>
-                      </span>
-                    </div>
-                  ))
-                ) : tx.transaction_items?.length === 1 ? (
-                  <p className="truncate">
-                    {tx.transaction_items[0].product_name}{' '}
-                    <span className="text-neutral-400 font-normal tabular-nums text-xs">
-                      x{tx.transaction_items[0].quantity}
-                    </span>
-                  </p>
-                ) : (
-                  <p className="truncate">Penjualan</p>
-                )}
-              </div>
-            ) : (
-              <p className="truncate">{tx.description}</p>
-            )}
+          <div className="text-sm font-medium text-neutral-900 pr-4">
+            <TransactionDetails transaction={tx} isMobile />
           </div>
-
-          {(tx.expense_category || tx.notes) && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-              {tx.type === 'pengeluaran' && tx.expense_category && (
-                <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                  {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
-                </span>
-              )}
-              {tx.notes && (
-                <p className="text-xs text-neutral-500 truncate italic">"{tx.notes}"</p>
-              )}
-            </div>
-          )}
 
           {tx.type === 'penjualan' && (
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">

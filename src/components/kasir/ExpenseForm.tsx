@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { PlusCircle, X } from 'lucide-react'
+import { PlusCircle, X, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -174,16 +174,33 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                     className="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                   />
                   <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Qty"
-                      value={item.qty || ''}
-                      onChange={(e) =>
-                        updateItem(item.id, 'qty', Math.max(1, parseInt(e.target.value, 10) || 1))
-                      }
-                      min={1}
-                      className="w-20 bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm tabular-nums"
-                    />
+                    <div className="flex items-center justify-between bg-primary rounded-xl p-1 shadow-sm shadow-primary/20 w-28 h-10 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => updateItem(item.id, 'qty', Math.max(1, (Number(item.qty) || 1) - 1))}
+                        className="w-8 h-8 flex items-center justify-center text-white active:scale-[0.96] transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer flex-shrink-0"
+                      >
+                        <Minus size={14} strokeWidth={3} />
+                      </button>
+                      <input
+                        type="number"
+                        placeholder="Qty"
+                        value={item.qty === 0 ? '' : item.qty || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          updateItem(item.id, 'qty', val === '' ? ('' as any) : parseInt(val, 10))
+                        }}
+                        min={1}
+                        className="w-10 bg-transparent text-white font-bold text-center text-sm focus:outline-none tabular-nums placeholder:text-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateItem(item.id, 'qty', (Number(item.qty) || 0) + 1)}
+                        className="w-8 h-8 flex items-center justify-center text-white active:scale-[0.96] transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer flex-shrink-0"
+                      >
+                        <Plus size={14} strokeWidth={3} />
+                      </button>
+                    </div>
                     <Input
                       className="flex-1 tabular-nums bg-white rounded-lg py-2"
                       type="number"

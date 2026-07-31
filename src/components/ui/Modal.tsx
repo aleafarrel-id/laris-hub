@@ -79,7 +79,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           aria-labelledby="modal-title"
         >
           <motion.div
-            className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-neutral-900/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -98,7 +98,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
             onClick={onClose}
           >
             <motion.div
-              className={contentClass}
+              className={`${contentClass} will-change-transform`}
               variants={contentVariants}
               initial="hidden"
               animate="visible"

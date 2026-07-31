@@ -1,8 +1,7 @@
 import { Edit3, Trash2, CheckCircle2 } from 'lucide-react'
 import { TransactionBadge, PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { TransactionItemsDisplay } from '@/components/ui/TransactionItemsDisplay'
-import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
+import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
@@ -99,24 +98,10 @@ export function BukuKasTableDesktop({
                 <td className="py-3 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                   {formatDateTime(tx.transaction_at)}
                 </td>
-                <td className="py-3 px-4 max-w-xs">
-                  <div className="flex items-start gap-2 mb-0.5">
-                    <div className="text-sm font-medium text-neutral-900">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <TransactionItemsDisplay transaction={tx as unknown as TransactionWithItems} />
-                        {tx.type === 'pengeluaran' && tx.expense_category && (
-                          <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                            {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {tx.notes && (
-                    <p className="text-xs text-neutral-500 truncate italic mt-1">"{tx.notes}"</p>
-                  )}
+                <td className="py-3 px-4 max-w-xs align-top">
+                  <TransactionDetails transaction={tx as unknown as TransactionWithItems} />
                 </td>
-                <td className="py-3 px-4">
+                <td className="py-3 px-4 align-top">
                   <div className="flex flex-col items-start gap-1">
                     <TransactionBadge type={tx.type} />
                     {tx.type === 'penjualan' && (
@@ -128,7 +113,7 @@ export function BukuKasTableDesktop({
                   </div>
                 </td>
                 {isAdmin && (
-                  <td className="py-3 px-4 text-neutral-600 truncate max-w-[120px]">
+                  <td className="py-3 px-4 text-neutral-600 truncate max-w-[120px] align-top">
                     <button
                       type="button"
                       onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
@@ -139,7 +124,7 @@ export function BukuKasTableDesktop({
                   </td>
                 )}
                 <td
-                  className={`py-3 px-4 text-right font-semibold tabular-nums ${
+                  className={`py-3 px-4 text-right font-semibold tabular-nums align-top ${
                     tx.type === 'penjualan' ? 'text-success' : 'text-danger'
                   }`}
                 >
@@ -147,11 +132,11 @@ export function BukuKasTableDesktop({
                   {formatRupiah(tx.total_amount)}
                 </td>
                 {isAdmin && (
-                  <td className="py-3 px-4 text-right tabular-nums text-neutral-600">
+                  <td className="py-3 px-4 text-right tabular-nums text-neutral-600 align-top">
                     {tx.type === 'penjualan' ? formatRupiah(tx.total_profit) : '-'}
                   </td>
                 )}
-                <td className="py-3 px-4 text-right">
+                <td className="py-3 px-4 text-right align-top">
                   <div className="flex justify-end items-center gap-1">
                     {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button

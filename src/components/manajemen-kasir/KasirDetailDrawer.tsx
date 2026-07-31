@@ -74,7 +74,7 @@ function DeleteConfirmModal({
 }) {
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-neutral-900/60 z-[60] flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onCancel()}
     >
       <motion.div
@@ -82,7 +82,7 @@ function DeleteConfirmModal({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ type: 'spring', duration: 0.25, bounce: 0 }}
-        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 will-change-transform"
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center flex-shrink-0">
@@ -192,7 +192,7 @@ export function KasirDetailDrawer({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex"
+        className="fixed inset-0 bg-neutral-900/60 z-50 flex"
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.aside
@@ -200,7 +200,7 @@ export function KasirDetailDrawer({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="ml-auto w-full max-w-sm bg-white h-full overflow-y-auto flex flex-col shadow-2xl"
+          className="ml-auto w-full max-w-sm bg-white h-full overflow-y-auto flex flex-col shadow-2xl will-change-transform"
         >
           {/* Header */}
           <div className="sticky top-0 bg-white z-10 px-5 py-4 border-b border-neutral-100 flex items-center gap-3">
