@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
-import { useAuthStore } from '@/store/auth.store'
 import { translateError } from '@/lib/utils'
 import {
   type CreateKasirPayload,
@@ -14,6 +13,7 @@ import {
   type UpdateKasirPayload,
   updateKasir,
 } from '@/services/kasir-management.service'
+import { useAuthStore } from '@/store/auth.store'
 
 export function useKasirList() {
   const user = useAuthStore((state) => state.user)

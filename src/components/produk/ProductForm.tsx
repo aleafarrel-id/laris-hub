@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
@@ -46,9 +46,9 @@ export function ProductForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.image_url ?? null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-  const hpp = useMemo(() => Number(form.hpp) || 0, [form.hpp])
-  const sellingPrice = useMemo(() => Number(form.selling_price) || 0, [form.selling_price])
-  const margin = useMemo(() => calcMargin(sellingPrice, hpp), [sellingPrice, hpp])
+  const hpp = Number(form.hpp) || 0
+  const sellingPrice = Number(form.selling_price) || 0
+  const margin = calcMargin(sellingPrice, hpp)
   const isPending = isCreating || isUpdating || isUploadingImage
 
   const handleFieldChange = useCallback((id: keyof LocalProductFormData, value: string) => {

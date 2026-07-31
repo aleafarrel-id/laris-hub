@@ -1,29 +1,15 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { PlusCircle, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useCreateExpense, useUpdateExpense } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatRupiah } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
-
-interface ExpenseLineItem {
-  id: string
-  name: string
-  qty: number
-  unit_price: number
-}
+import { useExpenseItems } from '@/hooks/useTransactionForm'
 
 const EXPENSE_CATEGORY_ENTRIES = Object.entries(EXPENSE_CATEGORIES) as [string, ExpenseCategory][]
-
-function calcLineItemTotal(items: ExpenseLineItem[]): number {
-  return items.reduce((sum, item) => {
-    const qty = Number.isFinite(item.qty) ? item.qty : 0
-    const price = Number.isFinite(item.unit_price) ? item.unit_price : 0
-    return sum + price * qty
-  }, 0)
-}
 
 interface ExpenseFormProps {
   /** When provided, the form operates in "edit" mode. */
@@ -48,7 +34,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
   const [category, setCategory] = useState<ExpenseCategory>(
     (transaction?.expense_category as ExpenseCategory) ?? 'operasional',
   )
-  const [items, setItems] = useState<ExpenseLineItem[]>([])
+  const { items, setItems, addItem, updateItem, removeItem, lineItemsTotal } = useExpenseItems()
   const [notes, setNotes] = useState(transaction?.notes ?? '')
   const [manualTotal, setManualTotal] = useState(() => {
     const hasItems =
@@ -69,28 +55,16 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
         })),
       )
     }
-  }, [transaction])
+  }, [transaction, setItems])
 
-  const totalAmount = useMemo(() => {
-    if (items.length > 0) return calcLineItemTotal(items)
+  // Removed useMemo per Vercel Best Practices for simple primitives
+  let totalAmount = 0
+  if (items.length > 0) {
+    totalAmount = lineItemsTotal
+  } else {
     const parsed = Number(manualTotal.replace(/[^0-9]/g, ''))
-    return Number.isFinite(parsed) ? parsed : 0
-  }, [items, manualTotal])
-
-  const addItem = useCallback(() => {
-    setItems((prev) => [...prev, { id: crypto.randomUUID(), name: '', qty: 1, unit_price: 0 }])
-  }, [])
-
-  const updateItem = useCallback(
-    (id: string, field: keyof ExpenseLineItem, value: string | number) => {
-      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
-    },
-    [],
-  )
-
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }, [])
+    totalAmount = Number.isFinite(parsed) ? parsed : 0
+  }
 
   const handleSubmit = useCallback(() => {
     const desc = description.trim()
@@ -211,7 +185,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                       className="w-20 bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm tabular-nums"
                     />
                     <Input
-                      className="flex-1 pl-8 tabular-nums bg-white rounded-lg py-2"
+                      className="flex-1 tabular-nums bg-white rounded-lg py-2"
                       type="number"
                       placeholder="Harga"
                       value={item.unit_price || ''}

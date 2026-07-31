@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
-import { useAuthStore } from '@/store/auth.store'
 import {
   getKPISummaryForDate,
   getKPISummaryForRange,
@@ -9,6 +8,7 @@ import {
   getTopProducts,
   getTopProductsByKasir,
 } from '@/services/dashboard.service'
+import { useAuthStore } from '@/store/auth.store'
 import type { DateRange } from '@/types'
 
 export type DashboardPeriod = 'today' | 'week' | 'month' | 'custom'

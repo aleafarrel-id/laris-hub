@@ -11,7 +11,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -125,30 +125,23 @@ function BukuKasPage() {
     recordedBy: isAdmin && kasirFilter !== 'all' ? kasirFilter : undefined,
   })
 
-  const { omzet, pengeluaran, profit, net } = useMemo(() => {
-    let o = 0
-    let p = 0
-    let pr = 0
+  let omzet = 0
+  let pengeluaran = 0
+  let profit = 0
 
-    if (transactions) {
-      for (let i = 0; i < transactions.length; i++) {
-        const t = transactions[i]
-        if (t.type === 'penjualan') {
-          o += t.total_amount
-          pr += t.total_profit
-        } else if (t.type === 'pengeluaran') {
-          p += t.total_amount
-        }
+  if (transactions) {
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i]
+      if (t.type === 'penjualan') {
+        omzet += t.total_amount
+        profit += t.total_profit
+      } else if (t.type === 'pengeluaran') {
+        pengeluaran += t.total_amount
       }
     }
+  }
 
-    return {
-      omzet: o,
-      pengeluaran: p,
-      profit: pr,
-      net: o - p,
-    }
-  }, [transactions])
+  const net = omzet - pengeluaran
 
   return (
     <div className="page-container">
@@ -517,7 +510,7 @@ function BukuKasPage() {
                       </th>
                     )}
                     {isAdmin && (
-                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-20"></th>
+                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-20" />
                     )}
                   </tr>
                 </thead>

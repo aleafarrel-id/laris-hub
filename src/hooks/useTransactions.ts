@@ -2,7 +2,6 @@ import type { QueryClient } from '@tanstack/react-query'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
-import { useAuthStore } from '@/store/auth.store'
 import { translateError } from '@/lib/utils'
 import {
   createExpenseTransaction,
@@ -13,6 +12,7 @@ import {
   updateExpenseTransaction,
   updateSaleTransaction,
 } from '@/services/transaction.service'
+import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
 // ─── Private Helpers ──────────────────────────────────────────────────────────
@@ -55,93 +55,75 @@ export function useTodayTransactions(recordedBy?: string) {
   })
 }
 
+// ─── Mutation Factory ──────────────────────────────────────────────────────────
+
+function createTransactionMutation<TVariables, TData>(
+  mutationFn: (vars: TVariables) => Promise<TData>,
+  options: {
+    successMessage: string
+    successDescription?: string
+    errorAction: string
+  },
+) {
+  return function useMutationHook() {
+    const queryClient = useQueryClient()
+    return useMutation({
+      mutationFn,
+      onSuccess: () => {
+        invalidateTransactionQueries(queryClient)
+        toast.success(options.successMessage, {
+          description: options.successDescription,
+        })
+      },
+      onError: onTransactionError(options.errorAction),
+    })
+  }
+}
+
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
-type CreateSaleArgs = {
-  payload: Parameters<typeof createSaleTransaction>[0]
-}
+type CreateSaleArgs = { payload: Parameters<typeof createSaleTransaction>[0] }
+export const useCreateSale = createTransactionMutation<CreateSaleArgs, any>(
+  ({ payload }) => createSaleTransaction(payload),
+  {
+    successMessage: 'Transaksi penjualan berhasil disimpan!',
+    successDescription: 'Data telah tersimpan ke Buku Kas.',
+    errorAction: 'menyimpan transaksi',
+  },
+)
 
-export function useCreateSale() {
-  const queryClient = useQueryClient()
+type CreateExpenseArgs = { payload: Parameters<typeof createExpenseTransaction>[0] }
+export const useCreateExpense = createTransactionMutation<CreateExpenseArgs, any>(
+  ({ payload }) => createExpenseTransaction(payload),
+  {
+    successMessage: 'Pengeluaran berhasil dicatat!',
+    successDescription: 'Data telah tersimpan ke Buku Kas.',
+    errorAction: 'mencatat pengeluaran',
+  },
+)
 
-  return useMutation({
-    // Security: recordedBy fetched from session inside service, not passed as arg
-    mutationFn: ({ payload }: CreateSaleArgs) => createSaleTransaction(payload),
-    onSuccess: () => {
-      invalidateTransactionQueries(queryClient)
-      toast.success('Transaksi penjualan berhasil disimpan!', {
-        description: 'Data telah tersimpan ke Buku Kas.',
-      })
-    },
-    onError: onTransactionError('menyimpan transaksi'),
-  })
-}
+type UpdateSaleArgs = { id: string; payload: Parameters<typeof updateSaleTransaction>[1] }
+export const useUpdateSale = createTransactionMutation<UpdateSaleArgs, any>(
+  ({ id, payload }) => updateSaleTransaction(id, payload),
+  {
+    successMessage: 'Transaksi penjualan berhasil diperbarui!',
+    errorAction: 'memperbarui transaksi',
+  },
+)
 
-type CreateExpenseArgs = {
-  payload: Parameters<typeof createExpenseTransaction>[0]
-}
+type UpdateExpenseArgs = { id: string; payload: Parameters<typeof updateExpenseTransaction>[1] }
+export const useUpdateExpense = createTransactionMutation<UpdateExpenseArgs, any>(
+  ({ id, payload }) => updateExpenseTransaction(id, payload),
+  {
+    successMessage: 'Pengeluaran berhasil diperbarui!',
+    errorAction: 'memperbarui pengeluaran',
+  },
+)
 
-export function useCreateExpense() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    // Security: recordedBy fetched from session inside service, not passed as arg
-    mutationFn: ({ payload }: CreateExpenseArgs) => createExpenseTransaction(payload),
-    onSuccess: () => {
-      invalidateTransactionQueries(queryClient)
-      toast.success('Pengeluaran berhasil dicatat!', {
-        description: 'Data telah tersimpan ke Buku Kas.',
-      })
-    },
-    onError: onTransactionError('mencatat pengeluaran'),
-  })
-}
-
-type UpdateSaleArgs = {
-  id: string
-  payload: Parameters<typeof updateSaleTransaction>[1]
-}
-
-export function useUpdateSale() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, payload }: UpdateSaleArgs) => updateSaleTransaction(id, payload),
-    onSuccess: () => {
-      invalidateTransactionQueries(queryClient)
-      toast.success('Transaksi penjualan berhasil diperbarui!')
-    },
-    onError: onTransactionError('memperbarui transaksi'),
-  })
-}
-
-type UpdateExpenseArgs = {
-  id: string
-  payload: Parameters<typeof updateExpenseTransaction>[1]
-}
-
-export function useUpdateExpense() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, payload }: UpdateExpenseArgs) => updateExpenseTransaction(id, payload),
-    onSuccess: () => {
-      invalidateTransactionQueries(queryClient)
-      toast.success('Pengeluaran berhasil diperbarui!')
-    },
-    onError: onTransactionError('memperbarui pengeluaran'),
-  })
-}
-
-export function useDeleteTransaction() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => deleteTransaction(id),
-    onSuccess: () => {
-      invalidateTransactionQueries(queryClient)
-      toast.success('Transaksi berhasil dihapus!')
-    },
-    onError: (error) => toast.error(translateError(error)),
-  })
-}
+export const useDeleteTransaction = createTransactionMutation<string, any>(
+  (id) => deleteTransaction(id),
+  {
+    successMessage: 'Transaksi berhasil dihapus!',
+    errorAction: 'menghapus transaksi',
+  },
+)

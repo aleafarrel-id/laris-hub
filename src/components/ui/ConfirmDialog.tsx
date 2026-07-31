@@ -75,7 +75,9 @@ export function ConfirmDialog({
                 <div className="flex items-center gap-3 mb-3 sm:mb-4">
                   <div
                     className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
+                      variant === 'danger'
+                        ? 'bg-danger/10 text-danger'
+                        : 'bg-primary/10 text-primary'
                     }`}
                   >
                     <Icon size={20} strokeWidth={2} />
@@ -90,10 +92,20 @@ export function ConfirmDialog({
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
-                <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:flex-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  className="w-full sm:flex-1"
+                >
                   {cancelText}
                 </Button>
-                <Button type="button" variant={variant} onClick={onConfirm} className="w-full sm:flex-1">
+                <Button
+                  type="button"
+                  variant={variant}
+                  onClick={onConfirm}
+                  className="w-full sm:flex-1"
+                >
                   {confirmText}
                 </Button>
               </div>

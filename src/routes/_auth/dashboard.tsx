@@ -446,7 +446,7 @@ function DashboardPage() {
                     <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20"></th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">

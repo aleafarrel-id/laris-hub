@@ -70,24 +70,31 @@ export function useAuthListener() {
   useEffect(() => {
     let mounted = true
 
-    // Initial session check (using getUser for secure server-side validation)
-    supabase.auth.getUser().then(async ({ data: { user }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error: sessionError }) => {
       if (!mounted) return
 
-      if (user && !error) {
-        setUser(user)
-        try {
-          const profile = await getProfile(user.id)
-          if (mounted) setProfile(profile)
-        } catch {
-          // Profile fetch failed - still mark initialized
-        }
-      }
-
-      if (mounted) {
+      if (sessionError || !session) {
         setInitialized(true)
         setLoading(false)
+        return
       }
+
+      supabase.auth.getUser().then(async ({ data: { user }, error }) => {
+        if (!mounted) return
+
+        if (user && !error) {
+          setUser(user)
+          try {
+            const profile = await getProfile(user.id)
+            if (mounted) setProfile(profile)
+          } catch { }
+        }
+
+        if (mounted) {
+          setInitialized(true)
+          setLoading(false)
+        }
+      })
     })
 
     // Subscribe to future auth events
@@ -101,9 +108,7 @@ export function useAuthListener() {
         try {
           const profile = await getProfile(session.user.id)
           if (mounted) setProfile(profile)
-        } catch {
-          // Silently handle - user is logged in even if profile fetch fails
-        }
+        } catch { }
       } else if (event === 'SIGNED_OUT') {
         clearAuth()
         queryClient.clear()

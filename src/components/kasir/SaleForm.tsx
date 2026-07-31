@@ -1,18 +1,14 @@
 import { CheckCircle, Minus, Package, Plus, Search, Tag } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useProducts } from '@/hooks/useProducts'
 import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
+import { type CartItem, useSaleCart } from '@/hooks/useTransactionForm'
 import { formatRupiah } from '@/lib/utils'
 import type { Product, TransactionWithItems } from '@/types'
-
-interface CartItem {
-  product: Product
-  quantity: number
-}
 
 const PRODUCT_COLORS = [
   'from-amber-400/20 to-orange-500/20',
@@ -40,7 +36,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale()
   const isPending = isCreating || isUpdating
 
-  const [cart, setCart] = useState<Map<string, CartItem>>(new Map())
+  const { cart, setCart, addToCart, changeQty, totalAmount, totalItems, cartArray } = useSaleCart()
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState(transaction?.notes ?? '')
 
@@ -72,65 +68,24 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
       })
     })
     setCart(initialCart)
-  }, [isEditing, transaction, products, productsLoading])
+  }, [isEditing, transaction, products, productsLoading, setCart])
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return products
-    return products.filter((p) => p.name.toLowerCase().includes(query))
-  }, [products, search])
+  // Simple derivations (removed useMemo for performance per Vercel guidelines)
+  const query = search.trim().toLowerCase()
+  const filtered = query
+    ? products.filter((p) => p.name.toLowerCase().includes(query))
+    : products
 
-  // When editing, also show deleted products that are still in the cart
-  const displayProducts = useMemo(() => {
-    if (!isEditing) return filtered
+  let displayProducts = filtered
+  if (isEditing) {
     const all = [...filtered]
     cart.forEach((c) => {
       if (!all.find((p) => p.id === c.product.id) && !search) {
         all.push(c.product)
       }
     })
-    return all
-  }, [isEditing, filtered, cart, search])
-
-  const { totalAmount, totalItems, cartArray } = useMemo(() => {
-    let amount = 0
-    let items = 0
-    const arr: CartItem[] = []
-    for (const item of cart.values()) {
-      amount += item.product.selling_price * item.quantity
-      items += item.quantity
-      arr.push(item)
-    }
-    return { totalAmount: amount, totalItems: items, cartArray: arr }
-  }, [cart])
-
-  const addToCart = useCallback((product: Product) => {
-    setCart((prev) => {
-      const next = new Map(prev)
-      const existing = next.get(product.id)
-      if (existing) {
-        next.set(product.id, { ...existing, quantity: existing.quantity + 1 })
-      } else {
-        next.set(product.id, { product, quantity: 1 })
-      }
-      return next
-    })
-  }, [])
-
-  const changeQty = useCallback((productId: string, delta: number) => {
-    setCart((prev) => {
-      const existing = prev.get(productId)
-      if (!existing) return prev
-      const next = new Map(prev)
-      const newQty = existing.quantity + delta
-      if (newQty <= 0) {
-        next.delete(productId)
-      } else {
-        next.set(productId, { ...existing, quantity: newQty })
-      }
-      return next
-    })
-  }, [])
+    displayProducts = all
+  }
 
   const handleSubmit = useCallback(() => {
     if (cart.size === 0) return

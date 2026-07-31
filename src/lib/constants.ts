@@ -1,6 +1,8 @@
+import pkg from '../../package.json'
+
 // App metadata
 export const APP_NAME = 'Laris Hub'
-export const APP_VERSION = '1.0.0'
+export const APP_VERSION = pkg.version
 
 // User roles
 export const ROLES = {

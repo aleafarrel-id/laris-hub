@@ -2,6 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { BarChart2, BookOpen, LogOut, Package, ShoppingCart, User, Users } from 'lucide-react'
 import { useState } from 'react'
 import { LogoutDialog } from '@/components/ui/LogoutDialog'
+import { APP_VERSION } from '@/lib/constants'
 
 const ADMIN_NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
@@ -89,6 +90,12 @@ export function Sidebar({
             <LogOut size={20} strokeWidth={2} className="flex-shrink-0" />
             Keluar
           </button>
+
+          <div className="mt-6 text-center">
+            <p className="text-[10px] font-medium text-neutral-400/80 uppercase tracking-wider">
+              Versi {APP_VERSION}
+            </p>
+          </div>
         </div>
       </aside>
 
