@@ -97,8 +97,8 @@ export async function deleteKasir(id: string): Promise<void> {
 
   await throwEdgeFunctionError(error, data, (err, ctx) => {
     if (ctx?.has_transactions) {
-      (err as Error & DeleteKasirError).has_transactions = true;
-      (err as Error & DeleteKasirError).transaction_count = ctx.transaction_count as number
+      ;(err as Error & DeleteKasirError).has_transactions = true
+      ;(err as Error & DeleteKasirError).transaction_count = ctx.transaction_count as number
     }
   })
 }

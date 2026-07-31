@@ -216,7 +216,7 @@ function ProdukPage() {
                 className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
               >
                 <div
-                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-square border-b border-neutral-100'}`}
+                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
                 >
                   {product.image_url ? (
                     <img
@@ -326,8 +326,18 @@ function ProdukPage() {
       <ConfirmDialog
         isOpen={confirmState.isOpen}
         title="Hapus Produk"
-        description={`Apakah Anda yakin ingin menghapus "${confirmState.name}"? Data transaksi lama yang menggunakan produk ini akan tetap tersimpan dengan aman.`}
-        confirmText="Hapus Produk"
+        description={
+          <>
+            <span>
+              Apakah Anda yakin ingin menghapus produk{' '}
+              <strong className="text-neutral-900">{confirmState.name}</strong>?
+            </span>
+            <span className="text-sm text-neutral-500">
+              Data transaksi lama yang menggunakan produk ini akan tetap tersimpan dengan aman.
+            </span>
+          </>
+        }
+        confirmText="Hapus"
         variant="danger"
         onConfirm={executeDelete}
         onCancel={() => setConfirmState({ isOpen: false, id: '', name: '' })}

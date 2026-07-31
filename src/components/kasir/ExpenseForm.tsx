@@ -1,12 +1,12 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { PlusCircle, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { useCreateExpense, useUpdateExpense } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatRupiah } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 
 interface ExpenseLineItem {
   id: string
@@ -117,7 +117,18 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
     } else {
       createExpense({ payload }, { onSuccess })
     }
-  }, [description, totalAmount, category, items, notes, isEditing, transaction, createExpense, updateExpense, onSuccess])
+  }, [
+    description,
+    totalAmount,
+    category,
+    items,
+    notes,
+    isEditing,
+    transaction,
+    createExpense,
+    updateExpense,
+    onSuccess,
+  ])
 
   const isSubmitDisabled =
     !description.trim() || !(Number.isFinite(totalAmount) && totalAmount > 0) || isPending
@@ -138,7 +149,10 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
       />
 
       <div>
-        <label htmlFor={`${idPrefix}-cat`} className="block text-sm font-semibold text-neutral-700 mb-2">
+        <label
+          htmlFor={`${idPrefix}-cat`}
+          className="block text-sm font-semibold text-neutral-700 mb-2"
+        >
           Kategori
         </label>
         <div className="flex flex-wrap gap-2">
@@ -202,7 +216,11 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                       placeholder="Harga"
                       value={item.unit_price || ''}
                       onChange={(e) =>
-                        updateItem(item.id, 'unit_price', Math.max(0, parseFloat(e.target.value) || 0))
+                        updateItem(
+                          item.id,
+                          'unit_price',
+                          Math.max(0, parseFloat(e.target.value) || 0),
+                        )
                       }
                       min={0}
                       inputMode="numeric"

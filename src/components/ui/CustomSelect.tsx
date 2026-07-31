@@ -80,6 +80,7 @@ export function CustomSelect({
           <div className="space-y-0.5">
             {options.map((option) => (
               <button
+                type="button"
                 key={option.value}
                 onClick={() => {
                   onChange(option.value)

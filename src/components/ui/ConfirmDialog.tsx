@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/Button'
 import type { LucideIcon } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface ConfirmDialogProps {
   isOpen: boolean
   title: string
-  description: string
+  description: React.ReactNode
   confirmText?: string
   cancelText?: string
   onConfirm: () => void
@@ -57,6 +57,8 @@ export function ConfirmDialog({
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           />
 
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: purely mouse shortcut for escape */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: purely mouse shortcut for escape */}
           <div
             className="absolute inset-0 flex items-center justify-center p-4 sm:p-6"
             onClick={onCancel}
@@ -69,38 +71,29 @@ export function ConfirmDialog({
               transition={{ type: 'spring', duration: 0.4, bounce: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 sm:mb-5 ${
-                    variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
-                  }`}
-                >
-                  <Icon size={28} strokeWidth={2} />
+              <div>
+                <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                  <div
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      variant === 'danger' ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
+                    }`}
+                  >
+                    <Icon size={20} strokeWidth={2} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight">
+                    {title}
+                  </h3>
                 </div>
-
-                <h3 className="text-xl font-bold text-neutral-900 mb-2 sm:mb-3 text-balance tracking-tight">
-                  {title}
-                </h3>
-                <p className="text-[14px] sm:text-[15px] text-neutral-500 leading-relaxed mb-6 sm:mb-8 text-pretty px-1 sm:px-0">
+                <div className="text-[14px] sm:text-[15px] text-neutral-600 leading-relaxed mb-6 sm:mb-8 text-pretty flex flex-col gap-2">
                   {description}
-                </p>
+                </div>
               </div>
 
-              <div className="flex gap-2 sm:gap-3 w-full">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  className="flex-1"
-                >
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
+                <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:flex-1">
                   {cancelText}
                 </Button>
-                <Button
-                  type="button"
-                  variant={variant}
-                  onClick={onConfirm}
-                  className="flex-1"
-                >
+                <Button type="button" variant={variant} onClick={onConfirm} className="w-full sm:flex-1">
                   {confirmText}
                 </Button>
               </div>

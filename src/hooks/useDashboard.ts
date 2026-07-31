@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth.store'
 import {
   getKPISummaryForDate,
   getKPISummaryForRange,
@@ -45,7 +46,10 @@ export function useKPISummary(
   const range = getDateRange(period, customRange)
   const isToday = period === 'today'
 
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange, kasirId],
     queryFn: () => {
       if (kasirId !== 'all') {
@@ -60,7 +64,10 @@ export function useKPISummary(
 }
 
 export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days, kasirId],
     queryFn: () => {
       if (kasirId !== 'all') {
@@ -80,7 +87,10 @@ export function useTopProducts(
 ) {
   const range = getDateRange(period, customRange)
 
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit, kasirId],
     queryFn: () => {
       if (kasirId !== 'all') {

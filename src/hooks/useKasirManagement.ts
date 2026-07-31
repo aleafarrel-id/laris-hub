@@ -1,21 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth.store'
 import { translateError } from '@/lib/utils'
 import {
+  type CreateKasirPayload,
   createKasir,
+  type DeleteKasirError,
   deleteKasir,
   getKasirAuthDetails,
   getKasirList,
   toggleKasirStatus,
-  updateKasir,
-  type CreateKasirPayload,
-  type DeleteKasirError,
   type UpdateKasirPayload,
+  updateKasir,
 } from '@/services/kasir-management.service'
 
 export function useKasirList() {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: QUERY_KEYS.CASHIERS,
     queryFn: getKasirList,
     staleTime: 1000 * 60 * 2, // 2 min
@@ -23,10 +27,12 @@ export function useKasirList() {
 }
 
 export function useKasirAuthDetails(kasirId: string | null) {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
     queryKey: [...QUERY_KEYS.CASHIERS, 'auth', kasirId],
     queryFn: () => getKasirAuthDetails(kasirId!),
-    enabled: !!kasirId,
+    enabled: !!user && !!kasirId,
     staleTime: 1000 * 60 * 5, // 5 min - email rarely changes
     retry: 1,
   })
@@ -110,4 +116,3 @@ export function useDeleteKasir(onSuccess?: () => void) {
     },
   })
 }
-

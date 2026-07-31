@@ -29,7 +29,10 @@ export interface CreateExpensePayload {
  * Prevents IDOR (Insecure Direct Object Reference) attacks.
  */
 async function getAuthenticatedUserId(): Promise<string> {
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
   if (error || !user) throw new Error('Sesi tidak valid. Silakan login ulang.')
   return user.id
 }
@@ -37,32 +40,7 @@ async function getAuthenticatedUserId(): Promise<string> {
 /** Returns the current timestamp as an ISO string. */
 const nowIso = () => new Date().toISOString()
 
-/**
- * Map a SaleItemFormData to the shape expected by the transaction_items table.
- */
-function toItemPayload(transactionId: string, item: SaleItemFormData) {
-  return {
-    transaction_id: transactionId,
-    product_id: item.product_id,
-    product_name: item.product_name,
-    product_hpp: item.product_hpp,
-    selling_price: item.selling_price,
-    quantity: item.quantity,
-  }
-}
 
-/**
- * Calculate total revenue and profit for a set of sale items.
- */
-function calcSaleTotals(items: SaleItemFormData[]): { totalAmount: number; totalProfit: number } {
-  let totalAmount = 0
-  let totalProfit = 0
-  for (const item of items) {
-    totalAmount += item.selling_price * item.quantity
-    totalProfit += (item.selling_price - item.product_hpp) * item.quantity
-  }
-  return { totalAmount, totalProfit }
-}
 
 /**
  * Create a sale transaction with multiple items.
@@ -72,56 +50,43 @@ function calcSaleTotals(items: SaleItemFormData[]): { totalAmount: number; total
 export async function createSaleTransaction(payload: CreateSalePayload): Promise<Transaction> {
   const recordedBy = await getAuthenticatedUserId()
 
-  const { totalAmount, totalProfit } = calcSaleTotals(payload.items)
-
-  const { data: transaction, error: txError } = await supabase
-    .from('transactions')
-    .insert([{
-      type: 'penjualan',
-      total_amount: totalAmount,
-      total_profit: totalProfit,
-      recorded_by: recordedBy,
-      notes: payload.notes ?? null,
-      transaction_at: payload.transaction_at ?? nowIso(),
-    }])
-    .select()
-    .single()
+  const { data: transaction, error: txError } = await (supabase as any)
+    .rpc('create_sale_transaction', {
+      p_recorded_by: recordedBy,
+      p_notes: payload.notes ?? null,
+      p_transaction_at: payload.transaction_at ?? nowIso(),
+      p_items: payload.items,
+    })
 
   if (txError) throw txError
 
-  const tx = transaction as Transaction
-  const itemsPayload = payload.items.map((item) => toItemPayload(tx.id, item))
-  const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
-
-  if (itemsError) {
-    // Compensating delete to avoid orphan transaction records
-    await supabase.from('transactions').delete().eq('id', tx.id)
-    throw itemsError
-  }
-
-  return tx
+  return transaction as unknown as Transaction
 }
 
 /**
  * Create an expense transaction.
  * Security: recorded_by is fetched from the authenticated session.
  */
-export async function createExpenseTransaction(payload: CreateExpensePayload): Promise<Transaction> {
+export async function createExpenseTransaction(
+  payload: CreateExpensePayload,
+): Promise<Transaction> {
   const recordedBy = await getAuthenticatedUserId()
 
   const { data, error } = await supabase
     .from('transactions')
-    .insert([{
-      type: 'pengeluaran',
-      description: payload.description,
-      total_amount: payload.total_amount,
-      total_profit: 0,
-      expense_category: payload.expense_category,
-      expense_items: payload.expense_items?.length ? payload.expense_items : null,
-      notes: payload.notes ?? null,
-      recorded_by: recordedBy,
-      transaction_at: payload.transaction_at ?? nowIso(),
-    }])
+    .insert([
+      {
+        type: 'pengeluaran',
+        description: payload.description,
+        total_amount: payload.total_amount,
+        total_profit: 0,
+        expense_category: payload.expense_category,
+        expense_items: payload.expense_items?.length ? payload.expense_items : null,
+        notes: payload.notes ?? null,
+        recorded_by: recordedBy,
+        transaction_at: payload.transaction_at ?? nowIso(),
+      },
+    ])
     .select()
     .single()
 
@@ -253,38 +218,17 @@ export async function updateSaleTransaction(
   id: string,
   payload: CreateSalePayload,
 ): Promise<Transaction> {
-  const { totalAmount, totalProfit } = calcSaleTotals(payload.items)
-
-  const { data: transaction, error: txError } = await supabase
-    .from('transactions')
-    .update({
-      total_amount: totalAmount,
-      total_profit: totalProfit,
-      notes: payload.notes ?? null,
-      transaction_at: payload.transaction_at ?? nowIso(),
-      updated_at: nowIso(),
+  const { data: transaction, error: txError } = await (supabase as any)
+    .rpc('update_sale_transaction', {
+      p_transaction_id: id,
+      p_notes: payload.notes ?? null,
+      p_transaction_at: payload.transaction_at ?? nowIso(),
+      p_items: payload.items,
     })
-    .eq('id', id)
-    .select()
-    .single()
 
   if (txError) throw txError
 
-  // Delete old items before inserting the updated set
-  const { error: deleteError } = await supabase
-    .from('transaction_items')
-    .delete()
-    .eq('transaction_id', id)
-
-  if (deleteError) throw deleteError
-
-  const tx = transaction as Transaction
-  const itemsPayload = payload.items.map((item) => toItemPayload(tx.id, item))
-  const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
-
-  if (itemsError) throw itemsError
-
-  return tx
+  return transaction as unknown as Transaction
 }
 
 /**

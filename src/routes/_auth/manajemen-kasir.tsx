@@ -1,5 +1,4 @@
-import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'motion/react'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -16,11 +15,12 @@ import {
   PlusCircle,
   ShieldOff,
   Trash2,
+  User,
   UserCheck,
   Users,
-  User,
   X,
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -29,12 +29,12 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import {
-  useKasirList,
   useCreateKasir,
-  useUpdateKasir,
-  useToggleKasirStatus,
-  useKasirAuthDetails,
   useDeleteKasir,
+  useKasirAuthDetails,
+  useKasirList,
+  useToggleKasirStatus,
+  useUpdateKasir,
 } from '@/hooks/useKasirManagement'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatDateTime, getInitials } from '@/lib/utils'
@@ -42,7 +42,9 @@ import type { Profile } from '@/types'
 
 export const Route = createFileRoute('/_auth/manajemen-kasir')({
   beforeLoad: async ({ location }) => {
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) throw redirect({ to: '/login', search: { redirect: location.href } })
     if (session.user.app_metadata?.role !== 'admin') throw redirect({ to: '/kasir' })
   },
@@ -72,21 +74,35 @@ function KasirAvatar({ profile, size = 'md' }: { profile: Profile; size?: 'sm' |
     )
   }
   return (
-    <div className={`${sizeClass} rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white flex-shrink-0`}>
+    <div
+      className={`${sizeClass} rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white flex-shrink-0`}
+    >
       {getInitials(profile.full_name)}
     </div>
   )
 }
 
 // ─── Info Row ─────────────────────────────────────────────────────────────────
-function InfoRow({ icon: Icon, label, value, isLoading }: { icon: React.ElementType; label: string; value?: string | null; isLoading?: boolean }) {
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+  isLoading,
+}: {
+  icon: React.ElementType
+  label: string
+  value?: string | null
+  isLoading?: boolean
+}) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-neutral-100 last:border-0">
       <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0 mt-0.5">
         <Icon size={15} className="text-neutral-500" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{label}</p>
+        <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+          {label}
+        </p>
         {isLoading ? (
           <Skeleton className="h-4 w-40 mt-1" />
         ) : (
@@ -110,7 +126,10 @@ function DeleteConfirmModal({
   isPending: boolean
 }) {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onCancel()}>
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      onClick={(e) => e.target === e.currentTarget && onCancel()}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -125,18 +144,20 @@ function DeleteConfirmModal({
           <h3 className="text-base font-bold text-neutral-900">Hapus Akun Kasir?</h3>
         </div>
         <p className="text-sm text-neutral-600 leading-relaxed mb-1">
-          Akun <strong className="text-neutral-900">{kasir.full_name}</strong> akan dihapus permanen dari sistem.
+          Akun <strong className="text-neutral-900">{kasir.full_name}</strong> akan dihapus permanen
+          dari sistem.
         </p>
         <p className="text-sm text-neutral-500 mb-5">
-          Jika kasir memiliki data transaksi, penghapusan akan ditolak secara otomatis, gunakan <strong>Tangguhkan</strong>.
+          Jika kasir memiliki data transaksi, penghapusan akan ditolak secara otomatis, gunakan{' '}
+          <strong>Tangguhkan</strong>.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-col-reverse sm:flex-row gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1"
+            className="w-full sm:flex-1"
           >
             Batal
           </Button>
@@ -146,10 +167,9 @@ function DeleteConfirmModal({
             onClick={onConfirm}
             disabled={isPending}
             isLoading={isPending}
-            className="flex-1"
-            leftIcon={<Trash2 size={14} />}
+            className="w-full sm:flex-1"
           >
-            Hapus Akun
+            Hapus
           </Button>
         </div>
       </motion.div>
@@ -192,8 +212,10 @@ function KasirDetailDrawer({
   const validateEdit = (): boolean => {
     const errs: Record<string, string> = {}
     if (!editForm.full_name.trim()) errs.full_name = 'Nama wajib diisi'
-    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim())) errs.email = 'Format email tidak valid'
-    if (editForm.password && editForm.password.length < 8) errs.password = 'Password minimal 8 karakter'
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email.trim()))
+      errs.email = 'Format email tidak valid'
+    if (editForm.password && editForm.password.length < 8)
+      errs.password = 'Password minimal 8 karakter'
     setEditErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -236,30 +258,50 @@ function KasirDetailDrawer({
         >
           {/* Header */}
           <div className="sticky top-0 bg-white z-10 px-5 py-4 border-b border-neutral-100 flex items-center gap-3">
-            <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors" aria-label="Tutup">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors"
+              aria-label="Tutup"
+            >
               <ArrowLeft size={18} className="text-neutral-600" />
             </button>
             <h2 className="text-base font-bold text-neutral-900 flex-1">Detail Kasir</h2>
-            <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors" aria-label="Tutup panel">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors"
+              aria-label="Tutup panel"
+            >
               <X size={16} className="text-neutral-400" />
             </button>
           </div>
 
           {/* Profile hero */}
-          <div className={`px-5 py-5 border-b border-neutral-100 ${kasir.is_active ? 'bg-neutral-50/30' : 'bg-blue-50/40'}`}>
+          <div
+            className={`px-5 py-5 border-b border-neutral-100 ${kasir.is_active ? 'bg-neutral-50/30' : 'bg-blue-50/40'}`}
+          >
             <div className="flex items-center gap-4">
               <div className="relative">
                 <KasirAvatar profile={kasir} size="lg" />
-                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                <span
+                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-lg font-bold text-neutral-900 leading-tight truncate">{kasir.full_name}</p>
+                <p className="text-lg font-bold text-neutral-900 leading-tight truncate">
+                  {kasir.full_name}
+                </p>
                 {isLoadingEmail ? (
                   <Skeleton className="h-3.5 w-36 mt-1" />
                 ) : (
-                  <p className="text-sm text-neutral-500 mt-0.5 truncate">{authDetails?.email || '-'}</p>
+                  <p className="text-sm text-neutral-500 mt-0.5 truncate">
+                    {authDetails?.email || '-'}
+                  </p>
                 )}
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}
+                >
                   {kasir.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
                   {kasir.is_active ? 'Aktif' : 'Ditangguhkan'}
                 </span>
@@ -272,13 +314,26 @@ function KasirDetailDrawer({
             {!isEditing ? (
               <>
                 <div className="mb-5">
-                  <InfoRow icon={Mail} label="Email" value={authDetails?.email} isLoading={isLoadingEmail} />
+                  <InfoRow
+                    icon={Mail}
+                    label="Email"
+                    value={authDetails?.email}
+                    isLoading={isLoadingEmail}
+                  />
                   <InfoRow icon={Phone} label="No. HP" value={kasir.phone} />
-                  <InfoRow icon={Calendar} label="Bergabung Sejak" value={formatDate(kasir.created_at)} />
+                  <InfoRow
+                    icon={Calendar}
+                    label="Bergabung Sejak"
+                    value={formatDate(kasir.created_at)}
+                  />
                   <InfoRow
                     icon={Clock}
                     label="Login Terakhir"
-                    value={authDetails?.last_sign_in_at ? formatDateTime(authDetails.last_sign_in_at) : 'Belum pernah login'}
+                    value={
+                      authDetails?.last_sign_in_at
+                        ? formatDateTime(authDetails.last_sign_in_at)
+                        : 'Belum pernah login'
+                    }
                     isLoading={isLoadingEmail}
                   />
                 </div>
@@ -287,7 +342,12 @@ function KasirDetailDrawer({
                   <Button
                     type="button"
                     onClick={() => {
-                      setEditForm({ full_name: kasir.full_name, phone: kasir.phone ?? '', email: '', password: '' })
+                      setEditForm({
+                        full_name: kasir.full_name,
+                        phone: kasir.phone ?? '',
+                        email: '',
+                        password: '',
+                      })
                       setEditErrors({})
                       setIsEditing(true)
                     }}
@@ -303,10 +363,11 @@ function KasirDetailDrawer({
                       variant="outline"
                       onClick={() => onToggle(kasir.id, !kasir.is_active)}
                       disabled={isToggling}
-                      className={`w-full border ${kasir.is_active
-                        ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300'
-                        : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
-                        }`}
+                      className={`w-full border ${
+                        kasir.is_active
+                          ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300'
+                          : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
+                      }`}
                       leftIcon={kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
                     >
                       {kasir.is_active ? 'Tangguhkan Akun' : 'Aktifkan Kembali'}
@@ -340,7 +401,10 @@ function KasirDetailDrawer({
                   label="Nama Lengkap"
                   required
                   value={editForm.full_name}
-                  onChange={(e) => { setEditForm((f) => ({ ...f, full_name: e.target.value })); if (editErrors.full_name) setEditErrors((e) => ({ ...e, full_name: '' })) }}
+                  onChange={(e) => {
+                    setEditForm((f) => ({ ...f, full_name: e.target.value }))
+                    if (editErrors.full_name) setEditErrors((e) => ({ ...e, full_name: '' }))
+                  }}
                   error={editErrors.full_name}
                 />
 
@@ -358,11 +422,23 @@ function KasirDetailDrawer({
                 <Input
                   id="email"
                   type="email"
-                  label={<>Email Baru <span className="ml-1.5 text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span></>}
+                  label={
+                    <>
+                      Email Baru{' '}
+                      <span className="ml-1.5 text-[10px] font-medium text-neutral-400 normal-case">
+                        (kosongkan jika tidak diubah)
+                      </span>
+                    </>
+                  }
                   autoComplete="off"
                   value={editForm.email}
-                  onChange={(e) => { setEditForm((f) => ({ ...f, email: e.target.value })); if (editErrors.email) setEditErrors((e) => ({ ...e, email: '' })) }}
-                  placeholder={isLoadingEmail ? 'Memuat...' : (authDetails?.email ?? 'Email saat ini')}
+                  onChange={(e) => {
+                    setEditForm((f) => ({ ...f, email: e.target.value }))
+                    if (editErrors.email) setEditErrors((e) => ({ ...e, email: '' }))
+                  }}
+                  placeholder={
+                    isLoadingEmail ? 'Memuat...' : (authDetails?.email ?? 'Email saat ini')
+                  }
                   leftDecorator={<Mail size={15} />}
                   error={editErrors.email}
                 />
@@ -371,14 +447,29 @@ function KasirDetailDrawer({
                 <Input
                   id="password"
                   type={showNewPassword ? 'text' : 'password'}
-                  label={<span className="flex items-center gap-1.5"><KeyRound size={13} className="text-neutral-500" />Password Baru <span className="text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span></span>}
+                  label={
+                    <span className="flex items-center gap-1.5">
+                      <KeyRound size={13} className="text-neutral-500" />
+                      Password Baru{' '}
+                      <span className="text-[10px] font-medium text-neutral-400 normal-case">
+                        (kosongkan jika tidak diubah)
+                      </span>
+                    </span>
+                  }
                   autoComplete="new-password"
                   value={editForm.password}
-                  onChange={(e) => { setEditForm((f) => ({ ...f, password: e.target.value })); if (editErrors.password) setEditErrors((e) => ({ ...e, password: '' })) }}
+                  onChange={(e) => {
+                    setEditForm((f) => ({ ...f, password: e.target.value }))
+                    if (editErrors.password) setEditErrors((e) => ({ ...e, password: '' }))
+                  }}
                   placeholder="Min. 8 karakter"
                   error={editErrors.password}
                   rightDecorator={
-                    <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="p-1 hover:text-neutral-700 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="p-1 hover:text-neutral-700 transition-colors"
+                    >
                       {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   }
@@ -421,14 +512,23 @@ function KasirDetailDrawer({
 }
 
 // ─── Create Kasir Modal ────────────────────────────────────────────────────────
-interface CreateFormState { full_name: string; email: string; password: string; phone: string }
+interface CreateFormState {
+  full_name: string
+  email: string
+  password: string
+  phone: string
+}
 const EMPTY_FORM: CreateFormState = { full_name: '', email: '', password: '', phone: '' }
 
 function CreateKasirModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [form, setForm] = useState<CreateFormState>(EMPTY_FORM)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<CreateFormState>>({})
-  const { mutate, isPending } = useCreateKasir(() => { setForm(EMPTY_FORM); setErrors({}); onClose() })
+  const { mutate, isPending } = useCreateKasir(() => {
+    setForm(EMPTY_FORM)
+    setErrors({})
+    onClose()
+  })
 
   const validate = (): boolean => {
     const next: Partial<CreateFormState> = {}
@@ -444,10 +544,21 @@ function CreateKasirModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    mutate({ full_name: form.full_name.trim(), email: form.email.trim().toLowerCase(), password: form.password, phone: form.phone.trim() || null })
+    mutate({
+      full_name: form.full_name.trim(),
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      phone: form.phone.trim() || null,
+    })
   }
 
-  const field = (id: keyof CreateFormState, label: string, placeholder: string, type = 'text', required = true) => (
+  const field = (
+    id: keyof CreateFormState,
+    label: string,
+    placeholder: string,
+    type = 'text',
+    required = true,
+  ) => (
     <Input
       id={`create-${id}`}
       type={id === 'password' ? (showPassword ? 'text' : 'password') : type}
@@ -455,12 +566,20 @@ function CreateKasirModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       required={required}
       autoComplete={id === 'password' ? 'new-password' : id === 'email' ? 'email' : 'off'}
       value={form[id]}
-      onChange={(e) => { setForm((f) => ({ ...f, [id]: e.target.value })); if (errors[id]) setErrors((er) => ({ ...er, [id]: undefined })) }}
+      onChange={(e) => {
+        setForm((f) => ({ ...f, [id]: e.target.value }))
+        if (errors[id]) setErrors((er) => ({ ...er, [id]: undefined }))
+      }}
       placeholder={placeholder}
       error={errors[id]}
       rightDecorator={
         id === 'password' ? (
-          <button type="button" onClick={() => setShowPassword((v) => !v)} className="p-1 hover:text-neutral-700 transition-colors" aria-label="Toggle password">
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="p-1 hover:text-neutral-700 transition-colors"
+            aria-label="Toggle password"
+          >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         ) : undefined
@@ -478,7 +597,13 @@ function CreateKasirModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         {field('email', 'Email', 'contoh@email.com', 'email')}
         {field('password', 'Password Sementara', 'Min. 8 karakter')}
         {field('phone', 'No. HP', '08xxxxxxxxxx', 'tel', false)}
-        <Button type="submit" disabled={isPending} isLoading={isPending} className="w-full mt-2 py-3.5" leftIcon={<UserCheck size={16} />}>
+        <Button
+          type="submit"
+          disabled={isPending}
+          isLoading={isPending}
+          className="w-full mt-2 py-3.5"
+          leftIcon={<UserCheck size={16} />}
+        >
           Simpan
         </Button>
       </form>
@@ -497,35 +622,52 @@ function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => void }) 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${kasir.is_active ? 'border-neutral-200 hover:border-primary/25' : 'border-neutral-100 opacity-70'
-        }`}
+      className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${
+        kasir.is_active
+          ? 'border-neutral-200 hover:border-primary/25'
+          : 'border-neutral-100 opacity-70'
+      }`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <KasirAvatar profile={kasir} />
-        <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+        <span
+          className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`}
+        />
       </div>
 
       {/* Info — takes all remaining space, truncates text */}
       <div className="flex-1 min-w-0 pr-1">
-        <p className="text-sm font-bold text-neutral-900 leading-tight truncate">{kasir.full_name}</p>
+        <p className="text-sm font-bold text-neutral-900 leading-tight truncate">
+          {kasir.full_name}
+        </p>
         {kasir.phone && (
           <div className="flex items-center gap-1.5 mt-0.5">
             <Phone size={11} className="text-neutral-400 flex-shrink-0" />
-            <span className="text-xs text-neutral-500 tabular-nums truncate block">{kasir.phone}</span>
+            <span className="text-xs text-neutral-500 tabular-nums truncate block">
+              {kasir.phone}
+            </span>
           </div>
         )}
-        <p className="text-[11px] text-neutral-400 mt-1 truncate">Sejak {formatDate(kasir.created_at)}</p>
+        <p className="text-[11px] text-neutral-400 mt-1 truncate">
+          Sejak {formatDate(kasir.created_at)}
+        </p>
       </div>
 
       {/* Status badge + chevron — fixed width so it never crushes the info column */}
       <div className="flex-shrink-0 flex flex-col items-end gap-2">
-        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
-          }`}>
+        <span
+          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
+            kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+          }`}
+        >
           {kasir.is_active ? <CheckCircle2 size={10} /> : <ShieldOff size={10} />}
           {kasir.is_active ? 'Aktif' : 'Tangguhkan'}
         </span>
-        <ChevronRight size={15} className="text-neutral-300 group-hover:text-primary transition-colors" />
+        <ChevronRight
+          size={15}
+          className="text-neutral-300 group-hover:text-primary transition-colors"
+        />
       </div>
     </motion.button>
   )
@@ -561,13 +703,21 @@ function ManajemenKasirPage() {
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-neutral-200 px-4 sm:px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-neutral-900 leading-tight">Tim Kasir</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-neutral-900 leading-tight">
+              Tim Kasir
+            </h1>
             <p className="text-xs text-neutral-500 mt-0.5 tabular-nums">
-              {isLoading ? 'Memuat...' : `${kasirList.length} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
+              {isLoading
+                ? 'Memuat...'
+                : `${kasirList.length} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
             </p>
           </div>
           {/* Desktop-only shortcut to profile */}
-          <Link to="/profil" className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all" aria-label="Profil Admin">
+          <Link
+            to="/profil"
+            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all"
+            aria-label="Profil Admin"
+          >
             <User size={16} strokeWidth={2} />
             <span>Profil</span>
           </Link>
@@ -586,13 +736,33 @@ function ManajemenKasirPage() {
               className="grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
               {[
-                { label: 'Total', value: kasirList.length, color: 'text-neutral-900', bg: 'bg-white' },
-                { label: 'Aktif', value: activeCount, color: 'text-emerald-700', bg: 'bg-emerald-50' },
-                { label: 'Tangguhkan', value: suspendedCount, color: suspendedCount > 0 ? 'text-blue-700' : 'text-neutral-400', bg: suspendedCount > 0 ? 'bg-blue-50' : 'bg-neutral-50' },
+                {
+                  label: 'Total',
+                  value: kasirList.length,
+                  color: 'text-neutral-900',
+                  bg: 'bg-white',
+                },
+                {
+                  label: 'Aktif',
+                  value: activeCount,
+                  color: 'text-emerald-700',
+                  bg: 'bg-emerald-50',
+                },
+                {
+                  label: 'Tangguhkan',
+                  value: suspendedCount,
+                  color: suspendedCount > 0 ? 'text-blue-700' : 'text-neutral-400',
+                  bg: suspendedCount > 0 ? 'bg-blue-50' : 'bg-neutral-50',
+                },
               ].map(({ label, value, color, bg }) => (
-                <div key={label} className={`${bg} rounded-2xl border border-neutral-200 p-3 text-center shadow-sm`}>
+                <div
+                  key={label}
+                  className={`${bg} rounded-2xl border border-neutral-200 p-3 text-center shadow-sm`}
+                >
                   <p className={`text-xl font-black tabular-nums ${color}`}>{value}</p>
-                  <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 leading-tight">{label}</p>
+                  <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 leading-tight">
+                    {label}
+                  </p>
                 </div>
               ))}
             </motion.div>
@@ -616,9 +786,15 @@ function ManajemenKasirPage() {
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((k) => (
-                <div key={k} className="bg-white rounded-2xl border border-neutral-200 p-4 flex items-center gap-4">
+                <div
+                  key={k}
+                  className="bg-white rounded-2xl border border-neutral-200 p-4 flex items-center gap-4"
+                >
                   <Skeleton className="w-11 h-11 rounded-xl flex-shrink-0" />
-                  <div className="flex-1 space-y-2"><Skeleton className="h-4 w-36" /><Skeleton className="h-3 w-24" /></div>
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
                   <Skeleton className="h-6 w-20 rounded-full" />
                 </div>
               ))}

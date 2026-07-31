@@ -42,8 +42,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    const { data: { user: caller }, error: callerError } =
-      await supabaseAdmin.auth.getUser(authHeader.slice(7))
+    const {
+      data: { user: caller },
+      error: callerError,
+    } = await supabaseAdmin.auth.getUser(authHeader.slice(7))
 
     if (callerError || !caller) return json({ error: 'Unauthorized' }, 401)
     if (caller.app_metadata?.role !== 'admin') return json({ error: 'Forbidden' }, 403)
@@ -55,8 +57,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const targetId = req.headers.get('x-kasir-id')
       if (!targetId) return json({ error: 'Header x-kasir-id diperlukan' }, 400)
 
-      const { data: { user: targetUser }, error } =
-        await supabaseAdmin.auth.admin.getUserById(targetId)
+      const {
+        data: { user: targetUser },
+        error,
+      } = await supabaseAdmin.auth.admin.getUserById(targetId)
 
       if (error || !targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
 
@@ -81,7 +85,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (!id) return json({ error: 'id kasir diperlukan' }, 400)
 
       // Prevent modifying a different admin account.
-      const { data: { user: targetUser } } = await supabaseAdmin.auth.admin.getUserById(id)
+      const {
+        data: { user: targetUser },
+      } = await supabaseAdmin.auth.admin.getUserById(id)
       if (!targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
       if (targetUser.app_metadata?.role === 'admin' && targetUser.id !== caller.id) {
         return json({ error: 'Tidak dapat mengubah akun admin lain' }, 403)
@@ -135,7 +141,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
       if (id === caller.id) return json({ error: 'Tidak dapat menghapus akun sendiri' }, 403)
 
-      const { data: { user: targetUser } } = await supabaseAdmin.auth.admin.getUserById(id)
+      const {
+        data: { user: targetUser },
+      } = await supabaseAdmin.auth.admin.getUserById(id)
       if (!targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
       if (targetUser.app_metadata?.role === 'admin') {
         return json({ error: 'Tidak dapat menghapus akun admin' }, 403)
@@ -150,11 +158,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (countError) return json({ error: 'Gagal memeriksa data transaksi' }, 500)
 
       if (count && count > 0) {
-        return json({
-          error: `Kasir ini memiliki ${count} transaksi yang tersimpan. Untuk menjaga integritas data, gunakan fitur Tangguhkan saja.`,
-          has_transactions: true,
-          transaction_count: count,
-        }, 409)
+        return json(
+          {
+            error: `Kasir ini memiliki ${count} transaksi yang tersimpan. Untuk menjaga integritas data, gunakan fitur Tangguhkan saja.`,
+            has_transactions: true,
+            transaction_count: count,
+          },
+          409,
+        )
       }
 
       // Delete profile first (it references auth.users via FK), then delete the auth user.

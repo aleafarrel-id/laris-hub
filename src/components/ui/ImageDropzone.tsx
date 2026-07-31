@@ -77,6 +77,8 @@ export function ImageDropzone({
   return (
     <div className="w-full">
       <div
+        role="button"
+        tabIndex={0}
         className={`relative w-full h-48 sm:h-64 lg:h-auto lg:aspect-square overflow-hidden rounded-2xl border-2 border-dashed transition-colors flex flex-col items-center justify-center cursor-pointer group ${
           isDragActive
             ? 'border-primary bg-primary/5'
@@ -89,6 +91,12 @@ export function ImageDropzone({
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => !currentPreviewUrl && fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !currentPreviewUrl) {
+            e.preventDefault()
+            fileInputRef.current?.click()
+          }
+        }}
       >
         <input
           ref={fileInputRef}

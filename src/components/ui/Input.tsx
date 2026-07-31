@@ -17,11 +17,23 @@ const BASE_INPUT_CLASS =
   'w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm'
 
 const errorClass = 'border-danger focus:ring-danger/20 focus:border-danger'
-const defaultClass = 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
+const defaultClass =
+  'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
 
-function FieldLabel({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
+function FieldLabel({
+  htmlFor,
+  children,
+  required,
+}: {
+  htmlFor?: string
+  children: React.ReactNode
+  required?: boolean
+}) {
   return (
-    <label htmlFor={htmlFor} className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">
+    <label
+      htmlFor={htmlFor}
+      className="text-xs font-semibold text-neutral-600 uppercase tracking-wider"
+    >
       {children}
       {required && <span className="text-danger ml-1">*</span>}
     </label>
@@ -32,11 +44,24 @@ function FieldLabel({ htmlFor, children, required }: { htmlFor?: string; childre
  * Reusable form input with optional label, error message,
  * and inline left/right decorators (e.g. "Rp" prefix or an icon).
  */
-export function Input({ label, error, leftDecorator, rightDecorator, className, id, required, ...props }: InputProps) {
+export function Input({
+  label,
+  error,
+  leftDecorator,
+  rightDecorator,
+  className,
+  id,
+  required,
+  ...props
+}: InputProps) {
   const stateClass = error ? errorClass : defaultClass
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel htmlFor={id} required={required}>
+          {label}
+        </FieldLabel>
+      )}
       <div className="relative">
         {leftDecorator && (
           <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-neutral-500 text-sm pointer-events-none">
@@ -46,7 +71,13 @@ export function Input({ label, error, leftDecorator, rightDecorator, className, 
         <input
           id={id}
           required={required}
-          className={cn(BASE_INPUT_CLASS, stateClass, leftDecorator && 'pl-10', rightDecorator && 'pr-10', className)}
+          className={cn(
+            BASE_INPUT_CLASS,
+            stateClass,
+            leftDecorator && 'pl-10',
+            rightDecorator && 'pr-10',
+            className,
+          )}
           {...props}
         />
         {rightDecorator && (
@@ -67,7 +98,11 @@ export function Textarea({ label, error, className, id, required, ...props }: Te
   const stateClass = error ? errorClass : defaultClass
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel htmlFor={id} required={required}>
+          {label}
+        </FieldLabel>
+      )}
       <textarea
         id={id}
         className={cn(BASE_INPUT_CLASS, stateClass, 'min-h-[100px] resize-y', className)}

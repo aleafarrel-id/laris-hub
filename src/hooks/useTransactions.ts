@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth.store'
 import { translateError } from '@/lib/utils'
 import {
   createExpenseTransaction,
@@ -32,7 +33,10 @@ function onTransactionError(action: string) {
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export function useTransactions(filters: TransactionFilters = {}) {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, filters],
     queryFn: () => getTransactions(filters),
     staleTime: 1000 * 30, // 30s - transactions change frequently
@@ -40,7 +44,10 @@ export function useTransactions(filters: TransactionFilters = {}) {
 }
 
 export function useTodayTransactions(recordedBy?: string) {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'today', recordedBy],
     queryFn: () => getTodayTransactions(recordedBy),
     staleTime: 1000 * 30,

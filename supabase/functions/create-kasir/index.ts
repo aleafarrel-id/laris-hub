@@ -44,8 +44,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     )
 
     const callerToken = authHeader.slice(7)
-    const { data: { user: caller }, error: callerError } =
-      await supabaseAdmin.auth.getUser(callerToken)
+    const {
+      data: { user: caller },
+      error: callerError,
+    } = await supabaseAdmin.auth.getUser(callerToken)
 
     if (callerError || !caller) return json({ error: 'Unauthorized' }, 401)
     if (caller.app_metadata?.role !== 'admin') {

@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
@@ -156,9 +156,7 @@ function LoginPage() {
         setLockoutSeconds(lockSeconds)
       }
 
-      setServerError(
-        errMsg || 'Email atau password salah.',
-      )
+      setServerError(errMsg || 'Email atau password salah.')
     } finally {
       setIsLoading(false)
     }

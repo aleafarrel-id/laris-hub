@@ -87,6 +87,8 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
             aria-hidden="true"
           />
 
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: purely mouse shortcut for escape */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: purely mouse shortcut for escape */}
           <div
             className={`absolute inset-0 flex ${
               isBottom

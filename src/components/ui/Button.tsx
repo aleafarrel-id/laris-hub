@@ -20,7 +20,8 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   danger:
     'bg-danger text-white shadow-md shadow-danger/20 hover:bg-danger/90 hover:shadow-danger/30',
   ghost: 'text-neutral-600 hover:bg-neutral-100',
-  outline: 'border border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300',
+  outline:
+    'border border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300',
 }
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
@@ -62,7 +63,7 @@ export function Button({
     >
       {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
       {!isLoading && leftIcon && <span className="shrink-0">{leftIcon}</span>}
-      {isLoading ? (loadingText || children) : children}
+      {isLoading ? loadingText || children : children}
       {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
     </button>
   )

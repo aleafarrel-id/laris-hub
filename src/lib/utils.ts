@@ -185,7 +185,7 @@ export function translateError(error: unknown): string {
   if ((error as any).isUserFacing === true && typeof rawMessage === 'string') {
     return rawMessage
   }
-  
+
   return 'Terjadi kesalahan sistem. Silakan coba lagi atau hubungi administrator.'
 }
 
@@ -250,10 +250,18 @@ async function parseEdgeFunctionContext(error: unknown): Promise<Record<string, 
   if (!raw) return null
 
   if (raw instanceof Response) {
-    try { return await raw.clone().json() } catch { return null }
+    try {
+      return await raw.clone().json()
+    } catch {
+      return null
+    }
   }
   if (typeof raw === 'string') {
-    try { return JSON.parse(raw) } catch { return null }
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
   }
   return null
 }
@@ -276,16 +284,16 @@ export async function throwEdgeFunctionError(
 ): Promise<void> {
   if (error) {
     const isError = error instanceof Error
-    const ctx = isError ? (await parseEdgeFunctionContext(error)) ?? {} : {}
+    const ctx = isError ? ((await parseEdgeFunctionContext(error)) ?? {}) : {}
 
     // supabase-js sometimes puts JSON directly in error.message when context is empty
     let resolvedCtx = ctx
-    if (
-      isError &&
-      Object.keys(ctx).length === 0 &&
-      (error as Error).message.startsWith('{')
-    ) {
-      try { resolvedCtx = JSON.parse((error as Error).message) } catch { /* noop */ }
+    if (isError && Object.keys(ctx).length === 0 && (error as Error).message.startsWith('{')) {
+      try {
+        resolvedCtx = JSON.parse((error as Error).message)
+      } catch {
+        /* noop */
+      }
     }
 
     const message = resolvedCtx?.error ?? (isError ? (error as Error).message : 'Unknown error')

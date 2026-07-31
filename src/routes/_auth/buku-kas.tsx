@@ -4,11 +4,11 @@ import {
   ArrowLeftRight,
   BookOpen,
   DollarSign,
+  Edit3,
   Filter,
+  Trash2,
   TrendingDown,
   TrendingUp,
-  Trash2,
-  Edit3,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
@@ -16,12 +16,12 @@ import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
+import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useCashiers } from '@/hooks/useProfile'
-import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
+import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionFilters, TransactionWithItems } from '@/types'
@@ -84,7 +84,7 @@ function getDateRange(range: QuickRange): { from: Date; to: Date } {
 
 function BukuKasPage() {
   const { isAdmin } = useAuth()
-  
+
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
 
@@ -94,18 +94,22 @@ function BukuKasPage() {
   const typeFilter = search.typeFilter || 'all'
   const kasirFilter = search.kasirFilter || 'all'
 
-  const setQuickRange = (range: QuickRange) => navigate({ search: (prev) => ({ ...prev, quickRange: range }) })
-  const setCustomFrom = (val: string) => navigate({ search: (prev) => ({ ...prev, customFrom: val }) })
+  const setQuickRange = (range: QuickRange) =>
+    navigate({ search: (prev) => ({ ...prev, quickRange: range }) })
+  const setCustomFrom = (val: string) =>
+    navigate({ search: (prev) => ({ ...prev, customFrom: val }) })
   const setCustomTo = (val: string) => navigate({ search: (prev) => ({ ...prev, customTo: val }) })
-  const setTypeFilter = (val: TransactionFilters['type']) => navigate({ search: (prev) => ({ ...prev, typeFilter: val }) })
-  const setKasirFilter = (val: string) => navigate({ search: (prev) => ({ ...prev, kasirFilter: val }) })
+  const setTypeFilter = (val: TransactionFilters['type']) =>
+    navigate({ search: (prev) => ({ ...prev, typeFilter: val }) })
+  const setKasirFilter = (val: string) =>
+    navigate({ search: (prev) => ({ ...prev, kasirFilter: val }) })
 
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
 
   const [listRef] = useAutoAnimate()
 
   const { data: cashiers } = useCashiers()
-  
+
   const deleteTxMutation = useDeleteTransaction()
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null)
   const [editingTx, setEditingTx] = useState<TransactionWithItems | null>(null)
@@ -462,7 +466,6 @@ function BukuKasPage() {
                       <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
                         {formatDateTime(tx.transaction_at)}
                       </span>
-
                     </div>
 
                     <div className="flex flex-col items-end leading-tight flex-shrink-0">
@@ -514,9 +517,7 @@ function BukuKasPage() {
                       </th>
                     )}
                     {isAdmin && (
-                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-20">
-                        
-                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide w-20"></th>
                     )}
                   </tr>
                 </thead>

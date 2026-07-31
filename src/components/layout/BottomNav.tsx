@@ -43,7 +43,9 @@ export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
                 strokeWidth={isActive ? 2.5 : 1.75}
                 className="transition-[stroke-width]"
               />
-              <span className={`text-[10px] font-medium truncate px-0.5 max-w-full ${isActive ? 'text-primary' : ''}`}>
+              <span
+                className={`text-[10px] font-medium truncate px-0.5 max-w-full ${isActive ? 'text-primary' : ''}`}
+              >
                 {label}
               </span>
             </Link>

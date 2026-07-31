@@ -1,5 +1,5 @@
 import { MapPin, Phone, ShoppingCart, TrendingUp, User } from 'lucide-react'
-import { useMemo, useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -67,7 +67,9 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
             )}
           </div>
 
-          <h3 className="text-xl font-bold text-neutral-900 mb-1">{cachedProfile.full_name || 'Sistem'}</h3>
+          <h3 className="text-xl font-bold text-neutral-900 mb-1">
+            {cachedProfile.full_name || 'Sistem'}
+          </h3>
           <div className="flex items-center gap-1.5 text-sm text-neutral-500 mb-6 bg-neutral-100 px-3 py-1 rounded-full">
             <MapPin size={14} />
             <span className="font-medium">Akun Lapak (Kasir)</span>
@@ -85,36 +87,36 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
             </div>
           )}
 
-        <div className="w-full grid grid-cols-2 gap-3">
-          <div className="bg-success/5 border border-success/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-            <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center mb-2">
-              <TrendingUp size={20} />
-            </div>
-            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-              Total Omzet
-            </p>
-            {isLoading ? (
-              <Skeleton className="w-20 h-6" />
-            ) : (
-              <p className="text-lg font-bold text-success tabular-nums">
-                {formatRupiah(stats.omzet)}
+          <div className="w-full grid grid-cols-2 gap-3">
+            <div className="bg-success/5 border border-success/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+              <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center mb-2">
+                <TrendingUp size={20} />
+              </div>
+              <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
+                Total Omzet
               </p>
-            )}
-          </div>
-
-          <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
-              <ShoppingCart size={20} />
+              {isLoading ? (
+                <Skeleton className="w-20 h-6" />
+              ) : (
+                <p className="text-lg font-bold text-success tabular-nums">
+                  {formatRupiah(stats.omzet)}
+                </p>
+              )}
             </div>
-            <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-              Total Transaksi
-            </p>
-            {isLoading ? (
-              <Skeleton className="w-12 h-6" />
-            ) : (
-              <p className="text-lg font-bold text-primary tabular-nums">{stats.count}x</p>
-            )}
-          </div>
+
+            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
+                <ShoppingCart size={20} />
+              </div>
+              <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
+                Total Transaksi
+              </p>
+              {isLoading ? (
+                <Skeleton className="w-12 h-6" />
+              ) : (
+                <p className="text-lg font-bold text-primary tabular-nums">{stats.count}x</p>
+              )}
+            </div>
           </div>
         </div>
       )}

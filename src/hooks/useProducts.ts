@@ -13,7 +13,10 @@ import {
 import { useAuthStore } from '@/store/auth.store'
 
 export function useProducts(activeOnly = false) {
+  const user = useAuthStore((state) => state.user)
+
   return useQuery({
+    enabled: !!user,
     queryKey: [...QUERY_KEYS.PRODUCTS, { activeOnly }],
     queryFn: () => getProducts(activeOnly),
     staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely

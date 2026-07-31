@@ -1,6 +1,6 @@
 import { LogOut } from 'lucide-react'
-import { ConfirmDialog } from './ConfirmDialog'
 import { useAuthActions } from '@/hooks/useAuth'
+import { ConfirmDialog } from './ConfirmDialog'
 
 interface LogoutDialogProps {
   isOpen: boolean

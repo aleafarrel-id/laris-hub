@@ -54,17 +54,22 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     transaction.transaction_items.forEach((item) => {
       const product = products.find((p) => p.id === item.product_id)
       // If a product was deleted but still appears in the transaction, create a fallback
-      const productData = product ?? ({
-        id: item.product_id,
-        name: item.product_name,
-        hpp: item.product_hpp,
-        selling_price: item.selling_price,
-        image_url: null,
-        sku: null,
-        stock: 0,
-      } as unknown as Product)
+      const productData =
+        product ??
+        ({
+          id: item.product_id,
+          name: item.product_name,
+          hpp: item.product_hpp,
+          selling_price: item.selling_price,
+          image_url: null,
+          sku: null,
+          stock: 0,
+        } as unknown as Product)
 
-      initialCart.set(item.product_id ?? crypto.randomUUID(), { product: productData, quantity: item.quantity })
+      initialCart.set(item.product_id ?? crypto.randomUUID(), {
+        product: productData,
+        quantity: item.quantity,
+      })
     })
     setCart(initialCart)
   }, [isEditing, transaction, products, productsLoading])
@@ -142,15 +147,16 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
       updateSale(
         {
           id: transaction.id,
-          payload: { items, notes: notes.trim() || null, transaction_at: transaction.transaction_at },
+          payload: {
+            items,
+            notes: notes.trim() || null,
+            transaction_at: transaction.transaction_at,
+          },
         },
         { onSuccess },
       )
     } else {
-      createSale(
-        { payload: { items, notes: notes.trim() || null } },
-        { onSuccess },
-      )
+      createSale({ payload: { items, notes: notes.trim() || null } }, { onSuccess })
     }
   }, [cart, cartArray, notes, isEditing, transaction, createSale, updateSale, onSuccess])
 

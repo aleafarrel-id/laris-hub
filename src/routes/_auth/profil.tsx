@@ -58,104 +58,103 @@ function ProfilPage() {
       <div className="page-container max-w-lg mx-auto">
         <h1 className="text-2xl font-bold mb-6 hidden md:block">Profil Saya</h1>
 
-      <div className="app-card p-6 mb-4">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
-            {profile ? getInitials(profile.full_name) : '?'}
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-neutral-900">{profile?.full_name}</h2>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                profile?.role === 'admin'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-neutral-100 text-neutral-600'
-              }`}
-            >
-              <Shield size={10} />
-              {profile?.role === 'admin' ? 'Admin' : 'Kasir'}
-            </span>
-          </div>
-        </div>
-
-        {!isEditing ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-sm">
-              <User size={16} className="text-neutral-400" />
-              <span className="text-neutral-700">{profile?.full_name}</span>
+        <div className="app-card p-6 mb-4">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
+              {profile ? getInitials(profile.full_name) : '?'}
             </div>
-            {profile?.phone && (
-              <div className="flex items-center gap-3 text-sm">
-                <Phone size={16} className="text-neutral-400" />
-                <span className="text-neutral-700">{profile.phone}</span>
-              </div>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setForm({ full_name: profile?.full_name ?? '', phone: profile?.phone ?? '' })
-                setIsEditing(true)
-              }}
-              className="mt-4 w-full"
-            >
-              Edit Profil
-            </Button>
+            <div>
+              <h2 className="text-lg font-bold text-neutral-900">{profile?.full_name}</h2>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                  profile?.role === 'admin'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-neutral-100 text-neutral-600'
+                }`}
+              >
+                <Shield size={10} />
+                {profile?.role === 'admin' ? 'Admin' : 'Kasir'}
+              </span>
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleSave} className="space-y-4">
-            <Input
-              id="profil-name"
-              type="text"
-              label="Nama Lengkap"
-              value={form.full_name}
-              onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-              required
-            />
-            <Input
-              id="profil-phone"
-              type="tel"
-              label="Nomor HP"
-              value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              inputMode="numeric"
-              placeholder="0812xxxxxxxx"
-            />
-            <div className="flex gap-3">
+
+          {!isEditing ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <User size={16} className="text-neutral-400" />
+                <span className="text-neutral-700">{profile?.full_name}</span>
+              </div>
+              {profile?.phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone size={16} className="text-neutral-400" />
+                  <span className="text-neutral-700">{profile.phone}</span>
+                </div>
+              )}
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsEditing(false)}
-                className="flex-1"
+                onClick={() => {
+                  setForm({ full_name: profile?.full_name ?? '', phone: profile?.phone ?? '' })
+                  setIsEditing(true)
+                }}
+                className="mt-4 w-full"
               >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending || !form.full_name.trim()}
-                isLoading={isPending}
-                className="flex-1"
-              >
-                Simpan
+                Edit Profil
               </Button>
             </div>
-          </form>
-        )}
-      </div>
+          ) : (
+            <form onSubmit={handleSave} className="space-y-4">
+              <Input
+                id="profil-name"
+                type="text"
+                label="Nama Lengkap"
+                value={form.full_name}
+                onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+                required
+              />
+              <Input
+                id="profil-phone"
+                type="tel"
+                label="Nomor HP"
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                inputMode="numeric"
+                placeholder="0812xxxxxxxx"
+              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending || !form.full_name.trim()}
+                  isLoading={isPending}
+                  className="flex-1"
+                >
+                  Simpan
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => setShowLogoutModal(true)}
-        className="w-full bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger mt-4"
-        leftIcon={<LogOut size={16} />}
-      >
-        Keluar dari Akun
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setShowLogoutModal(true)}
+          className="w-full bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger mt-4"
+          leftIcon={<LogOut size={16} />}
+        >
+          Keluar dari Akun
+        </Button>
       </div>
 
       <LogoutDialog isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </>
   )
 }
-

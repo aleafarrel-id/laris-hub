@@ -110,14 +110,22 @@ export function ProductForm({
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-neutral-700">Foto Produk</label>
-              <ImageDropzone currentPreviewUrl={previewUrl} onImageChange={handleImageChange} isUploading={isPending} />
+              <div className="block text-sm font-semibold text-neutral-700">Foto Produk</div>
+              <ImageDropzone
+                currentPreviewUrl={previewUrl}
+                onImageChange={handleImageChange}
+                isUploading={isPending}
+              />
             </div>
             <div className="space-y-3 pt-2">
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="flex-1 pr-4">
-                  <span className="text-sm font-bold text-neutral-900 block">Status Produk Aktif</span>
-                  <span className="text-xs text-neutral-500 block mt-0.5">Tampil di menu Kasir</span>
+                  <span className="text-sm font-bold text-neutral-900 block">
+                    Status Produk Aktif
+                  </span>
+                  <span className="text-xs text-neutral-500 block mt-0.5">
+                    Tampil di menu Kasir
+                  </span>
                 </div>
                 <div className="relative flex items-center justify-center shrink-0">
                   <input
@@ -134,23 +142,78 @@ export function ProductForm({
           </div>
           <div className="space-y-8">
             <div className="space-y-5">
-              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">Informasi Dasar</h3>
+              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
+                Informasi Dasar
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Input id="name" label="Nama Produk" value={form.name} onChange={(e) => handleFieldChange('name', e.target.value)} error={errors.name} placeholder="Contoh: Pukis Coklat Keju" required disabled={isPending} />
-                <Input id="sku" label="SKU (Opsional)" value={form.sku} onChange={(e) => handleFieldChange('sku', e.target.value)} error={errors.sku} placeholder="Contoh: PKS-CKJ-01" disabled={isPending} />
+                <Input
+                  id="name"
+                  label="Nama Produk"
+                  value={form.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  error={errors.name}
+                  placeholder="Contoh: Pukis Coklat Keju"
+                  required
+                  disabled={isPending}
+                />
+                <Input
+                  id="sku"
+                  label="SKU (Opsional)"
+                  value={form.sku}
+                  onChange={(e) => handleFieldChange('sku', e.target.value)}
+                  error={errors.sku}
+                  placeholder="Contoh: PKS-CKJ-01"
+                  disabled={isPending}
+                />
               </div>
-              <Textarea id="description" label="Deskripsi (Opsional)" value={form.description} onChange={(e) => handleFieldChange('description', e.target.value)} error={errors.description} placeholder="Tuliskan detail produk di sini..." disabled={isPending} />
+              <Textarea
+                id="description"
+                label="Deskripsi (Opsional)"
+                value={form.description}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                error={errors.description}
+                placeholder="Tuliskan detail produk di sini..."
+                disabled={isPending}
+              />
             </div>
             <div className="space-y-5">
-              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">Harga & Modal</h3>
+              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
+                Harga & Modal
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Input id="hpp" label="Modal Dasar (HPP)" value={form.hpp} onChange={(e) => handleFieldChange('hpp', e.target.value)} error={errors.hpp} type="number" inputMode="numeric" min={0} placeholder="Contoh: 3000" required disabled={isPending} />
+                <Input
+                  id="hpp"
+                  label="Modal Dasar (HPP)"
+                  value={form.hpp}
+                  onChange={(e) => handleFieldChange('hpp', e.target.value)}
+                  error={errors.hpp}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="Contoh: 3000"
+                  required
+                  disabled={isPending}
+                />
                 <div className="flex flex-col">
-                  <Input id="selling_price" label="Harga Jual" value={form.selling_price} onChange={(e) => handleFieldChange('selling_price', e.target.value)} error={errors.selling_price} type="number" inputMode="numeric" min={0} placeholder="Contoh: 5000" required disabled={isPending} />
+                  <Input
+                    id="selling_price"
+                    label="Harga Jual"
+                    value={form.selling_price}
+                    onChange={(e) => handleFieldChange('selling_price', e.target.value)}
+                    error={errors.selling_price}
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder="Contoh: 5000"
+                    required
+                    disabled={isPending}
+                  />
                   {hpp > 0 && sellingPrice > 0 && (
                     <div className="mt-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-between text-xs">
                       <span className="font-semibold text-neutral-600">Margin:</span>
-                      <span className={`font-bold px-2.5 py-1 rounded-md ${margin >= MARGIN_GOOD_THRESHOLD ? 'bg-success/15 text-success-700' : margin >= MARGIN_WARNING_THRESHOLD ? 'bg-amber-500/15 text-amber-700' : 'bg-danger/15 text-danger-700'}`}>
+                      <span
+                        className={`font-bold px-2.5 py-1 rounded-md ${margin >= MARGIN_GOOD_THRESHOLD ? 'bg-success/15 text-success-700' : margin >= MARGIN_WARNING_THRESHOLD ? 'bg-amber-500/15 text-amber-700' : 'bg-danger/15 text-danger-700'}`}
+                      >
                         {margin.toFixed(1)}% ({formatRupiah(sellingPrice - hpp)})
                       </span>
                     </div>
@@ -162,8 +225,12 @@ export function ProductForm({
         </div>
       </div>
       <div className="sticky bottom-0 z-10 border-t border-neutral-200 bg-white/90 backdrop-blur-md px-6 py-4 flex justify-end gap-3 shrink-0 mt-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-        <Button type="button" variant="ghost" onClick={onSuccess} disabled={isPending}>Batal</Button>
-        <Button type="submit" variant="primary" isLoading={isPending}>Simpan</Button>
+        <Button type="button" variant="ghost" onClick={onSuccess} disabled={isPending}>
+          Batal
+        </Button>
+        <Button type="submit" variant="primary" isLoading={isPending}>
+          Simpan
+        </Button>
       </div>
     </form>
   )

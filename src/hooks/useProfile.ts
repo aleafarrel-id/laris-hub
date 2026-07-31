@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth.store'
 import { translateError } from '@/lib/utils'
 import { getProfile, updateProfile } from '@/services/auth.service'
-import { useAuthStore } from '@/store/auth.store'
 import type { Profile } from '@/types'
 
 export function useProfile() {

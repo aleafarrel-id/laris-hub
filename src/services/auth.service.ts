@@ -5,11 +5,7 @@ import type { Profile } from '@/types'
  * Fetch profile by user ID.
  */
 export async function getProfile(userId: string): Promise<Profile> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
 
   if (error) throw error
   return data as Profile
@@ -71,7 +67,9 @@ export async function updateProfile(
   updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'>,
 ): Promise<Profile> {
   // Authoritative check: ensure the caller owns this profile
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user || user.id !== userId) {
     throw new Error('Unauthorized: Tidak dapat mengubah profil pengguna lain.')
   }

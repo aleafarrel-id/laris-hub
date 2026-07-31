@@ -1,24 +1,48 @@
-import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { ArrowLeftRight, Calendar, DollarSign, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, Wallet, Trash2, User, Edit3 } from 'lucide-react'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import {
+  ArrowLeftRight,
+  Calendar,
+  DollarSign,
+  Edit3,
+  ShoppingBag,
+  ShoppingCart,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Wallet,
+} from 'lucide-react'
 import { useState } from 'react'
-import { Bar, BarChart, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { TransactionBadge } from '@/components/ui/Badge'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
+import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { useCashiers } from '@/hooks/useProfile'
-import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
+import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTime } from '@/lib/utils'
 import type { Profile, TransactionWithItems } from '@/types'
+
 type DashboardSearch = {
   period?: DashboardPeriod
   kasir?: string
@@ -68,29 +92,32 @@ function DashboardPage() {
   const { profile } = useAuth()
   const navigate = Route.useNavigate()
   const search = Route.useSearch()
-  
+
   const period = search.period || 'today'
   const kasirFilter = search.kasir || 'all'
-  
+
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
-  
+
   const customFrom = search.customFrom || todayStart.toISOString().split('T')[0]
   const customTo = search.customTo || new Date().toISOString().split('T')[0]
 
   const setPeriod = (p: DashboardPeriod) => navigate({ search: (prev) => ({ ...prev, period: p }) })
   const setKasirFilter = (k: string) => navigate({ search: (prev) => ({ ...prev, kasir: k }) })
-  const setCustomFrom = (date: string) => navigate({ search: (prev) => ({ ...prev, customFrom: date }) })
-  const setCustomTo = (date: string) => navigate({ search: (prev) => ({ ...prev, customTo: date }) })
+  const setCustomFrom = (date: string) =>
+    navigate({ search: (prev) => ({ ...prev, customFrom: date }) })
+  const setCustomTo = (date: string) =>
+    navigate({ search: (prev) => ({ ...prev, customTo: date }) })
 
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
   const { data: cashiers } = useCashiers()
-  
+
   const isAdmin = profile?.role === 'admin'
 
-  const customRange = period === 'custom' 
-    ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) } 
-    : undefined
+  const customRange =
+    period === 'custom'
+      ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) }
+      : undefined
 
   const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, customRange, kasirFilter)
   const { data: trend, isLoading: trendLoading } = useMonthlyTrend(30, kasirFilter)
@@ -122,7 +149,11 @@ function DashboardPage() {
                 Selamat datang, {profile?.full_name ?? '-'}
               </p>
             </div>
-            <Link to="/profil" className="md:hidden flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-[0.96] transition-all" aria-label="Profil Admin">
+            <Link
+              to="/profil"
+              className="md:hidden flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-[0.96] transition-all"
+              aria-label="Profil Admin"
+            >
               <User size={18} strokeWidth={2.5} />
             </Link>
           </div>
@@ -145,7 +176,7 @@ function DashboardPage() {
                 />
               </div>
             )}
-            
+
             <CustomSelect
               value={kasirFilter}
               onChange={setKasirFilter}
@@ -415,8 +446,7 @@ function DashboardPage() {
                     <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide">
                       Jumlah
                     </th>
-                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20">
-                    </th>
+                    <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -563,7 +593,16 @@ function DashboardPage() {
 /** Harmonious 5-color palette aligned to the Laris Hub brand */
 const CHART_COLORS = ['#0F766E', '#285EAF', '#6366F1', '#10B981', '#F59E0B']
 
-function TopProductsDonutChart({ products }: { products: Array<{ product_id: string; product_name: string; total_qty: number; total_revenue: number }> }) {
+function TopProductsDonutChart({
+  products,
+}: {
+  products: Array<{
+    product_id: string
+    product_name: string
+    total_qty: number
+    total_revenue: number
+  }>
+}) {
   const totalRevenue = products.reduce((sum, p) => sum + p.total_revenue, 0)
   const totalQty = products.reduce((sum, p) => sum + p.total_qty, 0)
 
@@ -579,7 +618,9 @@ function TopProductsDonutChart({ products }: { products: Array<{ product_id: str
       <div className="relative flex items-center justify-center">
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-          <span className="text-xl font-bold text-neutral-900 tabular-nums leading-none">{totalQty}</span>
+          <span className="text-xl font-bold text-neutral-900 tabular-nums leading-none">
+            {totalQty}
+          </span>
           <span className="text-[10px] text-neutral-400 font-medium mt-0.5">total terjual</span>
         </div>
 
@@ -598,11 +639,7 @@ function TopProductsDonutChart({ products }: { products: Array<{ product_id: str
               animationDuration={700}
             >
               {chartData.map((entry) => (
-                <Cell 
-                  key={entry.product_id} 
-                  fill={entry.color} 
-                  style={{ outline: 'none' }} 
-                />
+                <Cell key={entry.product_id} fill={entry.color} style={{ outline: 'none' }} />
               ))}
             </Pie>
             <Tooltip
@@ -613,16 +650,25 @@ function TopProductsDonutChart({ products }: { products: Array<{ product_id: str
                 return (
                   <div className="bg-white border border-neutral-100 rounded-xl shadow-lg p-3 text-xs min-w-[160px]">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
-                      <span className="font-semibold text-neutral-900 truncate">{d.product_name}</span>
+                      <span
+                        className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                        style={{ backgroundColor: d.color }}
+                      />
+                      <span className="font-semibold text-neutral-900 truncate">
+                        {d.product_name}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 text-neutral-500">
                       <span>Terjual</span>
-                      <span className="font-semibold tabular-nums text-neutral-900">{d.total_qty}x</span>
+                      <span className="font-semibold tabular-nums text-neutral-900">
+                        {d.total_qty}x
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 text-neutral-500 mt-0.5">
                       <span>Revenue</span>
-                      <span className="font-semibold tabular-nums text-success">{formatRupiah(d.total_revenue)}</span>
+                      <span className="font-semibold tabular-nums text-success">
+                        {formatRupiah(d.total_revenue)}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 text-neutral-500 mt-0.5">
                       <span>Porsi</span>
@@ -640,10 +686,19 @@ function TopProductsDonutChart({ products }: { products: Array<{ product_id: str
       <div className="space-y-2">
         {chartData.map((p) => (
           <div key={p.product_id} className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
-            <span className="text-xs text-neutral-700 flex-1 truncate font-medium">{p.product_name}</span>
-            <span className="text-[10px] text-neutral-400 tabular-nums flex-shrink-0">{p.total_qty}x</span>
-            <span className="text-xs font-semibold text-success tabular-nums flex-shrink-0">{formatRupiah(p.total_revenue)}</span>
+            <span
+              className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+              style={{ backgroundColor: p.color }}
+            />
+            <span className="text-xs text-neutral-700 flex-1 truncate font-medium">
+              {p.product_name}
+            </span>
+            <span className="text-[10px] text-neutral-400 tabular-nums flex-shrink-0">
+              {p.total_qty}x
+            </span>
+            <span className="text-xs font-semibold text-success tabular-nums flex-shrink-0">
+              {formatRupiah(p.total_revenue)}
+            </span>
           </div>
         ))}
       </div>
