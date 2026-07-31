@@ -5,10 +5,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatRupiah, formatTime } from '@/lib/utils'
-import type { Profile, TransactionWithItems } from '@/types'
+import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
 interface RecentTransactionsTableProps {
-  transactions: TransactionWithItems[] | undefined
+  transactions: TransactionWithProfile[] | undefined
   isLoading: boolean
   isAdmin: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -88,7 +88,7 @@ export function RecentTransactionsTable({
             )}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="text-sm font-medium text-neutral-900 pr-12">
-                <TransactionItemsMobileDisplay transaction={tx} />
+                <TransactionItemsMobileDisplay transaction={tx as unknown as TransactionWithItems} />
               </div>
 
               {(tx.expense_category || tx.notes) && (

@@ -4,10 +4,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { Profile, TransactionWithItems } from '@/types'
+import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
 interface BukuKasTableDesktopProps {
-  transactions: TransactionWithItems[]
+  transactions: TransactionWithProfile[]
   isAdmin: boolean
   isLoading: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -107,7 +107,7 @@ export function BukuKasTableDesktop({
                   <div className="flex items-start gap-2 mb-0.5">
                     <div className="text-sm font-medium text-neutral-900">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <TransactionItemsDisplay transaction={tx} />
+                        <TransactionItemsDisplay transaction={tx as unknown as TransactionWithItems} />
                         {tx.type === 'pengeluaran' && tx.expense_category && (
                           <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
                             {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
@@ -152,7 +152,7 @@ export function BukuKasTableDesktop({
                     <div className="flex justify-end gap-1">
                       <button
                         type="button"
-                        onClick={() => onEditTransaction(tx)}
+                        onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
                         className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors"
                         title="Edit Transaksi"
                       >

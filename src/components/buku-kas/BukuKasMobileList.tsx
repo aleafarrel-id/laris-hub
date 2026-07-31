@@ -4,10 +4,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { Profile, TransactionWithItems } from '@/types'
+import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
 
 interface BukuKasMobileListProps {
-  transactions: TransactionWithItems[]
+  transactions: TransactionWithProfile[]
   isAdmin: boolean
   isLoading: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -79,7 +79,7 @@ export function BukuKasMobileList({
             <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => onEditTransaction(tx)}
+                onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
                 className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Edit Transaksi"
               >
@@ -98,7 +98,7 @@ export function BukuKasMobileList({
 
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="text-sm font-medium text-neutral-900 pr-12">
-              <TransactionItemsMobileDisplay transaction={tx} />
+              <TransactionItemsMobileDisplay transaction={tx as unknown as TransactionWithItems} />
             </div>
 
             {(tx.expense_category || tx.notes) && (

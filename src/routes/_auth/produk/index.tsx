@@ -19,8 +19,9 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { useDeleteProduct, useProducts, useToggleProductStatus } from '@/hooks/useProducts'
+import { useDeleteProduct, useInfiniteProducts, useToggleProductStatus } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { calcMargin, formatRupiah } from '@/lib/utils'
@@ -46,13 +47,28 @@ export const Route = createFileRoute('/_auth/produk/')({
 })
 
 function ProdukPage() {
-  const { data: products = [], isLoading } = useProducts(false)
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
+  
+  const { 
+    data: paginatedData, 
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteProducts(debouncedSearch, 12) // Show 12 items per page for better grid
+
+  const products = useMemo(() => {
+    return paginatedData?.pages.flatMap((page) => page.data) ?? []
+  }, [paginatedData])
+
+  const totalCount = paginatedData?.pages[0]?.total ?? 0
+
   const { mutate: deleteProduct } = useDeleteProduct()
   const { mutate: toggleStatus } = useToggleProductStatus()
 
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
-  const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'list'>('laris-hub-view-mode', 'grid')
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: string; name: string }>({
@@ -61,19 +77,9 @@ function ProdukPage() {
     name: '',
   })
 
-  const filtered = useMemo(() => {
-    let list = products
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(
-        (p) => p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q),
-      )
-    }
-    return list
-  }, [products, search])
-
-  const activeCount = useMemo(() => products.filter((p) => p.is_active).length, [products])
-
+  // activeCount is not possible to accurately calculate for the entire database without a dedicated query
+  // We'll show the totalCount instead for the dashboard label.
+  
   const handleDelete = useCallback((id: string, name: string) => {
     setConfirmState({ isOpen: true, id, name })
   }, [])
@@ -104,7 +110,7 @@ function ProdukPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Katalog Produk</h1>
-            <p className="text-sm text-neutral-500 tabular-nums">{activeCount} produk aktif</p>
+            <p className="text-sm text-neutral-500 tabular-nums">Total {totalCount} produk</p>
           </div>
         </div>
       </div>
@@ -152,7 +158,7 @@ function ProdukPage() {
 
       {isLoading && (
         <div
-          className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+          className={`grid gap-5 sm:gap-6 pb-8 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
         >
           {[1, 2, 3, 4, 5, 6].map((k) => (
             <div
@@ -184,7 +190,7 @@ function ProdukPage() {
         </div>
       )}
 
-      {!isLoading && !filtered.length && (
+      {!isLoading && !products.length && (
         <EmptyState
           icon={Package}
           title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
@@ -197,121 +203,136 @@ function ProdukPage() {
         />
       )}
 
-      {!isLoading && filtered.length > 0 && (
-        <div
-          className={`grid gap-5 sm:gap-6 pb-24 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
-        >
-          {filtered.map((product) => {
-            const margin = calcMargin(product.selling_price, product.hpp)
-            const marginColor =
-              margin >= MARGIN_GOOD_THRESHOLD
-                ? 'text-success bg-success/10'
-                : margin >= MARGIN_WARNING_THRESHOLD
-                  ? 'text-warning bg-warning/10'
-                  : 'text-danger bg-danger/10'
+      {!isLoading && products.length > 0 && (
+        <div className="pb-24">
+          <div
+            className={`grid gap-5 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+          >
+            {products.map((product) => {
+              const margin = calcMargin(product.selling_price, product.hpp)
+              const marginColor =
+                margin >= MARGIN_GOOD_THRESHOLD
+                  ? 'text-success bg-success/10'
+                  : margin >= MARGIN_WARNING_THRESHOLD
+                    ? 'text-warning bg-warning/10'
+                    : 'text-danger bg-danger/10'
 
-            return (
-              <div
-                key={product.id}
-                className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
-              >
+              return (
                 <div
-                  className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
+                  key={product.id}
+                  className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
                 >
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2">
-                      <ImageIcon size={32} strokeWidth={1.5} />
-                    </div>
-                  )}
-
-                  <div className="absolute top-2 right-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        toggleStatus({ id: product.id, isActive: !product.is_active })
-                      }}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
-                        product.is_active
-                          ? 'bg-white/80 text-success shadow-sm'
-                          : 'bg-neutral-800/80 text-white shadow-sm'
-                      }`}
-                      title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
-                    >
-                      {product.is_active ? 'AKTIF' : 'NONAKTIF'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0">
-                  <div className="flex flex-col gap-1.5">
-                    <h3
-                      className="font-bold text-neutral-900 leading-snug line-clamp-2"
-                      title={product.name}
-                    >
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
-                      {product.sku ? (
-                        <>
-                          <Tag size={12} className="text-neutral-400 flex-shrink-0" />
-                          <span className="truncate">{product.sku}</span>
-                        </>
-                      ) : (
-                        <span className="text-neutral-400 italic">Tanpa SKU</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2.5 mt-auto">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">
-                          Harga Jual
-                        </p>
-                        <div
-                          className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}
-                        >
-                          <TrendingUp size={10} />
-                          <span className="text-[9px] font-bold tabular-nums leading-none">
-                            {margin.toFixed(0)}%
-                          </span>
-                        </div>
+                  <div
+                    className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
+                  >
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2">
+                        <ImageIcon size={32} strokeWidth={1.5} />
                       </div>
-                      <p className="font-extrabold text-neutral-900 tabular-nums leading-none text-base">
-                        {formatRupiah(product.selling_price)}
-                      </p>
+                    )}
+
+                    <div className="absolute top-2 right-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          toggleStatus({ id: product.id, isActive: !product.is_active })
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
+                          product.is_active
+                            ? 'bg-white/80 text-success shadow-sm'
+                            : 'bg-neutral-800/80 text-white shadow-sm'
+                        }`}
+                        title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
+                      >
+                        {product.is_active ? 'AKTIF' : 'NONAKTIF'}
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(product)}
-                      className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Pencil size={14} />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(product.id, product.name)}
-                      className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
-                      title="Hapus Produk"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                  <div className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0">
+                    <div className="flex flex-col gap-1.5">
+                      <h3
+                        className="font-bold text-neutral-900 leading-snug line-clamp-2"
+                        title={product.name}
+                      >
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
+                        {product.sku ? (
+                          <>
+                            <Tag size={12} className="text-neutral-400 flex-shrink-0" />
+                            <span className="truncate">{product.sku}</span>
+                          </>
+                        ) : (
+                          <span className="text-neutral-400 italic">Tanpa SKU</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5 mt-auto">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">
+                            Harga Jual
+                          </p>
+                          <div
+                            className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}
+                          >
+                            <TrendingUp size={10} />
+                            <span className="text-[9px] font-bold tabular-nums leading-none">
+                              {margin.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                        <p className="font-extrabold text-neutral-900 tabular-nums leading-none text-base">
+                          {formatRupiah(product.selling_price)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(product)}
+                        className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Pencil size={14} />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product.id, product.name)}
+                        className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
+                        title="Hapus Produk"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+
+          {hasNextPage && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="px-6 py-2.5 bg-white border border-neutral-200 text-neutral-600 rounded-xl text-sm font-semibold hover:border-primary hover:text-primary active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFetchingNextPage ? 'Memuat...' : 'Muat Lebih Banyak'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

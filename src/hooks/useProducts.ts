@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
 import { translateError } from '@/lib/utils'
@@ -7,6 +7,7 @@ import {
   createProduct,
   deleteProduct,
   getProducts,
+  getProductsPaginated,
   toggleProductStatus,
   updateProduct,
 } from '@/services/product.service'
@@ -20,6 +21,19 @@ export function useProducts(activeOnly = false) {
     queryKey: [...QUERY_KEYS.PRODUCTS, { activeOnly }],
     queryFn: () => getProducts(activeOnly),
     staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
+  })
+}
+
+export function useInfiniteProducts(search = '', pageSize = 20) {
+  const user = useAuthStore((state) => state.user)
+
+  return useInfiniteQuery({
+    enabled: !!user,
+    queryKey: [...QUERY_KEYS.PRODUCTS, 'infinite', search, pageSize],
+    queryFn: ({ pageParam = 1 }) => getProductsPaginated(pageParam, pageSize, search),
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 5,
   })
 }
 

@@ -1,27 +1,17 @@
-import type React from 'react'
-import { useCallback, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import imageCompression from 'browser-image-compression'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
 import { calcMargin, formatRupiah } from '@/lib/utils'
-import type { ProductFormData } from '@/lib/validations/product.schema'
+import { type ProductFormData, productSchemaWithValidation } from '@/lib/validations/product.schema'
 import { uploadProductImage } from '@/services/product.service'
 import type { Product } from '@/types'
 import { Button } from '../ui/Button'
 import { ImageDropzone } from '../ui/ImageDropzone'
 import { Input, Textarea } from '../ui/Input'
-
-interface LocalProductFormData {
-  name: string
-  sku: string
-  hpp: string
-  selling_price: string
-  description: string
-  image_url: string
-  is_active: boolean
-}
-
-type FormErrors = Partial<Record<keyof LocalProductFormData, string>>
 
 export function ProductForm({
   product,
@@ -33,64 +23,67 @@ export function ProductForm({
   const { mutate: create, isPending: isCreating } = useCreateProduct()
   const { mutate: update, isPending: isUpdating } = useUpdateProduct()
 
-  const [form, setForm] = useState<LocalProductFormData>({
-    name: product?.name ?? '',
-    sku: product?.sku ?? '',
-    hpp: product?.hpp ? String(product.hpp) : '',
-    selling_price: product?.selling_price ? String(product.selling_price) : '',
-    description: product?.description ?? '',
-    image_url: product?.image_url ?? '',
-    is_active: product?.is_active ?? true,
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchemaWithValidation),
+    defaultValues: {
+      name: product?.name ?? '',
+      sku: product?.sku ?? '',
+      hpp: product?.hpp ?? 0,
+      selling_price: product?.selling_price ?? 0,
+      description: product?.description ?? '',
+      image_url: product?.image_url ?? '',
+      is_active: product?.is_active ?? true,
+    },
   })
 
-  const [errors, setErrors] = useState<FormErrors>({})
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.image_url ?? null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-  const hpp = Number(form.hpp) || 0
-  const sellingPrice = Number(form.selling_price) || 0
+  const hpp = watch('hpp')
+  const sellingPrice = watch('selling_price')
   const margin = calcMargin(sellingPrice, hpp)
   const isPending = isCreating || isUpdating || isUploadingImage
-
-  /** Update a single field and clear its error immediately. */
-  const handleFieldChange = useCallback((field: keyof LocalProductFormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setErrors((prev) => ({ ...prev, [field]: undefined }))
-  }, [])
-
-  const validate = (): boolean => {
-    const newErrors: FormErrors = {}
-    if (!form.name.trim()) newErrors.name = 'Nama produk wajib diisi'
-    if (hpp < 0) newErrors.hpp = 'HPP tidak boleh negatif'
-    if (sellingPrice <= 0) newErrors.selling_price = 'Harga jual harus lebih dari 0'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleImageChange = (file: File | null) => {
     setImageFile(file)
     if (file) {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
       setPreviewUrl(URL.createObjectURL(file))
     } else {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
       setPreviewUrl(null)
-      setForm((prev) => ({ ...prev, image_url: '' }))
+      setValue('image_url', '')
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-
-    let finalImageUrl = form.image_url
+  const onSubmit = async (data: ProductFormData) => {
+    let finalImageUrl = data.image_url
 
     if (imageFile) {
       setIsUploadingImage(true)
       try {
-        finalImageUrl = await uploadProductImage(imageFile)
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        }
+        const compressedFile = await imageCompression(imageFile, options)
+        finalImageUrl = await uploadProductImage(compressedFile)
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Gagal mengunggah gambar'
         toast.error(message)
+        setIsUploadingImage(false)
         return
       } finally {
         setIsUploadingImage(false)
@@ -98,24 +91,21 @@ export function ProductForm({
     }
 
     const payload: ProductFormData = {
-      name: form.name.trim(),
-      sku: form.sku.trim() || null,
-      hpp,
-      selling_price: sellingPrice,
-      description: form.description.trim() || null,
+      ...data,
       image_url: finalImageUrl || null,
-      is_active: form.is_active,
+      sku: data.sku?.trim() || null,
+      description: data.description?.trim() || null,
     }
 
     if (product) {
-      update({ id: product.id, data: payload as any }, { onSuccess })
+      update({ id: product.id, data: payload }, { onSuccess })
     } else {
-      create(payload as any, { onSuccess })
+      create(payload, { onSuccess })
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-full relative">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-full relative">
       <div className="flex-1 px-5 py-6 pb-24 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
           {/* Left column: image & status toggle */}
@@ -141,8 +131,7 @@ export function ProductForm({
                 <div className="relative flex items-center justify-center shrink-0">
                   <input
                     type="checkbox"
-                    checked={form.is_active}
-                    onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
+                    {...register('is_active')}
                     disabled={isPending}
                     className="peer sr-only"
                   />
@@ -162,9 +151,8 @@ export function ProductForm({
                 <Input
                   id="name"
                   label="Nama Produk"
-                  value={form.name}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
-                  error={errors.name}
+                  {...register('name')}
+                  error={errors.name?.message}
                   placeholder="Contoh: Pukis Coklat Keju"
                   required
                   disabled={isPending}
@@ -172,9 +160,8 @@ export function ProductForm({
                 <Input
                   id="sku"
                   label="SKU (Opsional)"
-                  value={form.sku}
-                  onChange={(e) => handleFieldChange('sku', e.target.value)}
-                  error={errors.sku}
+                  {...register('sku')}
+                  error={errors.sku?.message}
                   placeholder="Contoh: PKS-CKJ-01"
                   disabled={isPending}
                 />
@@ -182,9 +169,8 @@ export function ProductForm({
               <Textarea
                 id="description"
                 label="Deskripsi (Opsional)"
-                value={form.description}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
-                error={errors.description}
+                {...register('description')}
+                error={errors.description?.message}
                 placeholder="Tuliskan detail produk di sini..."
                 disabled={isPending}
               />
@@ -198,9 +184,8 @@ export function ProductForm({
                 <Input
                   id="hpp"
                   label="Modal Dasar (HPP)"
-                  value={form.hpp}
-                  onChange={(e) => handleFieldChange('hpp', e.target.value)}
-                  error={errors.hpp}
+                  {...register('hpp', { valueAsNumber: true })}
+                  error={errors.hpp?.message}
                   type="number"
                   inputMode="numeric"
                   min={0}
@@ -212,9 +197,8 @@ export function ProductForm({
                   <Input
                     id="selling_price"
                     label="Harga Jual"
-                    value={form.selling_price}
-                    onChange={(e) => handleFieldChange('selling_price', e.target.value)}
-                    error={errors.selling_price}
+                    {...register('selling_price', { valueAsNumber: true })}
+                    error={errors.selling_price?.message}
                     type="number"
                     inputMode="numeric"
                     min={0}
@@ -246,7 +230,6 @@ export function ProductForm({
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-/** Displays a color-coded margin badge below the selling price input. */
 function MarginBadge({
   margin,
   sellingPrice,

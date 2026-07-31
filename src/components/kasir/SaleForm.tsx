@@ -1,14 +1,13 @@
 import { Search } from 'lucide-react'
-import { useCallback, useEffect, useState, useDeferredValue } from 'react'
+import { useCallback, useState, useDeferredValue } from 'react'
 import { CheckoutPanel } from '@/components/kasir/CheckoutPanel'
 import { ProductCard } from '@/components/kasir/ProductCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { useProducts } from '@/hooks/useProducts'
 import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
-import { type CartItem, useSaleCart } from '@/hooks/useTransactionForm'
-import type { Product, TransactionWithItems } from '@/types'
+import { useSaleFormState } from '@/hooks/useTransactionForm'
+import type { TransactionWithItems } from '@/types'
 
 interface SaleFormProps {
   /** When provided, the form operates in "edit" mode. */
@@ -22,47 +21,25 @@ interface SaleFormProps {
  * Delegates rendering to ProductCard and CheckoutPanel sub-components.
  */
 export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
-  const isEditing = !!transaction
+  const {
+    isEditing,
+    products,
+    productsLoading,
+    cart,
+    addToCart,
+    changeQty,
+    totalAmount,
+    totalItems,
+    cartArray,
+  } = useSaleFormState(transaction)
 
-  const { data: products = [], isLoading: productsLoading } = useProducts(true)
   const { mutate: createSale, isPending: isCreating } = useCreateSale()
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale()
   const isPending = isCreating || isUpdating
 
-  const { cart, setCart, addToCart, changeQty, totalAmount, totalItems, cartArray } = useSaleCart()
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState(transaction?.notes ?? '')
   const deferredSearch = useDeferredValue(search)
-
-  // Pre-populate cart when editing an existing transaction
-  useEffect(() => {
-    if (!isEditing || productsLoading || products.length === 0 || !transaction.transaction_items) {
-      return
-    }
-
-    const initialCart = new Map<string, CartItem>()
-    transaction.transaction_items.forEach((item) => {
-      const product = products.find((p) => p.id === item.product_id)
-      // If a product was deleted but still appears in the transaction, create a fallback
-      const productData =
-        product ??
-        ({
-          id: item.product_id,
-          name: item.product_name,
-          hpp: item.product_hpp,
-          selling_price: item.selling_price,
-          image_url: null,
-          sku: null,
-          stock: 0,
-        } as unknown as Product)
-
-      initialCart.set(item.product_id ?? crypto.randomUUID(), {
-        product: productData,
-        quantity: item.quantity,
-      })
-    })
-    setCart(initialCart)
-  }, [isEditing, transaction, products, productsLoading, setCart])
 
   // Simple derivations — no useMemo needed for cheap operations (Vercel guideline)
   const query = deferredSearch.trim().toLowerCase()
@@ -84,14 +61,14 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     if (cart.size === 0) return
 
     const items = cartArray.map((cartItem) => ({
-      product_id: cartItem.product.id,
+      product_id: cartItem.original_product_id !== undefined ? cartItem.original_product_id : cartItem.product.id,
       product_name: cartItem.product.name,
       product_hpp: cartItem.product.hpp,
       selling_price: cartItem.product.selling_price,
       quantity: cartItem.quantity,
     }))
 
-    if (isEditing) {
+    if (isEditing && transaction) {
       updateSale(
         {
           id: transaction.id,

@@ -8,7 +8,7 @@ import type { Product } from '@/types'
 export async function getProducts(activeOnly = false): Promise<Product[]> {
   let query = supabase
     .from('products')
-    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_at, updated_at')
+    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_by, created_at, updated_at')
     .order('name', { ascending: true })
   if (activeOnly) query = query.eq('is_active', true)
   const { data, error } = await query
@@ -17,12 +17,45 @@ export async function getProducts(activeOnly = false): Promise<Product[]> {
 }
 
 /**
+ * Get paginated products for the admin table.
+ */
+export async function getProductsPaginated(
+  page = 1,
+  pageSize = 20,
+  search = '',
+): Promise<{ data: Product[]; nextPage: number | null; total: number }> {
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  let query = supabase
+    .from('products')
+    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_by, created_at, updated_at', { count: 'exact' })
+    .order('name', { ascending: true })
+
+  if (search.trim()) {
+    // Search by name or sku using ilike
+    query = query.or(`name.ilike.%${search.trim()}%,sku.ilike.%${search.trim()}%`)
+  }
+
+  const { data, error, count } = await query.range(from, to)
+
+  if (error) throw error
+
+  const hasNext = count !== null && from + pageSize < count
+  return {
+    data: (data ?? []) as Product[],
+    nextPage: hasNext ? page + 1 : null,
+    total: count ?? 0,
+  }
+}
+
+/**
  * Get a single product by ID.
  */
 export async function getProductById(id: string): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_at, updated_at')
+    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_by, created_at, updated_at')
     .eq('id', id)
     .single()
   if (error) throw error

@@ -1,25 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ExpenseForm } from '@/components/kasir/ExpenseForm'
 import { SaleForm } from '@/components/kasir/SaleForm'
 import { Modal } from '@/components/ui/Modal'
-import type { TransactionWithItems } from '@/types'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { getTransactionWithItems } from '@/services/transaction.service'
+import type { TransactionWithItems, TransactionWithProfile } from '@/types'
 
 export function EditTransactionModal({
   transaction,
   isOpen,
   onClose,
 }: {
-  transaction: TransactionWithItems | null
+  transaction: TransactionWithProfile | TransactionWithItems | null
   isOpen: boolean
   onClose: () => void
 }) {
-  const [cachedTx, setCachedTx] = useState<TransactionWithItems | null>(transaction)
+  const { data: fullTx, isLoading } = useQuery({
+    queryKey: ['transaction', transaction?.id],
+    queryFn: () => getTransactionWithItems(transaction!.id),
+    enabled: isOpen && !!transaction?.id,
+  })
 
-  useEffect(() => {
-    if (transaction) {
-      setCachedTx(transaction)
-    }
-  }, [transaction])
+  const cachedTx = fullTx ?? (transaction as TransactionWithItems)
 
   return (
     <Modal
@@ -27,7 +29,13 @@ export function EditTransactionModal({
       onClose={onClose}
       title={cachedTx?.type === 'penjualan' ? 'Edit Penjualan' : 'Edit Pengeluaran'}
     >
-      {cachedTx?.type === 'penjualan' ? (
+      {isLoading ? (
+        <div className="p-4 flex flex-col gap-4">
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+        </div>
+      ) : cachedTx?.type === 'penjualan' ? (
         <SaleForm transaction={cachedTx} onSuccess={onClose} />
       ) : cachedTx?.type === 'pengeluaran' ? (
         <ExpenseForm transaction={cachedTx} onSuccess={onClose} />

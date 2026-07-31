@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
-import type { Product } from '@/types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useProducts } from '@/hooks/useProducts'
+import type { Product, TransactionWithItems } from '@/types'
 
 // ─── Sale Cart Logic ─────────────────────────────────────────────────────────
 
 export interface CartItem {
   product: Product
   quantity: number
+  original_product_id?: string | null
 }
 
 export function useSaleCart(initialCart?: Map<string, CartItem>) {
@@ -52,6 +54,55 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
   }, [cart])
 
   return { cart, setCart, addToCart, changeQty, totalAmount, totalItems, cartArray }
+}
+
+/**
+ * Deep module that coordinates data fetching and cart initialization.
+ * Abstracts the complexity away from SaleForm.tsx.
+ */
+export function useSaleFormState(transaction?: TransactionWithItems) {
+  const isEditing = !!transaction
+  const { data: products = [], isLoading: productsLoading } = useProducts(true)
+  const cartState = useSaleCart()
+  const { setCart } = cartState
+
+  // Pre-populate cart when editing an existing transaction
+  useEffect(() => {
+    if (!isEditing || productsLoading || products.length === 0 || !transaction.transaction_items) {
+      return
+    }
+
+    const initialCart = new Map<string, CartItem>()
+    transaction.transaction_items.forEach((item) => {
+      const product = products.find((p) => p.id === item.product_id)
+      const fallbackId = item.product_id ?? crypto.randomUUID()
+      const productData =
+        product ??
+        ({
+          id: fallbackId,
+          name: item.product_name,
+          hpp: item.product_hpp,
+          selling_price: item.selling_price,
+          image_url: null,
+          sku: null,
+          stock: 0,
+        } as unknown as Product)
+
+      initialCart.set(fallbackId, {
+        product: productData,
+        quantity: item.quantity,
+        original_product_id: item.product_id,
+      })
+    })
+    setCart(initialCart)
+  }, [isEditing, transaction, products, productsLoading, setCart])
+
+  return {
+    isEditing,
+    products,
+    productsLoading,
+    ...cartState,
+  }
 }
 
 // ─── Expense Items Logic ──────────────────────────────────────────────────────

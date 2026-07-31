@@ -3,7 +3,7 @@ import { EXPENSE_CATEGORIES } from '@/lib/constants'
 
 // Single item in a sale transaction
 const saleItemSchema = z.object({
-  product_id: z.string().uuid('ID produk tidak valid'),
+  product_id: z.string().uuid('ID produk tidak valid').nullable(),
   product_name: z.string().min(1),
   product_hpp: z.number().min(0),
   selling_price: z.number().min(0),

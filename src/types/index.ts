@@ -20,6 +20,7 @@ export type {
   TransactionItemInsert,
   TransactionUpdate,
   TransactionWithItems,
+  TransactionWithProfile,
   UserRole,
 } from './app.types'
 

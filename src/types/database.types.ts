@@ -176,6 +176,12 @@ export interface Database {
       }
     }
     Functions: {
+      delete_transaction: {
+        Args: {
+          p_transaction_id: string
+        }
+        Returns: void
+      }
       get_top_products: {
         Args: {
           start_date: string

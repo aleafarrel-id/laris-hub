@@ -1,11 +1,12 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import {
-  PlusCircle,
+  Plus,
   User,
   Users,
 } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useState } from 'react'
+import { AnimatePresence } from 'motion/react'
+import { useCallback, useMemo, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
@@ -39,13 +40,16 @@ function ManajemenKasirPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedKasir, setSelectedKasir] = useState<Profile | null>(null)
 
-  const activeCount = kasirList.filter((k) => k.is_active).length
+  const activeCount = useMemo(() => kasirList.filter((k) => k.is_active).length, [kasirList])
   const suspendedCount = kasirList.length - activeCount
 
   // Sync selectedKasir with the live kasirList data after any mutation refetch.
   // The drawer always receives syncedKasir (ground truth from the database),
   // never a stale local snapshot that could disagree with what the server stored.
-  const syncedKasir = kasirList.find((k) => k.id === selectedKasir?.id) ?? null
+  const syncedKasir = useMemo(
+    () => kasirList.find((k) => k.id === selectedKasir?.id) ?? null,
+    [kasirList, selectedKasir?.id]
+  )
 
   const handleToggle = useCallback(
     (id: string, isActive: boolean) => {
@@ -70,15 +74,27 @@ function ManajemenKasirPage() {
                 : `${kasirList.length} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
             </p>
           </div>
-          {/* Desktop-only shortcut to profile */}
-          <Link
-            to="/profil"
-            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all"
-            aria-label="Profil Admin"
-          >
-            <User size={16} strokeWidth={2} />
-            <span>Profil</span>
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Desktop-only shortcut to profile */}
+            <Link
+              to="/profil"
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all"
+              aria-label="Profil Admin"
+            >
+              <User size={16} strokeWidth={2} />
+              <span>Profil</span>
+            </Link>
+
+            <Button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="flex-shrink-0 h-[44px]"
+              leftIcon={<Plus size={16} strokeWidth={2.5} />}
+            >
+              <span className="hidden sm:inline">Tambah Kasir</span>
+              <span className="inline sm:hidden">Tambah</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -88,21 +104,6 @@ function ManajemenKasirPage() {
           {/* Stats */}
           {!isLoading && kasirList.length > 0 && (
             <KasirStats kasirList={kasirList} />
-          )}
-
-          {/* Add Kasir CTA — below stats, always visible */}
-          {!isLoading && (
-            <motion.button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl border-2 border-dashed border-primary/30 text-primary font-semibold text-sm bg-primary/5 hover:bg-primary/10 hover:border-primary/50 active:scale-[0.98] transition-all"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              <PlusCircle size={18} strokeWidth={2.5} />
-              Tambah Kasir
-            </motion.button>
           )}
 
           {isLoading ? (
