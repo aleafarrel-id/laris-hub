@@ -19,6 +19,7 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionItemsDisplay, TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { useAuth } from '@/hooks/useAuth'
 import { useCashiers } from '@/hooks/useProfile'
 import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions'
@@ -398,35 +399,7 @@ function BukuKasPage() {
                 )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="text-sm font-medium text-neutral-900 pr-12">
-                    {tx.type === 'penjualan' ? (
-                      <div className="flex flex-col gap-0.5">
-                        {(tx as TransactionWithItems).transaction_items &&
-                        (tx as TransactionWithItems).transaction_items.length > 1 ? (
-                          (tx as TransactionWithItems).transaction_items.map((i, idx) => (
-                            <div key={idx} className="flex items-start gap-1.5 min-w-0">
-                              <span className="text-neutral-400 flex-shrink-0">•</span>
-                              <span className="truncate">
-                                {i.product_name}{' '}
-                                <span className="text-neutral-400 font-normal tabular-nums text-xs">
-                                  x{i.quantity}
-                                </span>
-                              </span>
-                            </div>
-                          ))
-                        ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
-                          <p className="truncate">
-                            {(tx as TransactionWithItems).transaction_items[0].product_name}{' '}
-                            <span className="text-neutral-400 font-normal tabular-nums text-xs">
-                              x{(tx as TransactionWithItems).transaction_items[0].quantity}
-                            </span>
-                          </p>
-                        ) : (
-                          <p className="truncate">Penjualan</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="truncate">{tx.description}</p>
-                    )}
+                    <TransactionItemsMobileDisplay transaction={tx as any} />
                   </div>
 
                   {(tx.expense_category || tx.notes) && (
@@ -523,46 +496,14 @@ function BukuKasPage() {
                       <td className="py-3 px-4 max-w-xs">
                         <div className="flex items-start gap-2 mb-0.5">
                           <div className="text-sm font-medium text-neutral-900">
-                            {tx.type === 'penjualan' ? (
-                              <div className="flex flex-col gap-0.5">
-                                {(tx as TransactionWithItems).transaction_items &&
-                                (tx as TransactionWithItems).transaction_items.length > 1 ? (
-                                  (tx as TransactionWithItems).transaction_items.map((i, idx) => (
-                                    <div key={idx} className="flex items-center gap-1.5">
-                                      <span className="text-neutral-400">•</span>
-                                      <span>
-                                        {i.product_name}{' '}
-                                        <span className="text-neutral-400 tabular-nums">
-                                          x{i.quantity}
-                                        </span>
-                                      </span>
-                                    </div>
-                                  ))
-                                ) : (tx as TransactionWithItems).transaction_items?.length === 1 ? (
-                                  <span>
-                                    {(tx as TransactionWithItems).transaction_items[0].product_name}{' '}
-                                    <span className="text-neutral-400 tabular-nums">
-                                      x{(tx as TransactionWithItems).transaction_items[0].quantity}
-                                    </span>
-                                  </span>
-                                ) : (
-                                  <span>Penjualan</span>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <span>{tx.description}</span>
-                                {tx.type === 'pengeluaran' && tx.expense_category && (
-                                  <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
-                                    {
-                                      EXPENSE_CATEGORY_LABELS[
-                                        tx.expense_category as ExpenseCategory
-                                      ]
-                                    }
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <TransactionItemsDisplay transaction={tx as any} />
+                              {tx.type === 'pengeluaran' && tx.expense_category && (
+                                <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex-shrink-0">
+                                  {EXPENSE_CATEGORY_LABELS[tx.expense_category as ExpenseCategory]}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         {tx.notes && (
@@ -641,7 +582,16 @@ function BukuKasPage() {
       <ConfirmDialog
         isOpen={!!deletingTxId}
         title="Hapus Transaksi?"
-        description="Data transaksi ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan dan akan mempengaruhi laporan keuangan."
+        description={
+          <>
+            <p className="text-sm text-neutral-600 leading-relaxed mb-1">
+              Data transaksi ini akan dihapus permanen.
+            </p>
+            <p className="text-sm text-neutral-500">
+              Aksi ini tidak dapat dibatalkan dan akan mempengaruhi laporan keuangan.
+            </p>
+          </>
+        }
         confirmText={deleteTxMutation.isPending ? 'Menghapus...' : 'Hapus'}
         onConfirm={() => {
           if (deletingTxId) {

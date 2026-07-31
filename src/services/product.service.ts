@@ -6,7 +6,10 @@ import type { Product } from '@/types'
  * Get all products. Admin sees all; kasir sees only active (RLS).
  */
 export async function getProducts(activeOnly = false): Promise<Product[]> {
-  let query = supabase.from('products').select('*').order('name', { ascending: true })
+  let query = supabase
+    .from('products')
+    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_at, updated_at')
+    .order('name', { ascending: true })
   if (activeOnly) query = query.eq('is_active', true)
   const { data, error } = await query
   if (error) throw error
@@ -17,7 +20,11 @@ export async function getProducts(activeOnly = false): Promise<Product[]> {
  * Get a single product by ID.
  */
 export async function getProductById(id: string): Promise<Product> {
-  const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, sku, hpp, selling_price, description, image_url, is_active, created_at, updated_at')
+    .eq('id', id)
+    .single()
   if (error) throw error
   return data as Product
 }

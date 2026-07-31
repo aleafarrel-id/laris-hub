@@ -36,7 +36,7 @@ export interface DeleteKasirError {
 export async function getKasirList(): Promise<Profile[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, full_name, avatar_url, phone, role, is_active, created_at, updated_at')
     .eq('role', 'kasir')
     .order('full_name', { ascending: true })
 
@@ -112,7 +112,7 @@ export async function toggleKasirStatus(id: string, isActive: boolean): Promise<
     .from('profiles')
     .update({ is_active: isActive, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select()
+    .select('id, full_name, avatar_url, phone, role, is_active, created_at, updated_at')
     .single()
 
   if (error) throw error

@@ -15,7 +15,11 @@ export function LogoutDialog({ isOpen, onClose }: LogoutDialogProps) {
       isOpen={isOpen}
       icon={LogOut}
       title="Yakin ingin keluar?"
-      description="Anda harus login kembali untuk masuk ke sistem."
+      description={
+        <p className="text-sm text-neutral-600 leading-relaxed">
+          Anda harus login kembali untuk masuk ke sistem.
+        </p>
+      }
       confirmText="Keluar"
       cancelText="Batal"
       onConfirm={signOut}

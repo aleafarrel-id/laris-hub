@@ -5,7 +5,11 @@ import type { Profile } from '@/types'
  * Fetch profile by user ID.
  */
 export async function getProfile(userId: string): Promise<Profile> {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url, phone, role, is_active, created_at, updated_at')
+    .eq('id', userId)
+    .single()
 
   if (error) throw error
   return data as Profile
@@ -83,7 +87,7 @@ export async function updateProfile(
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
-    .select()
+    .select('id, full_name, avatar_url, phone, role, is_active, created_at, updated_at')
     .single()
 
   if (error) throw error

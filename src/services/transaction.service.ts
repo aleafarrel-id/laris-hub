@@ -87,7 +87,7 @@ export async function createExpenseTransaction(
         transaction_at: payload.transaction_at ?? nowIso(),
       },
     ])
-    .select()
+    .select('id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at')
     .single()
 
   if (error) throw error
@@ -177,7 +177,7 @@ export async function updateTransaction(
     .from('transactions')
     .update({ ...updates, updated_at: nowIso() })
     .eq('id', id)
-    .select()
+    .select('id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at')
     .single()
 
   if (error) throw error
@@ -203,7 +203,7 @@ export async function updateExpenseTransaction(
       updated_at: nowIso(),
     })
     .eq('id', id)
-    .select()
+    .select('id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at')
     .single()
 
   if (error) throw error

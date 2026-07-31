@@ -64,7 +64,7 @@ export function ConfirmDialog({
             onClick={onCancel}
           >
             <motion.div
-              className="bg-white rounded-[24px] shadow-xl w-full max-w-[400px] overflow-hidden flex flex-col p-5 sm:p-8"
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col p-6"
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -72,9 +72,9 @@ export function ConfirmDialog({
               onClick={(e) => e.stopPropagation()}
             >
               <div>
-                <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <div
-                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                       variant === 'danger'
                         ? 'bg-danger/10 text-danger'
                         : 'bg-primary/10 text-primary'
@@ -82,11 +82,11 @@ export function ConfirmDialog({
                   >
                     <Icon size={20} strokeWidth={2} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight">
+                  <h3 className="text-base font-bold text-neutral-900">
                     {title}
                   </h3>
                 </div>
-                <div className="text-[14px] sm:text-[15px] text-neutral-600 leading-relaxed mb-6 sm:mb-8 text-pretty flex flex-col gap-2">
+                <div className="flex flex-col gap-1 mb-5">
                   {description}
                 </div>
               </div>

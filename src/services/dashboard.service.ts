@@ -19,7 +19,7 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
 
   const { data, error } = await supabase
     .from('daily_summary')
-    .select('*')
+    .select('total_sales_count, total_revenue, total_gross_profit, total_expense')
     .eq('date', dateStr)
     .maybeSingle()
 

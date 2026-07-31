@@ -150,10 +150,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
         </div>
       </div>
 
-      <div
-        className="animate-fade-in animate-slide-up"
-        style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-      >
+      <div className="animate-fade-in animate-slide-up [animation-delay:100ms] [animation-fill-mode:both]">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-semibold text-neutral-700">Detail Item</span>
         </div>
