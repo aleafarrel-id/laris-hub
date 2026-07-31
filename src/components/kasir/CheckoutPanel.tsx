@@ -52,21 +52,21 @@ export function CheckoutPanel({
               type="button"
               onClick={onSubmit}
               disabled={isPending}
-              className="w-full py-3.5 bg-primary text-white rounded-2xl flex items-center justify-between px-5 shadow-lg shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-primary text-white rounded-2xl flex items-center justify-between px-4 shadow-lg shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed"
               whileTap={{ scale: 0.97 }}
               transition={{ type: 'spring', duration: 0.2, bounce: 0 }}
             >
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] font-medium text-white/80 uppercase tracking-wider">
+              <div className="flex flex-col items-start min-w-0 pr-2">
+                <span className="text-[10px] font-medium text-white/80 uppercase tracking-wider truncate w-full">
                   {totalItems} Item Terpilih
                 </span>
-                <span className="text-lg font-bold tabular-nums leading-none mt-0.5">
+                <span className="text-[15px] sm:text-base font-bold tabular-nums leading-none mt-0.5 truncate w-full">
                   {formatRupiah(totalAmount)}
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-xl">
-                <span className="font-bold text-sm">{isPending ? 'Menyimpan...' : 'Simpan'}</span>
-                <CheckCircle size={18} strokeWidth={2.5} />
+              <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1.5 rounded-xl flex-shrink-0">
+                <span className="font-bold text-[13px]">{isPending ? 'Menyimpan...' : 'Simpan'}</span>
+                <CheckCircle size={16} strokeWidth={2.5} />
               </div>
             </motion.button>
           </motion.div>

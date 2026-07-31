@@ -9,6 +9,32 @@ import ReactDOM from 'react-dom/client'
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
+// Suppress harmless ResizeObserver errors from recharts/ResponsiveContainer
+const originalError = console.error;
+console.error = (...args) => {
+  if (
+    /defaultProps will be removed/.test(args[0]) ||
+    /ResizeObserver loop limit exceeded/.test(args[0]) ||
+    /ResizeObserver loop completed with undelivered notifications/.test(args[0])
+  ) {
+    return;
+  }
+  originalError.call(console, ...args);
+};
+
+window.addEventListener('error', (e) => {
+  if (
+    e.message === 'ResizeObserver loop limit exceeded' ||
+    e.message === 'ResizeObserver loop completed with undelivered notifications.'
+  ) {
+    e.stopImmediatePropagation();
+    const resizeObserverErrDiv = document.getElementById('webpack-dev-server-client-overlay-div');
+    const resizeObserverErr = document.getElementById('webpack-dev-server-client-overlay');
+    if (resizeObserverErr) resizeObserverErr.setAttribute('style', 'display: none');
+    if (resizeObserverErrDiv) resizeObserverErrDiv.setAttribute('style', 'display: none');
+  }
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

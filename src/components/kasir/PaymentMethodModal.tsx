@@ -29,7 +29,7 @@ export function PaymentMethodModal({
             onClick={!isPending ? onClose : undefined}
             className="fixed inset-0 z-50 bg-neutral-900/40 backdrop-blur-sm"
           />
-          
+
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
@@ -54,8 +54,8 @@ export function PaymentMethodModal({
 
               {/* Amount Summary */}
               <div className="px-6 py-8 bg-neutral-50/50 flex flex-col items-center justify-center">
-                <span className="text-sm font-medium text-neutral-500 mb-1">Total Tagihan</span>
-                <span className="text-3xl font-black text-neutral-900 tabular-nums tracking-tight">
+                <span className="text-[13px] font-medium text-neutral-500 mb-1">Total Tagihan</span>
+                <span className="text-2xl sm:text-3xl font-black text-neutral-900 tabular-nums tracking-tight">
                   {formatRupiah(totalAmount)}
                 </span>
               </div>
@@ -72,8 +72,8 @@ export function PaymentMethodModal({
                     <Banknote size={24} strokeWidth={2.5} />
                   </div>
                   <div className="flex flex-col items-start flex-1 text-left">
-                    <span className="font-bold text-neutral-900 text-lg">Tunai</span>
-                    <span className="text-sm text-neutral-500">Bayar dengan uang cash</span>
+                    <span className="font-bold text-neutral-900 text-[15px] sm:text-base">Tunai</span>
+                    <span className="text-xs text-neutral-500">Bayar dengan uang tunai</span>
                   </div>
                 </button>
 
@@ -87,8 +87,8 @@ export function PaymentMethodModal({
                     <QrCode size={24} strokeWidth={2.5} />
                   </div>
                   <div className="flex flex-col items-start flex-1 text-left">
-                    <span className="font-bold text-neutral-900 text-lg">QRIS</span>
-                    <span className="text-sm text-neutral-500">Scan kode QR (Gopay Merchant)</span>
+                    <span className="font-bold text-neutral-900 text-[15px] sm:text-base">QRIS</span>
+                    <span className="text-xs text-neutral-500">Scan kode QR (Gopay Merchant)</span>
                   </div>
                 </button>
               </div>

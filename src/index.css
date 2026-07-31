@@ -112,12 +112,15 @@
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html {
     font-size: 16px; /* Base - never below this */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
     touch-action: manipulation; /* Prevent double-tap zoom on iOS */
     scroll-behavior: smooth;
     height: 100%;

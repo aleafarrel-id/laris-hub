@@ -8,7 +8,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useState, useMemo } from 'react'
 import { RecentTransactionsTable } from '@/components/dashboard/RecentTransactionsTable'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -90,11 +90,15 @@ function DashboardPage() {
   const period = search.period || 'today'
   const kasirFilter = search.kasir || 'all'
 
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
+  const getLocalDateString = (d: Date) => {
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
 
-  const customFrom = search.customFrom || todayStart.toISOString().split('T')[0]
-  const customTo = search.customTo || new Date().toISOString().split('T')[0]
+  const customFrom = search.customFrom || getLocalDateString(new Date())
+  const customTo = search.customTo || getLocalDateString(new Date())
 
   const setPeriod = (p: DashboardPeriod) => navigate({ search: (prev) => ({ ...prev, period: p }) })
   const setKasirFilter = (k: string) => navigate({ search: (prev) => ({ ...prev, kasir: k }) })
@@ -106,10 +110,11 @@ function DashboardPage() {
   const { data: cashiers } = useCashiers()
   const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
 
-  const customRange =
-    period === 'custom'
+  const customRange = useMemo(() => {
+    return period === 'custom'
       ? { from: new Date(customFrom), to: new Date(`${customTo}T23:59:59`) }
       : undefined
+  }, [period, customFrom, customTo])
 
   const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, customRange, kasirFilter)
   const { data: trend, isLoading: trendLoading } = useMonthlyTrend(30, kasirFilter)
@@ -155,23 +160,6 @@ function DashboardPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            {period === 'custom' && (
-              <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-xl p-1.5 shadow-sm">
-                <input
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
-                />
-                <span className="text-neutral-400 text-xs font-semibold px-1">s/d</span>
-                <input
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
-                />
-              </div>
-            )}
 
             <CustomSelect
               value={kasirFilter}
@@ -188,6 +176,24 @@ function DashboardPage() {
             />
           </div>
         </div>
+
+        {period === 'custom' && (
+          <div className="flex items-center justify-between gap-1 sm:gap-2 bg-white border border-neutral-200 rounded-xl p-1.5 shadow-sm w-full sm:w-fit mt-1">
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="w-full flex-1 min-w-0 text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 sm:px-3 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
+            />
+            <span className="text-neutral-400 text-xs font-semibold px-1 flex-shrink-0">s/d</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="w-full flex-1 min-w-0 text-xs font-medium bg-neutral-50 border border-transparent rounded-lg px-2 sm:px-3 py-1.5 text-neutral-700 hover:bg-neutral-100 focus:bg-white focus:border-primary focus:outline-none transition-all cursor-pointer"
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           <KPICard
