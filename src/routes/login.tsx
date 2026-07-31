@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
-import { useAuthActions } from '@/hooks/useAuth'
+import { useAuth, useAuthActions } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import type { LoginFormData } from '@/lib/validations/auth.schema'
 import { loginSchema } from '@/lib/validations/auth.schema'
@@ -40,8 +40,20 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const { signIn } = useAuthActions()
+  const { user, isInitialized, profile } = useAuth()
   const navigate = useNavigate()
   const search = Route.useSearch()
+
+  useEffect(() => {
+    if (isInitialized && user && profile) {
+      const fallback = profile.role === 'admin' ? '/dashboard' : '/kasir'
+      let dest = (search as { redirect?: string }).redirect
+      if (!dest || !dest.startsWith('/') || dest.startsWith('//')) {
+        dest = fallback
+      }
+      navigate({ to: dest, replace: true })
+    }
+  }, [isInitialized, user, profile, navigate, search])
 
   const [form, setForm] = useState<LoginFormData>({ email: '', password: '' })
   const [errors, setErrors] = useState<Partial<LoginFormData>>({})
