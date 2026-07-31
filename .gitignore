@@ -50,7 +50,6 @@ supabase/.branch/
 .agents/
 skills-lock.json
 
-src/routeTree.gen.ts
 
 .agents/
 .documentation/
