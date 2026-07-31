@@ -34,52 +34,63 @@ async function getAuthenticatedUserId(): Promise<string> {
   return user.id
 }
 
+/** Returns the current timestamp as an ISO string. */
+const nowIso = () => new Date().toISOString()
+
+/**
+ * Map a SaleItemFormData to the shape expected by the transaction_items table.
+ */
+function toItemPayload(transactionId: string, item: SaleItemFormData) {
+  return {
+    transaction_id: transactionId,
+    product_id: item.product_id,
+    product_name: item.product_name,
+    product_hpp: item.product_hpp,
+    selling_price: item.selling_price,
+    quantity: item.quantity,
+  }
+}
+
+/**
+ * Calculate total revenue and profit for a set of sale items.
+ */
+function calcSaleTotals(items: SaleItemFormData[]): { totalAmount: number; totalProfit: number } {
+  let totalAmount = 0
+  let totalProfit = 0
+  for (const item of items) {
+    totalAmount += item.selling_price * item.quantity
+    totalProfit += (item.selling_price - item.product_hpp) * item.quantity
+  }
+  return { totalAmount, totalProfit }
+}
+
 /**
  * Create a sale transaction with multiple items.
- * DB trigger auto-calculates subtotal & profit per item.
  * Security: recorded_by is fetched from the authenticated session,
  * not accepted as an argument, to prevent IDOR spoofing.
  */
 export async function createSaleTransaction(payload: CreateSalePayload): Promise<Transaction> {
   const recordedBy = await getAuthenticatedUserId()
 
-  const totalAmount = payload.items.reduce(
-    (sum, item) => sum + item.selling_price * item.quantity,
-    0,
-  )
-  const totalProfit = payload.items.reduce(
-    (sum, item) => sum + (item.selling_price - item.product_hpp) * item.quantity,
-    0,
-  )
+  const { totalAmount, totalProfit } = calcSaleTotals(payload.items)
 
   const { data: transaction, error: txError } = await supabase
     .from('transactions')
-    .insert([
-      {
-        type: 'penjualan',
-        total_amount: totalAmount,
-        total_profit: totalProfit,
-        recorded_by: recordedBy,
-        notes: payload.notes ?? null,
-        transaction_at: payload.transaction_at ?? new Date().toISOString(),
-      },
-    ])
+    .insert([{
+      type: 'penjualan',
+      total_amount: totalAmount,
+      total_profit: totalProfit,
+      recorded_by: recordedBy,
+      notes: payload.notes ?? null,
+      transaction_at: payload.transaction_at ?? nowIso(),
+    }])
     .select()
     .single()
 
   if (txError) throw txError
 
   const tx = transaction as Transaction
-
-  const itemsPayload = payload.items.map((item) => ({
-    transaction_id: tx.id,
-    product_id: item.product_id,
-    product_name: item.product_name,
-    product_hpp: item.product_hpp,
-    selling_price: item.selling_price,
-    quantity: item.quantity,
-  }))
-
+  const itemsPayload = payload.items.map((item) => toItemPayload(tx.id, item))
   const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
 
   if (itemsError) {
@@ -100,19 +111,17 @@ export async function createExpenseTransaction(payload: CreateExpensePayload): P
 
   const { data, error } = await supabase
     .from('transactions')
-    .insert([
-      {
-        type: 'pengeluaran',
-        description: payload.description,
-        total_amount: payload.total_amount,
-        total_profit: 0,
-        expense_category: payload.expense_category,
-        expense_items: payload.expense_items?.length ? payload.expense_items : null,
-        notes: payload.notes ?? null,
-        recorded_by: recordedBy,
-        transaction_at: payload.transaction_at ?? new Date().toISOString(),
-      },
-    ])
+    .insert([{
+      type: 'pengeluaran',
+      description: payload.description,
+      total_amount: payload.total_amount,
+      total_profit: 0,
+      expense_category: payload.expense_category,
+      expense_items: payload.expense_items?.length ? payload.expense_items : null,
+      notes: payload.notes ?? null,
+      recorded_by: recordedBy,
+      transaction_at: payload.transaction_at ?? nowIso(),
+    }])
     .select()
     .single()
 
@@ -201,7 +210,7 @@ export async function updateTransaction(
 ): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...updates, updated_at: nowIso() })
     .eq('id', id)
     .select()
     .single()
@@ -225,8 +234,8 @@ export async function updateExpenseTransaction(
       expense_category: payload.expense_category,
       expense_items: payload.expense_items?.length ? payload.expense_items : null,
       notes: payload.notes ?? null,
-      transaction_at: payload.transaction_at ?? new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      transaction_at: payload.transaction_at ?? nowIso(),
+      updated_at: nowIso(),
     })
     .eq('id', id)
     .select()
@@ -244,14 +253,7 @@ export async function updateSaleTransaction(
   id: string,
   payload: CreateSalePayload,
 ): Promise<Transaction> {
-  const totalAmount = payload.items.reduce(
-    (sum, item) => sum + item.selling_price * item.quantity,
-    0,
-  )
-  const totalProfit = payload.items.reduce(
-    (sum, item) => sum + (item.selling_price - item.product_hpp) * item.quantity,
-    0,
-  )
+  const { totalAmount, totalProfit } = calcSaleTotals(payload.items)
 
   const { data: transaction, error: txError } = await supabase
     .from('transactions')
@@ -259,8 +261,8 @@ export async function updateSaleTransaction(
       total_amount: totalAmount,
       total_profit: totalProfit,
       notes: payload.notes ?? null,
-      transaction_at: payload.transaction_at ?? new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      transaction_at: payload.transaction_at ?? nowIso(),
+      updated_at: nowIso(),
     })
     .eq('id', id)
     .select()
@@ -268,7 +270,7 @@ export async function updateSaleTransaction(
 
   if (txError) throw txError
 
-  // Delete old items
+  // Delete old items before inserting the updated set
   const { error: deleteError } = await supabase
     .from('transaction_items')
     .delete()
@@ -277,16 +279,7 @@ export async function updateSaleTransaction(
   if (deleteError) throw deleteError
 
   const tx = transaction as Transaction
-
-  const itemsPayload = payload.items.map((item) => ({
-    transaction_id: tx.id,
-    product_id: item.product_id,
-    product_name: item.product_name,
-    product_hpp: item.product_hpp,
-    selling_price: item.selling_price,
-    quantity: item.quantity,
-  }))
-
+  const itemsPayload = payload.items.map((item) => toItemPayload(tx.id, item))
   const { error: itemsError } = await supabase.from('transaction_items').insert(itemsPayload)
 
   if (itemsError) throw itemsError

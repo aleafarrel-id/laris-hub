@@ -13,8 +13,10 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { ProductForm } from '@/components/produk/ProductForm'
+import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
@@ -108,21 +110,18 @@ function ProdukPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
-          />
-          <input
+        <div className="flex-1">
+          <Input
             type="search"
             placeholder="Cari nama produk atau SKU..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+            leftDecorator={<Search size={16} className="text-neutral-400" />}
+            className="bg-white"
           />
         </div>
-        <div className="flex gap-2 items-center justify-between sm:justify-start">
-          <div className="flex bg-neutral-100 p-1 rounded-xl flex-shrink-0">
+        <div className="flex gap-2 items-center justify-between sm:justify-start pt-1 sm:pt-0">
+          <div className="flex bg-neutral-100 p-1 rounded-xl flex-shrink-0 h-[44px] items-center">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-neutral-400 hover:text-neutral-600'}`}
@@ -139,15 +138,15 @@ function ProdukPage() {
             </button>
           </div>
 
-          <button
+          <Button
             type="button"
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-[0.96] transition-all shadow-md shadow-primary/20 flex-shrink-0"
+            className="flex-shrink-0 h-[44px]"
+            leftIcon={<Plus size={16} strokeWidth={2.5} />}
           >
-            <Plus size={16} strokeWidth={2.5} />
             <span className="hidden sm:inline">Tambah Produk</span>
             <span className="inline sm:hidden">Tambah</span>
-          </button>
+          </Button>
         </div>
       </div>
 

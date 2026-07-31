@@ -96,12 +96,15 @@
 
 :root {
   --layout-sidebar-width: 0px;
+  --sidebar-offset: 0px; /* Overridden in layout containers */
 }
 @media (min-width: 768px) {
   :root {
     --layout-sidebar-width: 16rem; /* 256px */
   }
 }
+
+
 
 /* ============================================================
    BASE STYLES

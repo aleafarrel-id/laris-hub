@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { throwEdgeFunctionError } from '@/lib/utils'
 import type { Profile } from '@/types'
 
 export interface CreateKasirPayload {
@@ -53,25 +54,7 @@ export async function getKasirAuthDetails(kasirId: string): Promise<KasirAuthDet
     headers: { 'x-kasir-id': kasirId },
   })
 
-  if (error) {
-    if (error instanceof Error && 'context' in error) {
-      let context = (error as any).context
-      if (context instanceof Response) {
-        try { context = await context.clone().json() } catch {}
-      } else if (typeof context === 'string') {
-        try { context = JSON.parse(context) } catch {}
-      }
-      const err = new Error(context?.error || error.message)
-      ;(err as any).isUserFacing = true
-      throw err
-    }
-    throw error
-  }
-  if (data?.error) {
-    const err = new Error(data.error)
-    ;(err as any).isUserFacing = true
-    throw err
-  }
+  await throwEdgeFunctionError(error, data)
   return data as KasirAuthDetails
 }
 
@@ -84,25 +67,7 @@ export async function createKasir(payload: CreateKasirPayload): Promise<Profile>
     body: payload,
   })
 
-  if (error) {
-    if (error instanceof Error && 'context' in error) {
-      let context = (error as any).context
-      if (context instanceof Response) {
-        try { context = await context.clone().json() } catch {}
-      } else if (typeof context === 'string') {
-        try { context = JSON.parse(context) } catch {}
-      }
-      const err = new Error(context?.error || error.message)
-      ;(err as any).isUserFacing = true
-      throw err
-    }
-    throw error
-  }
-  if (data?.error) {
-    const err = new Error(data.error)
-    ;(err as any).isUserFacing = true
-    throw err
-  }
+  await throwEdgeFunctionError(error, data)
   return data.profile as Profile
 }
 
@@ -115,25 +80,7 @@ export async function updateKasir(payload: UpdateKasirPayload): Promise<Profile>
     body: payload,
   })
 
-  if (error) {
-    if (error instanceof Error && 'context' in error) {
-      let context = (error as any).context
-      if (context instanceof Response) {
-        try { context = await context.clone().json() } catch {}
-      } else if (typeof context === 'string') {
-        try { context = JSON.parse(context) } catch {}
-      }
-      const err = new Error(context?.error || error.message)
-      ;(err as any).isUserFacing = true
-      throw err
-    }
-    throw error
-  }
-  if (data?.error) {
-    const err = new Error(data.error)
-    ;(err as any).isUserFacing = true
-    throw err
-  }
+  await throwEdgeFunctionError(error, data)
   return data.profile as Profile
 }
 
@@ -148,42 +95,12 @@ export async function deleteKasir(id: string): Promise<void> {
     body: { id },
   })
 
-  if (error) {
-    if (error instanceof Error) {
-      let context = (error as any).context
-      if (context instanceof Response) {
-        try { context = await context.clone().json() } catch {}
-      } else if (typeof context === 'string') {
-        try { context = JSON.parse(context) } catch {}
-      }
-      
-      // If context is empty, sometimes supabase-js puts the JSON in error.message
-      if (!context && typeof error.message === 'string' && error.message.startsWith('{')) {
-        try { context = JSON.parse(error.message) } catch {}
-      }
-      
-      const err = new Error(context?.error || error.message) as Error & DeleteKasirError
-      ;(err as any).isUserFacing = true
-      if (context?.has_transactions) {
-        err.has_transactions = true
-        err.transaction_count = context.transaction_count
-      }
-      throw err
+  await throwEdgeFunctionError(error, data, (err, ctx) => {
+    if (ctx?.has_transactions) {
+      (err as Error & DeleteKasirError).has_transactions = true;
+      (err as Error & DeleteKasirError).transaction_count = ctx.transaction_count as number
     }
-    throw error
-  }
-
-  // Edge Function signals a business-logic conflict (has transactions) via data.error + 409
-  // but if it returned 200 OK with error payload we still handle it here:
-  if (data?.error) {
-    const err = new Error(data.error) as Error & DeleteKasirError
-    ;(err as any).isUserFacing = true
-    if (data.has_transactions) {
-      err.has_transactions = true
-      err.transaction_count = data.transaction_count
-    }
-    throw err
-  }
+  })
 }
 
 /**

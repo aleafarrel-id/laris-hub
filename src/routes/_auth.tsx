@@ -27,7 +27,10 @@ function AuthLayout() {
   const { profile } = useAuth()
 
   return (
-    <div className="flex min-h-dvh bg-neutral-50/50">
+    <div
+      className="flex min-h-dvh bg-neutral-50/50"
+      style={{ '--sidebar-offset': 'var(--layout-sidebar-width)' } as React.CSSProperties}
+    >
       <Sidebar role={profile?.role} userName={profile?.full_name} />
 
       <div className="flex-1 min-w-0 md:ml-64 pb-[72px] md:pb-0 flex flex-col">

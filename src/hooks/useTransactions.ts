@@ -1,22 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
 import { translateError } from '@/lib/utils'
-import type {
-  ExpenseTransactionFormData,
-  SaleTransactionFormData,
-} from '@/lib/validations/transaction.schema'
 import {
   createExpenseTransaction,
   createSaleTransaction,
   deleteTransaction,
   getTodayTransactions,
   getTransactions,
-  updateTransaction,
   updateExpenseTransaction,
   updateSaleTransaction,
 } from '@/services/transaction.service'
 import type { TransactionFilters } from '@/types'
+
+// ─── Private Helpers ──────────────────────────────────────────────────────────
+
+/** Invalidate all data that depends on transaction changes. */
+function invalidateTransactionQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+}
+
+/** Standard error handler for transaction mutations. */
+function onTransactionError(action: string) {
+  return (error: unknown) => {
+    toast.error(`Gagal ${action}`, { description: translateError(error) })
+  }
+}
+
+// ─── Queries ─────────────────────────────────────────────────────────────────
 
 export function useTransactions(filters: TransactionFilters = {}) {
   return useQuery({
@@ -35,85 +48,7 @@ export function useTodayTransactions(recordedBy?: string) {
   })
 }
 
-export function useCreateSaleTransaction() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data: SaleTransactionFormData) =>
-      // Security: recordedBy is now fetched inside the service from the live session,
-      // preventing any client-side IDOR spoofing.
-      createSaleTransaction({
-        items: data.items,
-        notes: data.notes,
-        transaction_at: data.transaction_at,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
-      toast.success('Transaksi penjualan berhasil disimpan!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
-}
-
-export function useCreateExpenseTransaction() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data: ExpenseTransactionFormData) =>
-      // Security: recordedBy is now fetched inside the service from the live session.
-      createExpenseTransaction({
-        description: data.description,
-        total_amount: data.total_amount,
-        expense_category: data.expense_category,
-        notes: data.notes,
-        transaction_at: data.transaction_at,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
-      toast.success('Pengeluaran berhasil dicatat!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
-}
-
-export function useUpdateTransaction() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateTransaction>[1] }) =>
-      updateTransaction(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
-      toast.success('Transaksi berhasil diperbarui!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
-}
-
-export function useDeleteTransaction() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => deleteTransaction(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
-      toast.success('Transaksi berhasil dihapus!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
-}
+// ─── Mutations ────────────────────────────────────────────────────────────────
 
 type CreateSaleArgs = {
   payload: Parameters<typeof createSaleTransaction>[0]
@@ -123,21 +58,15 @@ export function useCreateSale() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ payload }: CreateSaleArgs) =>
-      // Security: recordedBy fetched from session inside service
-      createSaleTransaction(payload),
+    // Security: recordedBy fetched from session inside service, not passed as arg
+    mutationFn: ({ payload }: CreateSaleArgs) => createSaleTransaction(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      invalidateTransactionQueries(queryClient)
       toast.success('Transaksi penjualan berhasil disimpan!', {
         description: 'Data telah tersimpan ke Buku Kas.',
       })
     },
-    onError: (error) => {
-      toast.error('Gagal menyimpan transaksi', {
-        description: translateError(error),
-      })
-    },
+    onError: onTransactionError('menyimpan transaksi'),
   })
 }
 
@@ -149,21 +78,15 @@ export function useCreateExpense() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ payload }: CreateExpenseArgs) =>
-      // Security: recordedBy fetched from session inside service
-      createExpenseTransaction(payload),
+    // Security: recordedBy fetched from session inside service, not passed as arg
+    mutationFn: ({ payload }: CreateExpenseArgs) => createExpenseTransaction(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      invalidateTransactionQueries(queryClient)
       toast.success('Pengeluaran berhasil dicatat!', {
         description: 'Data telah tersimpan ke Buku Kas.',
       })
     },
-    onError: (error) => {
-      toast.error('Gagal mencatat pengeluaran', {
-        description: translateError(error),
-      })
-    },
+    onError: onTransactionError('mencatat pengeluaran'),
   })
 }
 
@@ -178,15 +101,10 @@ export function useUpdateSale() {
   return useMutation({
     mutationFn: ({ id, payload }: UpdateSaleArgs) => updateSaleTransaction(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      invalidateTransactionQueries(queryClient)
       toast.success('Transaksi penjualan berhasil diperbarui!')
     },
-    onError: (error) => {
-      toast.error('Gagal memperbarui transaksi', {
-        description: translateError(error),
-      })
-    },
+    onError: onTransactionError('memperbarui transaksi'),
   })
 }
 
@@ -201,14 +119,22 @@ export function useUpdateExpense() {
   return useMutation({
     mutationFn: ({ id, payload }: UpdateExpenseArgs) => updateExpenseTransaction(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      invalidateTransactionQueries(queryClient)
       toast.success('Pengeluaran berhasil diperbarui!')
     },
-    onError: (error) => {
-      toast.error('Gagal memperbarui pengeluaran', {
-        description: translateError(error),
-      })
+    onError: onTransactionError('memperbarui pengeluaran'),
+  })
+}
+
+export function useDeleteTransaction() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteTransaction(id),
+    onSuccess: () => {
+      invalidateTransactionQueries(queryClient)
+      toast.success('Transaksi berhasil dihapus!')
     },
+    onError: (error) => toast.error(translateError(error)),
   })
 }

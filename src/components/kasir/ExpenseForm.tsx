@@ -1,9 +1,12 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { PlusCircle, X } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
-import { useCreateExpense } from '@/hooks/useTransactions'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCreateExpense, useUpdateExpense } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatRupiah } from '@/lib/utils'
+import type { TransactionWithItems } from '@/types'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 
 interface ExpenseLineItem {
   id: string
@@ -14,29 +17,62 @@ interface ExpenseLineItem {
 
 const EXPENSE_CATEGORY_ENTRIES = Object.entries(EXPENSE_CATEGORIES) as [string, ExpenseCategory][]
 
-export function ExpenseForm({
-  onSuccess,
-}: {
+function calcLineItemTotal(items: ExpenseLineItem[]): number {
+  return items.reduce((sum, item) => {
+    const qty = Number.isFinite(item.qty) ? item.qty : 0
+    const price = Number.isFinite(item.unit_price) ? item.unit_price : 0
+    return sum + price * qty
+  }, 0)
+}
+
+interface ExpenseFormProps {
+  /** When provided, the form operates in "edit" mode. */
+  transaction?: TransactionWithItems
   onSuccess: () => void
-}) {
-  const { mutate: createExpense, isPending } = useCreateExpense()
+}
+
+/**
+ * Unified expense form for both creating and editing.
+ * Pass `transaction` to enter edit mode; omit for create mode.
+ */
+export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
+  const isEditing = !!transaction
+
+  const { mutate: createExpense, isPending: isCreating } = useCreateExpense()
+  const { mutate: updateExpense, isPending: isUpdating } = useUpdateExpense()
+  const isPending = isCreating || isUpdating
+
   const [parentRef] = useAutoAnimate()
 
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState<ExpenseCategory>('operasional')
+  const [description, setDescription] = useState(transaction?.description ?? '')
+  const [category, setCategory] = useState<ExpenseCategory>(
+    (transaction?.expense_category as ExpenseCategory) ?? 'operasional',
+  )
   const [items, setItems] = useState<ExpenseLineItem[]>([])
-  const [notes, setNotes] = useState('')
-  const [manualTotal, setManualTotal] = useState('')
+  const [notes, setNotes] = useState(transaction?.notes ?? '')
+  const [manualTotal, setManualTotal] = useState(() => {
+    const hasItems =
+      Array.isArray(transaction?.expense_items) && transaction.expense_items.length > 0
+    return hasItems ? '' : (transaction?.total_amount.toString() ?? '')
+  })
+
+  // Populate line items from the existing transaction when editing
+  useEffect(() => {
+    if (transaction?.expense_items && Array.isArray(transaction.expense_items)) {
+      setItems(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        transaction.expense_items.map((item: any) => ({
+          id: crypto.randomUUID(),
+          name: item.name,
+          qty: item.qty ?? 1,
+          unit_price: item.unit_price,
+        })),
+      )
+    }
+  }, [transaction])
 
   const totalAmount = useMemo(() => {
-    if (items.length > 0) {
-      return items.reduce((s, i) => {
-        const qty = Number.isFinite(i.qty) ? i.qty : 0
-        const price = Number.isFinite(i.unit_price) ? i.unit_price : 0
-        return s + price * qty
-      }, 0)
-    }
-
+    if (items.length > 0) return calcLineItemTotal(items)
     const parsed = Number(manualTotal.replace(/[^0-9]/g, ''))
     return Number.isFinite(parsed) ? parsed : 0
   }, [items, manualTotal])
@@ -63,44 +99,46 @@ export function ExpenseForm({
     const safeTotal = Number.isFinite(totalAmount) && totalAmount > 0 ? totalAmount : 0
     if (safeTotal <= 0) return
 
-    createExpense(
-      {
-        payload: {
-          description: desc,
-          total_amount: safeTotal,
-          expense_category: category,
-          expense_items: items.length
-            ? items.map(({ name, qty, unit_price }) => ({ name, qty, unit_price }))
-            : [],
-          notes: notes.trim() || null,
-        },
-      },
-      { onSuccess: () => onSuccess() },
-    )
-  }, [description, totalAmount, category, items, notes, createExpense, onSuccess])
+    const payload = {
+      description: desc,
+      total_amount: safeTotal,
+      expense_category: category,
+      expense_items: items.length
+        ? items.map(({ name, qty, unit_price }) => ({ name, qty, unit_price }))
+        : [],
+      notes: notes.trim() || null,
+    }
+
+    if (isEditing) {
+      updateExpense(
+        { id: transaction.id, payload: { ...payload, transaction_at: transaction.transaction_at } },
+        { onSuccess },
+      )
+    } else {
+      createExpense({ payload }, { onSuccess })
+    }
+  }, [description, totalAmount, category, items, notes, isEditing, transaction, createExpense, updateExpense, onSuccess])
 
   const isSubmitDisabled =
     !description.trim() || !(Number.isFinite(totalAmount) && totalAmount > 0) || isPending
 
+  const idPrefix = isEditing ? 'edit-expense' : 'expense'
+
   return (
     <div className="px-5 py-5 space-y-6">
-      <div>
-        <label htmlFor="expense-desc" className="block text-sm font-semibold text-neutral-700 mb-2">
-          Keterangan <span className="text-danger">*</span>
-        </label>
-        <input
-          id="expense-desc"
-          type="text"
-          placeholder="Contoh: Belanja bahan baku mingguan"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          maxLength={200}
-          className="w-full bg-neutral-50/50 border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-        />
-      </div>
+      <Input
+        id={`${idPrefix}-desc`}
+        label="Keterangan"
+        required
+        type="text"
+        placeholder="Contoh: Belanja bahan baku mingguan"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        maxLength={200}
+      />
 
       <div>
-        <label htmlFor="expense-cat" className="block text-sm font-semibold text-neutral-700 mb-2">
+        <label htmlFor={`${idPrefix}-cat`} className="block text-sm font-semibold text-neutral-700 mb-2">
           Kategori
         </label>
         <div className="flex flex-wrap gap-2">
@@ -158,26 +196,18 @@ export function ExpenseForm({
                       min={1}
                       className="w-20 bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm tabular-nums"
                     />
-                    <div className="flex-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">
-                        Rp
-                      </span>
-                      <input
-                        type="number"
-                        placeholder="Harga"
-                        value={item.unit_price || ''}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            'unit_price',
-                            Math.max(0, parseFloat(e.target.value) || 0),
-                          )
-                        }
-                        min={0}
-                        inputMode="numeric"
-                        className="w-full bg-white border border-neutral-200 rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm tabular-nums"
-                      />
-                    </div>
+                    <Input
+                      className="flex-1 pl-8 tabular-nums bg-white rounded-lg py-2"
+                      type="number"
+                      placeholder="Harga"
+                      value={item.unit_price || ''}
+                      onChange={(e) =>
+                        updateItem(item.id, 'unit_price', Math.max(0, parseFloat(e.target.value) || 0))
+                      }
+                      min={0}
+                      inputMode="numeric"
+                      leftDecorator="Rp"
+                    />
                   </div>
                 </div>
                 <button
@@ -192,29 +222,18 @@ export function ExpenseForm({
             ))}
           </div>
         ) : (
-          <div>
-            <label
-              htmlFor="expense-total"
-              className="block text-xs font-medium text-neutral-500 mb-1.5"
-            >
-              Total Pengeluaran (Rp)
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-neutral-500">
-                Rp
-              </span>
-              <input
-                id="expense-total"
-                type="number"
-                placeholder="0"
-                value={manualTotal}
-                onChange={(e) => setManualTotal(e.target.value)}
-                min={1}
-                inputMode="numeric"
-                className="w-full bg-neutral-50/50 border border-neutral-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary tabular-nums shadow-sm"
-              />
-            </div>
-          </div>
+          <Input
+            id={`${idPrefix}-total`}
+            label="Total Pengeluaran"
+            type="number"
+            placeholder="0"
+            value={manualTotal}
+            onChange={(e) => setManualTotal(e.target.value)}
+            min={1}
+            inputMode="numeric"
+            leftDecorator="Rp"
+            className="tabular-nums"
+          />
         )}
 
         {items.length > 0 && (
@@ -236,39 +255,31 @@ export function ExpenseForm({
         </button>
       </div>
 
-      <div>
-        <label
-          htmlFor="expense-notes"
-          className="block text-sm font-semibold text-neutral-700 mb-2"
-        >
-          Catatan (Opsional)
-        </label>
-        <input
-          id="expense-notes"
-          type="text"
-          placeholder="Catatan tambahan..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          maxLength={200}
-          className="w-full bg-neutral-50/50 border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-        />
-      </div>
+      <Input
+        id={`${idPrefix}-notes`}
+        label="Catatan (Opsional)"
+        type="text"
+        placeholder="Catatan tambahan..."
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        maxLength={200}
+      />
 
-      <button
-        type="button"
+      <Button
+        variant={isEditing ? 'primary' : 'danger'}
+        size="lg"
         onClick={handleSubmit}
         disabled={isSubmitDisabled}
-        className="w-full mt-2 py-3.5 bg-danger text-white rounded-xl active:scale-[0.96] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-danger/20 flex items-center justify-between px-5 hover:bg-danger/90 hover:shadow-lg hover:shadow-danger/30"
-      >
-        <span className="font-bold text-sm">
-          {isPending ? 'Menyimpan...' : 'Catat Pengeluaran'}
-        </span>
-        {!isPending && (
+        isLoading={isPending}
+        className="w-full mt-2 flex items-center justify-between"
+        rightIcon={
           <span className="bg-white/20 px-2.5 py-1 rounded-lg text-sm font-bold tabular-nums">
             {formatRupiah(totalAmount)}
           </span>
-        )}
-      </button>
+        }
+      >
+        {isEditing ? 'Simpan' : 'Catat Pengeluaran'}
+      </Button>
     </div>
   )
 }

@@ -73,7 +73,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
       {isOpen && (
         <div
           className="fixed inset-0 z-50 antialiased"
-          style={{ left: 'var(--layout-sidebar-width)' }}
+          style={{ left: 'var(--sidebar-offset)' }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"

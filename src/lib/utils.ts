@@ -238,3 +238,67 @@ export function calcProfit(sellingPrice: number, hpp: number, quantity: number):
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
+
+/**
+ * Parse error context from a Supabase Edge Function error.
+ * Supabase-js can return the HTTP response body in `error.context` as either
+ * a raw `Response` object or a JSON string - we normalise both.
+ */
+async function parseEdgeFunctionContext(error: unknown): Promise<Record<string, unknown> | null> {
+  if (!(error instanceof Error)) return null
+  const raw = (error as any).context
+  if (!raw) return null
+
+  if (raw instanceof Response) {
+    try { return await raw.clone().json() } catch { return null }
+  }
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw) } catch { return null }
+  }
+  return null
+}
+
+/**
+ * Throw a normalised, user-facing error from a Supabase Edge Function response.
+ * Handles both error.context (supabase-js >=2 format) and data.error (legacy).
+ *
+ * Usage:
+ *   const { data, error } = await supabase.functions.invoke(...)
+ *   await throwEdgeFunctionError(error, data)   // throws if there's an error
+ *   return data                                 // safe to use
+ *
+ * Extra fields on the error (e.g. `has_transactions`) can be passed via `extra`.
+ */
+export async function throwEdgeFunctionError(
+  error: unknown,
+  data: Record<string, unknown> | null,
+  extra?: (err: Error, ctx: Record<string, unknown>) => void,
+): Promise<void> {
+  if (error) {
+    const isError = error instanceof Error
+    const ctx = isError ? (await parseEdgeFunctionContext(error)) ?? {} : {}
+
+    // supabase-js sometimes puts JSON directly in error.message when context is empty
+    let resolvedCtx = ctx
+    if (
+      isError &&
+      Object.keys(ctx).length === 0 &&
+      (error as Error).message.startsWith('{')
+    ) {
+      try { resolvedCtx = JSON.parse((error as Error).message) } catch { /* noop */ }
+    }
+
+    const message = resolvedCtx?.error ?? (isError ? (error as Error).message : 'Unknown error')
+    const err = new Error(message as string)
+    ;(err as any).isUserFacing = true
+    extra?.(err, resolvedCtx)
+    throw err
+  }
+
+  if (data?.error) {
+    const err = new Error(data.error as string)
+    ;(err as any).isUserFacing = true
+    extra?.(err, data)
+    throw err
+  }
+}

@@ -3,6 +3,8 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { useAuthActions } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -222,62 +224,42 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="mb-5">
-              <label htmlFor="email" className="block text-sm font-semibold text-neutral-700 mb-2">
-                Email
-              </label>
-              <input
+              <Input
                 id="email"
                 type="email"
+                label="Email"
                 autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="contoh@email.com"
-                className={`flex h-12 w-full rounded-xl border bg-neutral-50/50 px-4 py-2 text-sm placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all ${
-                  errors.email
-                    ? 'border-danger focus:border-danger focus:ring-danger/20'
-                    : 'border-neutral-200 focus:border-primary focus:ring-primary/30 hover:border-neutral-300'
-                }`}
+                error={errors.email}
               />
-              {errors.email && (
-                <p className="text-xs font-medium text-danger mt-1.5">{errors.email}</p>
-              )}
             </div>
 
             <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-2">
-                Password
-              </label>
-              <div className="relative mb-2">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••"
-                  className={`flex h-12 w-full rounded-xl border bg-neutral-50/50 px-4 py-2 text-sm placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-offset-1 pr-12 transition-all ${
-                    errors.password
-                      ? 'border-danger focus:border-danger focus:ring-danger/20'
-                      : 'border-neutral-200 focus:border-primary focus:ring-primary/30 hover:border-neutral-300'
-                  }`}
-                />
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                label="Password"
+                autoComplete="current-password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder="••••••••"
+                error={errors.password}
+                rightDecorator={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 hover:text-neutral-700 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                }
+              />
+              <div className="flex justify-end mt-1">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors p-1"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              <div className="flex justify-between items-start">
-                {errors.password ? (
-                  <p className="text-xs font-medium text-danger mt-1">{errors.password}</p>
-                ) : (
-                  <div />
-                )}
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors mt-1"
+                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   onClick={() => setShowForgotModal(true)}
                 >
                   Lupa password?
@@ -298,42 +280,16 @@ function LoginPage() {
               </motion.div>
             )}
 
-            <motion.button
+            <Button
               type="submit"
-              disabled={isLoading || isLockedOut}
-              className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 transition-all disabled:pointer-events-none disabled:opacity-50"
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', duration: 0.2, bounce: 0 }}
+              disabled={isLockedOut}
+              isLoading={isLoading}
+              loadingText="Memproses..."
+              className="w-full h-12"
             >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Memproses...
-                </>
-              ) : (
-                'Masuk'
-              )}
-            </motion.button>
-</form>
+              Masuk
+            </Button>
+          </form>
         </motion.div>
 
         <motion.p
@@ -371,13 +327,13 @@ function LoginPage() {
               Demi keamanan akun, reset password hanya dapat dilakukan oleh Pemilik Usaha atau Admin
               sistem. Silakan hubungi admin Anda untuk mendapatkan password baru.
             </p>
-            <button
+            <Button
               type="button"
               onClick={() => setShowForgotModal(false)}
-              className="w-full py-3 bg-neutral-900 text-white rounded-xl text-sm font-semibold hover:bg-neutral-800 active:scale-[0.96] transition-all"
+              className="w-full bg-neutral-900 text-white hover:bg-neutral-800"
             >
               Saya Mengerti
-            </button>
+            </Button>
           </div>
         </Modal>
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
-import { EditExpenseForm } from '@/components/kasir/EditExpenseForm'
-import { EditSaleForm } from '@/components/kasir/EditSaleForm'
+import { ExpenseForm } from '@/components/kasir/ExpenseForm'
+import { SaleForm } from '@/components/kasir/SaleForm'
 import type { TransactionWithItems } from '@/types'
 
 export function EditTransactionModal({
@@ -28,9 +28,9 @@ export function EditTransactionModal({
       title={cachedTx?.type === 'penjualan' ? 'Edit Penjualan' : 'Edit Pengeluaran'}
     >
       {cachedTx?.type === 'penjualan' ? (
-        <EditSaleForm transaction={cachedTx} onSuccess={onClose} />
+        <SaleForm transaction={cachedTx} onSuccess={onClose} />
       ) : cachedTx?.type === 'pengeluaran' ? (
-        <EditExpenseForm transaction={cachedTx} onSuccess={onClose} />
+        <ExpenseForm transaction={cachedTx} onSuccess={onClose} />
       ) : null}
     </Modal>
   )

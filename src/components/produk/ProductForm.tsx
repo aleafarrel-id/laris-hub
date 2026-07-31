@@ -1,5 +1,5 @@
 import type React from 'react'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts'
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
@@ -7,7 +7,9 @@ import { calcMargin, formatRupiah } from '@/lib/utils'
 import type { ProductFormData } from '@/lib/validations/product.schema'
 import { uploadProductImage } from '@/services/product.service'
 import type { Product } from '@/types'
+import { Button } from '../ui/Button'
 import { ImageDropzone } from '../ui/ImageDropzone'
+import { Input, Textarea } from '../ui/Input'
 
 interface LocalProductFormData {
   name: string
@@ -18,46 +20,6 @@ interface LocalProductFormData {
   image_url: string
   is_active: boolean
 }
-
-interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
-  id: string
-  label: string
-  error?: string
-  isTextarea?: boolean
-  value: string | number
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-}
-
-const FormField = memo(function FormField({
-  id,
-  label,
-  error,
-  isTextarea = false,
-  className = '',
-  ...props
-}: FormFieldProps) {
-  const baseClassName = `w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all shadow-sm ${error
-      ? 'border-danger focus:ring-danger/20 focus:border-danger'
-      : 'border-neutral-200 focus:ring-primary/20 focus:border-primary hover:border-neutral-300'
-    } ${isTextarea ? 'min-h-[100px] resize-y' : ''} ${className}`
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label
-        htmlFor={id}
-        className="text-xs font-semibold text-neutral-600 uppercase tracking-wider"
-      >
-        {label}
-      </label>
-      {isTextarea ? (
-        <textarea id={id} className={baseClassName} {...(props as any)} />
-      ) : (
-        <input id={id} className={baseClassName} {...(props as any)} />
-      )}
-      {error && <p className="text-xs text-danger font-medium mt-0.5">{error}</p>}
-    </div>
-  )
-})
 
 export function ProductForm({
   product,
@@ -80,7 +42,6 @@ export function ProductForm({
   })
 
   const [errors, setErrors] = useState<Partial<LocalProductFormData>>({})
-
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.image_url ?? null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -116,9 +77,7 @@ export function ProductForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-
     let finalImageUrl = form.image_url
-
     if (imageFile) {
       setIsUploadingImage(true)
       try {
@@ -129,7 +88,6 @@ export function ProductForm({
         return
       }
     }
-
     const payload: ProductFormData = {
       name: form.name.trim(),
       sku: form.sku.trim() || null,
@@ -139,12 +97,9 @@ export function ProductForm({
       image_url: finalImageUrl || null,
       is_active: form.is_active,
     }
-
     if (product) {
-      // biome-ignore lint/suspicious/noExplicitAny: API shape ok
       update({ id: product.id, data: payload as any }, { onSuccess })
     } else {
-      // biome-ignore lint/suspicious/noExplicitAny: API shape ok
       create(payload as any, { onSuccess })
     }
   }
@@ -153,29 +108,16 @@ export function ProductForm({
     <form onSubmit={handleSubmit} className="flex flex-col min-h-full relative">
       <div className="flex-1 px-5 py-6 pb-24 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
-
-          {/* Left Column */}
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-neutral-700">
-                Foto Produk
-              </label>
-              <ImageDropzone
-                currentPreviewUrl={previewUrl}
-                onImageChange={handleImageChange}
-                isUploading={isPending}
-              />
+              <label className="block text-sm font-semibold text-neutral-700">Foto Produk</label>
+              <ImageDropzone currentPreviewUrl={previewUrl} onImageChange={handleImageChange} isUploading={isPending} />
             </div>
-
             <div className="space-y-3 pt-2">
               <label className="flex items-center justify-between cursor-pointer group">
                 <div className="flex-1 pr-4">
-                  <span className="text-sm font-bold text-neutral-900 block">
-                    Status Produk Aktif
-                  </span>
-                  <span className="text-xs text-neutral-500 block mt-0.5">
-                    Tampil di menu Kasir
-                  </span>
+                  <span className="text-sm font-bold text-neutral-900 block">Status Produk Aktif</span>
+                  <span className="text-xs text-neutral-500 block mt-0.5">Tampil di menu Kasir</span>
                 </div>
                 <div className="relative flex items-center justify-center shrink-0">
                   <input
@@ -190,90 +132,25 @@ export function ProductForm({
               </label>
             </div>
           </div>
-
-          {/* Right Column */}
           <div className="space-y-8">
-
             <div className="space-y-5">
-              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
-                Informasi Dasar
-              </h3>
+              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">Informasi Dasar</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <FormField
-                  id="name"
-                  label="Nama Produk *"
-                  value={form.name}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
-                  error={errors.name}
-                  placeholder="Contoh: Pukis Coklat Keju"
-                  required
-                  disabled={isPending}
-                />
-                <FormField
-                  id="sku"
-                  label="SKU (Opsional)"
-                  value={form.sku}
-                  onChange={(e) => handleFieldChange('sku', e.target.value)}
-                  error={errors.sku}
-                  placeholder="Contoh: PKS-CKJ-01"
-                  disabled={isPending}
-                />
+                <Input id="name" label="Nama Produk" value={form.name} onChange={(e) => handleFieldChange('name', e.target.value)} error={errors.name} placeholder="Contoh: Pukis Coklat Keju" required disabled={isPending} />
+                <Input id="sku" label="SKU (Opsional)" value={form.sku} onChange={(e) => handleFieldChange('sku', e.target.value)} error={errors.sku} placeholder="Contoh: PKS-CKJ-01" disabled={isPending} />
               </div>
-              <FormField
-                id="description"
-                label="Deskripsi (Opsional)"
-                value={form.description}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
-                error={errors.description}
-                placeholder="Tuliskan detail produk di sini..."
-                disabled={isPending}
-                isTextarea
-              />
+              <Textarea id="description" label="Deskripsi (Opsional)" value={form.description} onChange={(e) => handleFieldChange('description', e.target.value)} error={errors.description} placeholder="Tuliskan detail produk di sini..." disabled={isPending} />
             </div>
-
             <div className="space-y-5">
-              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">
-                Harga & Modal
-              </h3>
+              <h3 className="text-sm font-bold text-neutral-900 pb-2 border-b border-neutral-100">Harga & Modal</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <FormField
-                  id="hpp"
-                  label="Modal Dasar (HPP) *"
-                  value={form.hpp}
-                  onChange={(e) => handleFieldChange('hpp', e.target.value)}
-                  error={errors.hpp}
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  placeholder="Contoh: 3000"
-                  required
-                  disabled={isPending}
-                />
+                <Input id="hpp" label="Modal Dasar (HPP)" value={form.hpp} onChange={(e) => handleFieldChange('hpp', e.target.value)} error={errors.hpp} type="number" inputMode="numeric" min={0} placeholder="Contoh: 3000" required disabled={isPending} />
                 <div className="flex flex-col">
-                  <FormField
-                    id="selling_price"
-                    label="Harga Jual *"
-                    value={form.selling_price}
-                    onChange={(e) => handleFieldChange('selling_price', e.target.value)}
-                    error={errors.selling_price}
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    placeholder="Contoh: 5000"
-                    required
-                    disabled={isPending}
-                  />
+                  <Input id="selling_price" label="Harga Jual" value={form.selling_price} onChange={(e) => handleFieldChange('selling_price', e.target.value)} error={errors.selling_price} type="number" inputMode="numeric" min={0} placeholder="Contoh: 5000" required disabled={isPending} />
                   {hpp > 0 && sellingPrice > 0 && (
                     <div className="mt-3 p-3.5 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-between text-xs">
                       <span className="font-semibold text-neutral-600">Margin:</span>
-                      <span
-                        className={`font-bold px-2.5 py-1 rounded-md ${margin >= MARGIN_GOOD_THRESHOLD
-                            ? 'bg-success/15 text-success-700'
-                            : margin >= MARGIN_WARNING_THRESHOLD
-                              ? 'bg-amber-500/15 text-amber-700'
-                              : 'bg-danger/15 text-danger-700'
-                          }`}
-                      >
+                      <span className={`font-bold px-2.5 py-1 rounded-md ${margin >= MARGIN_GOOD_THRESHOLD ? 'bg-success/15 text-success-700' : margin >= MARGIN_WARNING_THRESHOLD ? 'bg-amber-500/15 text-amber-700' : 'bg-danger/15 text-danger-700'}`}>
                         {margin.toFixed(1)}% ({formatRupiah(sellingPrice - hpp)})
                       </span>
                     </div>
@@ -285,21 +162,8 @@ export function ProductForm({
         </div>
       </div>
       <div className="sticky bottom-0 z-10 border-t border-neutral-200 bg-white/90 backdrop-blur-md px-6 py-4 flex justify-end gap-3 shrink-0 mt-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-        <button
-          type="button"
-          onClick={onSuccess}
-          disabled={isPending}
-          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-50 active:scale-[0.96] cursor-pointer"
-        >
-          Batal
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-all disabled:opacity-50 shadow-md shadow-primary/20 active:scale-[0.96] cursor-pointer"
-        >
-          {isPending ? 'Menyimpan...' : 'Simpan'}
-        </button>
+        <Button type="button" variant="ghost" onClick={onSuccess} disabled={isPending}>Batal</Button>
+        <Button type="submit" variant="primary" isLoading={isPending}>Simpan</Button>
       </div>
     </form>
   )

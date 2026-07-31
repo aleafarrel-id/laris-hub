@@ -22,9 +22,11 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import {
   useKasirList,
@@ -126,31 +128,29 @@ function DeleteConfirmModal({
           Akun <strong className="text-neutral-900">{kasir.full_name}</strong> akan dihapus permanen dari sistem.
         </p>
         <p className="text-sm text-neutral-500 mb-5">
-          Jika kasir ini memiliki data transaksi, penghapusan akan ditolak secara otomatis, gunakan <strong>Tangguhkan</strong> saja.
+          Jika kasir memiliki data transaksi, penghapusan akan ditolak secara otomatis, gunakan <strong>Tangguhkan</strong>.
         </p>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 py-3 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 active:scale-[0.96] transition-all disabled:opacity-50"
+            className="flex-1"
           >
             Batal
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="danger"
             onClick={onConfirm}
             disabled={isPending}
-            className="flex-1 py-3 bg-danger text-white rounded-xl text-sm font-semibold hover:bg-danger/90 active:scale-[0.96] transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-danger/20"
+            isLoading={isPending}
+            className="flex-1"
+            leftIcon={<Trash2 size={14} />}
           >
-            {isPending ? (
-              <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : <Trash2 size={14} />}
             Hapus Akun
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>
@@ -284,43 +284,45 @@ function KasirDetailDrawer({
                 </div>
 
                 <div className="space-y-2.5">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => {
                       setEditForm({ full_name: kasir.full_name, phone: kasir.phone ?? '', email: '', password: '' })
                       setEditErrors({})
                       setIsEditing(true)
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 active:scale-[0.96] transition-all shadow-sm shadow-primary/20"
+                    className="w-full"
+                    leftIcon={<Edit2 size={15} />}
                   >
-                    <Edit2 size={15} />
                     Edit Profil &amp; Akun
-                  </button>
+                  </Button>
 
                   {!isOwnAccount && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => onToggle(kasir.id, !kasir.is_active)}
                       disabled={isToggling}
-                      className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.96] transition-all disabled:opacity-50 border ${kasir.is_active
-                        ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100'
-                        : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                      className={`w-full border ${kasir.is_active
+                        ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300'
+                        : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
                         }`}
+                      leftIcon={kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
                     >
-                      {kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
                       {kasir.is_active ? 'Tangguhkan Akun' : 'Aktifkan Kembali'}
-                    </button>
+                    </Button>
                   )}
 
                   {!isOwnAccount && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-danger border border-danger/20 bg-danger/5 hover:bg-danger/10 active:scale-[0.96] transition-all"
+                      className="w-full text-danger border-danger/20 bg-danger/5 hover:bg-danger/10 hover:border-danger/30"
+                      leftIcon={<Trash2 size={15} />}
                     >
-                      <Trash2 size={15} />
                       Hapus Akun
-                    </button>
+                    </Button>
                   )}
                 </div>
               </>
@@ -328,96 +330,74 @@ function KasirDetailDrawer({
               /* Edit form */
               <div className="space-y-4">
                 <p className="text-xs text-neutral-500 bg-neutral-50 rounded-xl p-3 border border-neutral-100 leading-relaxed">
-                  Kosongkan Email atau Password jika tidak ingin mengubahnya.
+                  Kosongkan jika tidak ingin mengubahnya.
                 </p>
 
                 {/* Nama */}
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
-                    Nama Lengkap <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.full_name}
-                    onChange={(e) => { setEditForm((f) => ({ ...f, full_name: e.target.value })); if (editErrors.full_name) setEditErrors((e) => ({ ...e, full_name: '' })) }}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all ${editErrors.full_name ? 'border-danger focus:ring-danger/20' : 'border-neutral-200 focus:border-primary focus:ring-primary/20'}`}
-                  />
-                  {editErrors.full_name && <p className="text-xs text-danger mt-1">{editErrors.full_name}</p>}
-                </div>
+                <Input
+                  id="full_name"
+                  type="text"
+                  label="Nama Lengkap"
+                  required
+                  value={editForm.full_name}
+                  onChange={(e) => { setEditForm((f) => ({ ...f, full_name: e.target.value })); if (editErrors.full_name) setEditErrors((e) => ({ ...e, full_name: '' })) }}
+                  error={editErrors.full_name}
+                />
 
                 {/* No HP */}
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">No. HP</label>
-                  <input
-                    type="tel"
-                    value={editForm.phone}
-                    onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-                    placeholder="08xxxxxxxxxx"
-                    className="w-full border border-neutral-200 rounded-xl px-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:border-primary focus:ring-primary/20 transition-all"
-                  />
-                </div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  label="No. HP"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="08xxxxxxxxxx"
+                />
 
                 {/* Email baru */}
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
-                    Email Baru
-                    <span className="ml-1.5 text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span>
-                  </label>
-                  <div className="relative">
-                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                    <input
-                      type="email"
-                      autoComplete="off"
-                      value={editForm.email}
-                      onChange={(e) => { setEditForm((f) => ({ ...f, email: e.target.value })); if (editErrors.email) setEditErrors((e) => ({ ...e, email: '' })) }}
-                      placeholder={isLoadingEmail ? 'Memuat...' : (authDetails?.email ?? 'Email saat ini')}
-                      className={`w-full border rounded-xl pl-9 pr-4 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all ${editErrors.email ? 'border-danger focus:ring-danger/20' : 'border-neutral-200 focus:border-primary focus:ring-primary/20'}`}
-                    />
-                  </div>
-                  {editErrors.email && <p className="text-xs text-danger mt-1">{editErrors.email}</p>}
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  label={<>Email Baru <span className="ml-1.5 text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span></>}
+                  autoComplete="off"
+                  value={editForm.email}
+                  onChange={(e) => { setEditForm((f) => ({ ...f, email: e.target.value })); if (editErrors.email) setEditErrors((e) => ({ ...e, email: '' })) }}
+                  placeholder={isLoadingEmail ? 'Memuat...' : (authDetails?.email ?? 'Email saat ini')}
+                  leftDecorator={<Mail size={15} />}
+                  error={editErrors.email}
+                />
 
                 {/* Password baru */}
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <KeyRound size={13} className="text-neutral-500" />
-                      Password Baru
-                      <span className="text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span>
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={editForm.password}
-                      onChange={(e) => { setEditForm((f) => ({ ...f, password: e.target.value })); if (editErrors.password) setEditErrors((e) => ({ ...e, password: '' })) }}
-                      placeholder="Min. 8 karakter"
-                      className={`w-full border rounded-xl px-4 pr-11 py-3 text-sm bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-2 transition-all ${editErrors.password ? 'border-danger focus:ring-danger/20' : 'border-neutral-200 focus:border-primary focus:ring-primary/20'}`}
-                    />
-                    <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 transition-colors">
+                <Input
+                  id="password"
+                  type={showNewPassword ? 'text' : 'password'}
+                  label={<span className="flex items-center gap-1.5"><KeyRound size={13} className="text-neutral-500" />Password Baru <span className="text-[10px] font-medium text-neutral-400 normal-case">(kosongkan jika tidak diubah)</span></span>}
+                  autoComplete="new-password"
+                  value={editForm.password}
+                  onChange={(e) => { setEditForm((f) => ({ ...f, password: e.target.value })); if (editErrors.password) setEditErrors((e) => ({ ...e, password: '' })) }}
+                  placeholder="Min. 8 karakter"
+                  error={editErrors.password}
+                  rightDecorator={
+                    <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="p-1 hover:text-neutral-700 transition-colors">
                       {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
-                  </div>
-                  {editErrors.password && <p className="text-xs text-danger mt-1">{editErrors.password}</p>}
-                </div>
+                  }
+                />
 
                 {/* Save / Cancel */}
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={handleCancel} className="flex-1 py-3 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 active:scale-[0.96] transition-all">
+                  <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
                     Batal
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={handleSave}
                     disabled={isUpdating}
-                    className="flex-1 py-3 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 active:scale-[0.96] transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-primary/20"
+                    isLoading={isUpdating}
+                    className="flex-1"
                   >
-                    {isUpdating && (
-                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    )}
                     Simpan
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -468,43 +448,39 @@ function CreateKasirModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   }
 
   const field = (id: keyof CreateFormState, label: string, placeholder: string, type = 'text', required = true) => (
-    <div>
-      <label htmlFor={`create-${id}`} className="block text-sm font-semibold text-neutral-700 mb-1.5">
-        {label}{required && <span className="text-danger ml-0.5">*</span>}
-      </label>
-      <div className="relative">
-        <input
-          id={`create-${id}`}
-          type={id === 'password' ? (showPassword ? 'text' : 'password') : type}
-          autoComplete={id === 'password' ? 'new-password' : id === 'email' ? 'email' : 'off'}
-          value={form[id]}
-          onChange={(e) => { setForm((f) => ({ ...f, [id]: e.target.value })); if (errors[id]) setErrors((er) => ({ ...er, [id]: undefined })) }}
-          placeholder={placeholder}
-          className={`w-full bg-neutral-50/50 border rounded-xl px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 transition-all ${errors[id] ? 'border-danger focus:border-danger focus:ring-danger/20' : 'border-neutral-200 focus:border-primary focus:ring-primary/20'} ${id === 'password' ? 'pr-11' : ''}`}
-        />
-        {id === 'password' && (
-          <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 transition-colors" aria-label="Toggle password">
+    <Input
+      id={`create-${id}`}
+      type={id === 'password' ? (showPassword ? 'text' : 'password') : type}
+      label={label}
+      required={required}
+      autoComplete={id === 'password' ? 'new-password' : id === 'email' ? 'email' : 'off'}
+      value={form[id]}
+      onChange={(e) => { setForm((f) => ({ ...f, [id]: e.target.value })); if (errors[id]) setErrors((er) => ({ ...er, [id]: undefined })) }}
+      placeholder={placeholder}
+      error={errors[id]}
+      rightDecorator={
+        id === 'password' ? (
+          <button type="button" onClick={() => setShowPassword((v) => !v)} className="p-1 hover:text-neutral-700 transition-colors" aria-label="Toggle password">
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
-        )}
-      </div>
-      {errors[id] && <p className="text-xs font-medium text-danger mt-1.5 flex items-center gap-1"><X size={11} />{errors[id]}</p>}
-    </div>
+        ) : undefined
+      }
+    />
   )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Tambah Kasir Baru">
       <form onSubmit={handleSubmit} noValidate className="px-5 py-5 space-y-4">
         <p className="text-xs text-primary/80 bg-primary/5 border border-primary/20 rounded-xl p-3 leading-relaxed">
-          Kasir akan langsung bisa login menggunakan email dan password yang Anda buat.
+          Kasir akan langsung bisa login menggunakan akun yang Anda buat.
         </p>
         {field('full_name', 'Nama Lengkap', 'Contoh: Budi Santoso')}
         {field('email', 'Email', 'contoh@email.com', 'email')}
         {field('password', 'Password Sementara', 'Min. 8 karakter')}
         {field('phone', 'No. HP', '08xxxxxxxxxx', 'tel', false)}
-        <button type="submit" disabled={isPending} className="w-full mt-2 py-3.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 active:scale-[0.96] transition-all disabled:opacity-60 shadow-md shadow-primary/20 flex items-center justify-center gap-2">
-          {isPending ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Menyimpan...</> : <><UserCheck size={16} />Simpan</>}
-        </button>
+        <Button type="submit" disabled={isPending} isLoading={isPending} className="w-full mt-2 py-3.5" leftIcon={<UserCheck size={16} />}>
+          Simpan
+        </Button>
       </form>
     </Modal>
   )
@@ -521,29 +497,35 @@ function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => void }) 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3.5 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${kasir.is_active ? 'border-neutral-200 hover:border-primary/25' : 'border-neutral-100 opacity-70'
+      className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${kasir.is_active ? 'border-neutral-200 hover:border-primary/25' : 'border-neutral-100 opacity-70'
         }`}
     >
+      {/* Avatar */}
       <div className="relative flex-shrink-0">
         <KasirAvatar profile={kasir} />
         <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`} />
       </div>
-      <div className="flex-1 min-w-0">
+
+      {/* Info — takes all remaining space, truncates text */}
+      <div className="flex-1 min-w-0 pr-1">
         <p className="text-sm font-bold text-neutral-900 leading-tight truncate">{kasir.full_name}</p>
         {kasir.phone && (
-          <div className="flex items-center gap-1 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-0.5">
             <Phone size={11} className="text-neutral-400 flex-shrink-0" />
-            <span className="text-xs text-neutral-500 tabular-nums">{kasir.phone}</span>
+            <span className="text-xs text-neutral-500 tabular-nums truncate block">{kasir.phone}</span>
           </div>
         )}
-        <p className="text-[11px] text-neutral-400 mt-1">Sejak {formatDate(kasir.created_at)}</p>
+        <p className="text-[11px] text-neutral-400 mt-1 truncate">Sejak {formatDate(kasir.created_at)}</p>
       </div>
-      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>
-          {kasir.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
-          {kasir.is_active ? 'Aktif' : 'Ditangguhkan'}
+
+      {/* Status badge + chevron — fixed width so it never crushes the info column */}
+      <div className="flex-shrink-0 flex flex-col items-end gap-2">
+        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+          }`}>
+          {kasir.is_active ? <CheckCircle2 size={10} /> : <ShieldOff size={10} />}
+          {kasir.is_active ? 'Aktif' : 'Tangguhkan'}
         </span>
-        <ChevronRight size={16} className="text-neutral-300 group-hover:text-primary transition-colors group-hover:translate-x-0.5 transition-transform duration-150" />
+        <ChevronRight size={15} className="text-neutral-300 group-hover:text-primary transition-colors" />
       </div>
     </motion.button>
   )
@@ -584,20 +566,11 @@ function ManajemenKasirPage() {
               {isLoading ? 'Memuat...' : `${kasirList.length} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/profil" className="md:hidden flex-shrink-0 w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-[0.96] transition-all" aria-label="Profil Admin">
-              <User size={16} strokeWidth={2.5} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-primary/25 hover:bg-primary/90 active:scale-[0.96] transition-all"
-            >
-              <PlusCircle size={16} strokeWidth={2.5} />
-              <span className="hidden sm:inline">Tambah Kasir</span>
-              <span className="sm:hidden">Tambah</span>
-            </button>
-          </div>
+          {/* Desktop-only shortcut to profile */}
+          <Link to="/profil" className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all" aria-label="Profil Admin">
+            <User size={16} strokeWidth={2} />
+            <span>Profil</span>
+          </Link>
         </div>
       </div>
 
@@ -606,18 +579,38 @@ function ManajemenKasirPage() {
         <div className="max-w-3xl mx-auto space-y-3">
           {/* Stats */}
           {!isLoading && kasirList.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
               {[
-                { label: 'Total Kasir', value: kasirList.length, color: 'text-neutral-900', bg: 'bg-white' },
+                { label: 'Total', value: kasirList.length, color: 'text-neutral-900', bg: 'bg-white' },
                 { label: 'Aktif', value: activeCount, color: 'text-emerald-700', bg: 'bg-emerald-50' },
-                { label: 'Ditangguhkan', value: suspendedCount, color: suspendedCount > 0 ? 'text-blue-700' : 'text-neutral-400', bg: suspendedCount > 0 ? 'bg-blue-50' : 'bg-neutral-50' },
+                { label: 'Tangguhkan', value: suspendedCount, color: suspendedCount > 0 ? 'text-blue-700' : 'text-neutral-400', bg: suspendedCount > 0 ? 'bg-blue-50' : 'bg-neutral-50' },
               ].map(({ label, value, color, bg }) => (
-                <div key={label} className={`${bg} rounded-2xl border border-neutral-200 p-4 text-center shadow-sm`}>
-                  <p className={`text-2xl font-black tabular-nums ${color}`}>{value}</p>
-                  <p className="text-xs text-neutral-500 font-medium mt-0.5">{label}</p>
+                <div key={label} className={`${bg} rounded-2xl border border-neutral-200 p-3 text-center shadow-sm`}>
+                  <p className={`text-xl font-black tabular-nums ${color}`}>{value}</p>
+                  <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 leading-tight">{label}</p>
                 </div>
               ))}
             </motion.div>
+          )}
+
+          {/* Add Kasir CTA — below stats, always visible */}
+          {!isLoading && (
+            <motion.button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl border-2 border-dashed border-primary/30 text-primary font-semibold text-sm bg-primary/5 hover:bg-primary/10 hover:border-primary/50 active:scale-[0.98] transition-all"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <PlusCircle size={18} strokeWidth={2.5} />
+              Tambah Kasir
+            </motion.button>
           )}
 
           {isLoading ? (
@@ -635,10 +628,6 @@ function ManajemenKasirPage() {
               icon={Users}
               title="Belum Ada Kasir"
               description="Tambahkan kasir pertama agar bisa mulai mencatat transaksi."
-              action={{
-                label: 'Tambah Kasir Pertama',
-                onClick: () => setShowCreateModal(true),
-              }}
             />
           ) : (
             <AnimatePresence mode="popLayout">

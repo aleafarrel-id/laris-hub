@@ -1,12 +1,13 @@
 import { CheckCircle, Minus, Package, Plus, Search, Tag } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useProducts } from '@/hooks/useProducts'
-import { useCreateSale } from '@/hooks/useTransactions'
+import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
-import type { Product } from '@/types'
+import type { Product, TransactionWithItems } from '@/types'
 
 interface CartItem {
   product: Product
@@ -21,13 +22,52 @@ const PRODUCT_COLORS = [
   'from-purple-400/20 to-fuchsia-500/20',
 ]
 
-export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
+interface SaleFormProps {
+  /** When provided, the form operates in "edit" mode. */
+  transaction?: TransactionWithItems
+  onSuccess: () => void
+}
+
+/**
+ * Unified sale form for both creating and editing.
+ * Pass `transaction` to enter edit mode; omit for create mode.
+ */
+export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
+  const isEditing = !!transaction
+
   const { data: products = [], isLoading: productsLoading } = useProducts(true)
-  const { mutate: createSale, isPending } = useCreateSale()
+  const { mutate: createSale, isPending: isCreating } = useCreateSale()
+  const { mutate: updateSale, isPending: isUpdating } = useUpdateSale()
+  const isPending = isCreating || isUpdating
 
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map())
   const [search, setSearch] = useState('')
-  const [notes, setNotes] = useState('')
+  const [notes, setNotes] = useState(transaction?.notes ?? '')
+
+  // Pre-populate cart when editing an existing transaction
+  useEffect(() => {
+    if (!isEditing || productsLoading || products.length === 0 || !transaction.transaction_items) {
+      return
+    }
+
+    const initialCart = new Map<string, CartItem>()
+    transaction.transaction_items.forEach((item) => {
+      const product = products.find((p) => p.id === item.product_id)
+      // If a product was deleted but still appears in the transaction, create a fallback
+      const productData = product ?? ({
+        id: item.product_id,
+        name: item.product_name,
+        hpp: item.product_hpp,
+        selling_price: item.selling_price,
+        image_url: null,
+        sku: null,
+        stock: 0,
+      } as unknown as Product)
+
+      initialCart.set(item.product_id ?? crypto.randomUUID(), { product: productData, quantity: item.quantity })
+    })
+    setCart(initialCart)
+  }, [isEditing, transaction, products, productsLoading])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -35,11 +75,22 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
     return products.filter((p) => p.name.toLowerCase().includes(query))
   }, [products, search])
 
+  // When editing, also show deleted products that are still in the cart
+  const displayProducts = useMemo(() => {
+    if (!isEditing) return filtered
+    const all = [...filtered]
+    cart.forEach((c) => {
+      if (!all.find((p) => p.id === c.product.id) && !search) {
+        all.push(c.product)
+      }
+    })
+    return all
+  }, [isEditing, filtered, cart, search])
+
   const { totalAmount, totalItems, cartArray } = useMemo(() => {
     let amount = 0
     let items = 0
     const arr: CartItem[] = []
-
     for (const item of cart.values()) {
       amount += item.product.selling_price * item.quantity
       items += item.quantity
@@ -52,7 +103,6 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
     setCart((prev) => {
       const next = new Map(prev)
       const existing = next.get(product.id)
-
       if (existing) {
         next.set(product.id, { ...existing, quantity: existing.quantity + 1 })
       } else {
@@ -66,10 +116,8 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
     setCart((prev) => {
       const existing = prev.get(productId)
       if (!existing) return prev
-
       const next = new Map(prev)
       const newQty = existing.quantity + delta
-
       if (newQty <= 0) {
         next.delete(productId)
       } else {
@@ -82,39 +130,41 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
   const handleSubmit = useCallback(() => {
     if (cart.size === 0) return
 
-    createSale(
-      {
-        payload: {
-          items: cartArray.map((c) => ({
-            product_id: c.product.id,
-            product_name: c.product.name,
-            product_hpp: c.product.hpp,
-            selling_price: c.product.selling_price,
-            quantity: c.quantity,
-          })),
-          notes: notes.trim() || null,
+    const items = cartArray.map((c) => ({
+      product_id: c.product.id,
+      product_name: c.product.name,
+      product_hpp: c.product.hpp,
+      selling_price: c.product.selling_price,
+      quantity: c.quantity,
+    }))
+
+    if (isEditing) {
+      updateSale(
+        {
+          id: transaction.id,
+          payload: { items, notes: notes.trim() || null, transaction_at: transaction.transaction_at },
         },
-      },
-      { onSuccess: () => onSuccess() },
-    )
-  }, [cart, cartArray, notes, createSale, onSuccess])
+        { onSuccess },
+      )
+    } else {
+      createSale(
+        { payload: { items, notes: notes.trim() || null } },
+        { onSuccess },
+      )
+    }
+  }, [cart, cartArray, notes, isEditing, transaction, createSale, updateSale, onSuccess])
 
   return (
     <div className="flex flex-col min-h-[60vh] max-h-full">
       <div className="sticky top-0 z-10 px-4 py-3 bg-white border-b border-neutral-100">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
-          />
-          <input
-            type="search"
-            placeholder="Cari varian produk..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-neutral-100/70 border-transparent rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all"
-          />
-        </div>
+        <Input
+          type="search"
+          placeholder="Cari varian produk..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          leftDecorator={<Search size={18} className="text-neutral-400" />}
+          className="pl-10 bg-neutral-100/70 border-transparent rounded-2xl focus:bg-white focus:border-primary"
+        />
       </div>
 
       <div className="p-4 bg-neutral-50/50 flex-1">
@@ -134,12 +184,11 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
               </div>
             ))}
           </div>
-        ) : filtered.length ? (
+        ) : displayProducts.length ? (
           <div className="flex flex-col gap-3">
-            {filtered.map((product) => {
+            {displayProducts.map((product) => {
               const inCart = cart.get(product.id)
               const qty = inCart?.quantity || 0
-
               const colorIdx = product.name.length % PRODUCT_COLORS.length
               const gradient = PRODUCT_COLORS[colorIdx]
 
@@ -261,13 +310,13 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.2, ease: 'easeOut' as const }}
             >
-              <input
+              <Input
                 type="text"
                 placeholder="Catatan transaksi (opsional)"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 maxLength={200}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="bg-neutral-50"
               />
 
               <motion.button

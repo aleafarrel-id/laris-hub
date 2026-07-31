@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/Button'
 import type { LucideIcon } from 'lucide-react'
 import { AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -43,8 +44,8 @@ export function ConfirmDialog({
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[100]"
-          style={{ left: 'var(--layout-sidebar-width)' }}
+          className="fixed inset-0 z-[100] antialiased"
+          style={{ left: 'var(--sidebar-offset)' }}
           role="alertdialog"
           aria-modal="true"
         >
@@ -85,25 +86,23 @@ export function ConfirmDialog({
                 </p>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
-                <button
+              <div className="flex gap-2 sm:gap-3 w-full">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={onCancel}
-                  className="flex-1 px-4 py-3 sm:py-3 rounded-xl text-[14px] sm:text-[15px] font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors active:scale-[0.96]"
+                  className="flex-1"
                 >
                   {cancelText}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={variant}
                   onClick={onConfirm}
-                  className={`flex-1 px-4 py-3 sm:py-3 rounded-xl text-[14px] sm:text-[15px] font-semibold text-white transition-colors active:scale-[0.96] shadow-sm ${
-                    variant === 'danger'
-                      ? 'bg-danger hover:bg-danger-dark'
-                      : 'bg-primary hover:bg-primary-700'
-                  }`}
+                  className="flex-1"
                 >
                   {confirmText}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>
