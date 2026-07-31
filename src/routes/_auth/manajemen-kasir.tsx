@@ -146,15 +146,15 @@ function ManajemenKasirPage() {
 
       {/* Drawer & Modals */}
       <AnimatePresence>
-        {selectedKasir && syncedKasir && (
-          <KasirDetailDrawer
-            kasir={syncedKasir}
+        <KasirDetailDrawer
+          key="kasir-detail-drawer"
+          isOpen={!!selectedKasir && !!syncedKasir}
+          kasir={syncedKasir || selectedKasir}
             onClose={() => setSelectedKasir(null)}
             onToggle={handleToggle}
             isToggling={isToggling}
             adminId={adminProfile?.id}
           />
-        )}
       </AnimatePresence>
 
       <CreateKasirModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />

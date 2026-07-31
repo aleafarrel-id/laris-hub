@@ -1,9 +1,11 @@
 import { Edit3, Trash2, CheckCircle2 } from 'lucide-react'
 import { TransactionBadge, PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
+import { useState } from 'react'
 
 interface BukuKasTableDesktopProps {
   transactions: TransactionWithProfile[]
@@ -75,10 +77,13 @@ export function BukuKasTableDesktop({
   onSelectKasirProfile,
   onUpdateStatus,
 }: BukuKasTableDesktopProps) {
+  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+
   if (isLoading) return <TableSkeleton isAdmin={isAdmin} />
 
   return (
-    <div className="app-card overflow-hidden hidden md:block">
+    <>
+      <div className="app-card overflow-hidden hidden md:block">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 border-b border-neutral-200">
@@ -94,7 +99,11 @@ export function BukuKasTableDesktop({
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {transactions.map((tx) => (
-              <tr key={tx.id} className="hover:bg-neutral-50/80 transition-colors">
+              <tr 
+                key={tx.id} 
+                onClick={() => setViewingTx(tx)}
+                className="hover:bg-neutral-50/80 transition-colors cursor-pointer"
+              >
                 <td className="py-3 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                   {formatDateTime(tx.transaction_at)}
                 </td>
@@ -116,7 +125,10 @@ export function BukuKasTableDesktop({
                   <td className="py-3 px-4 text-neutral-600 truncate max-w-[120px] align-top">
                     <button
                       type="button"
-                      onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                      }}
                       className="hover:text-primary transition-colors focus:outline-none"
                     >
                       {tx.profiles?.full_name ?? 'Sistem'}
@@ -141,40 +153,56 @@ export function BukuKasTableDesktop({
                     {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button
                         type="button"
-                        onClick={() => onUpdateStatus(tx.id, 'sukses')}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateStatus(tx.id, 'sukses')
+                        }}
+                        className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center justify-center border border-transparent hover:border-emerald-200"
+                        title="Tandai Selesai"
                       >
                         <CheckCircle2 size={14} />
-                        Selesai
                       </button>
                     )}
                     {isAdmin && (
-                      <>
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
-                          className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEditTransaction(tx as unknown as TransactionWithItems)
+                          }}
+                          className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
                           title="Edit Transaksi"
                         >
                           <Edit3 size={15} />
                         </button>
                         <button
                           type="button"
-                          onClick={() => onDeleteTransaction(tx.id)}
-                          className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDeleteTransaction(tx.id)
+                          }}
+                          className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
                           title="Hapus Transaksi"
                         >
                           <Trash2 size={15} />
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <TransactionDetailModal
+        isOpen={!!viewingTx}
+        onClose={() => setViewingTx(null)}
+        transaction={viewingTx as unknown as TransactionWithItems}
+      />
+    </>
   )
 }

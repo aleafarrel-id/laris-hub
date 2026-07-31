@@ -1,4 +1,4 @@
-import { QrCode, Banknote, Clock } from 'lucide-react'
+import { QrCode, Banknote, Clock, CheckCircle2 } from 'lucide-react'
 import type { TransactionType } from '@/lib/constants'
 
 interface BadgeProps {
@@ -25,22 +25,26 @@ export function TransactionBadge({ type }: BadgeProps) {
   )
 }
 
-export function StatusBadge({ status }: { status: string | null }) {
-  if (!status || status === 'sukses') return null
+export function StatusBadge({ status, forceShow }: { status: string | null, forceShow?: boolean }) {
+  if (!status) return null
+  if (status === 'sukses' && !forceShow) return null
   const config = {
     pending: { label: 'Tertunda', className: 'bg-amber-50 text-amber-600 border border-amber-200' },
+    sukses: { label: 'Sukses', className: 'bg-emerald-50 text-emerald-600 border border-emerald-200' },
   }[status] ?? { label: status, className: 'bg-neutral-50 text-neutral-600 border border-neutral-200' }
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${config.className}`}>
       {status === 'pending' && <Clock size={12} />}
+      {status === 'sukses' && <CheckCircle2 size={12} />}
       {config.label}
     </span>
   )
 }
 
-export function PaymentMethodBadge({ method }: { method: string | null }) {
-  if (!method || method === 'tunai') return null
+export function PaymentMethodBadge({ method, forceShow }: { method: string | null, forceShow?: boolean }) {
+  if (!method) return null
+  if (method === 'tunai' && !forceShow) return null
   const config = {
     tunai: { label: 'Tunai', className: 'bg-emerald-50 text-emerald-600 border border-emerald-200', icon: Banknote },
     qris: { label: 'QRIS', className: 'bg-blue-50 text-blue-600 border border-blue-200', icon: QrCode },

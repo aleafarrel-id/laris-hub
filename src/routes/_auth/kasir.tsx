@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { TransactionListItem } from '@/components/kasir/TransactionListItem'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useTodayTransactions, useUpdateTransactionStatus } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
@@ -23,6 +24,7 @@ function KasirPage() {
 
   const [showSaleModal, setShowSaleModal] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [viewingTx, setViewingTx] = useState<TransactionWithItems | null>(null)
   const updateStatusMutation = useUpdateTransactionStatus()
 
   const todayOmzet = useMemo(() => {
@@ -170,6 +172,7 @@ function KasirPage() {
                   key={tx.id}
                   tx={tx as TransactionWithItems}
                   idx={idx}
+                  onClick={() => setViewingTx(tx as TransactionWithItems)}
                   onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
                 />
               ))}
@@ -177,6 +180,12 @@ function KasirPage() {
           )}
         </div>
       </div>
+
+      <TransactionDetailModal
+        isOpen={!!viewingTx}
+        onClose={() => setViewingTx(null)}
+        transaction={viewingTx}
+      />
 
       <Modal isOpen={showSaleModal} onClose={() => setShowSaleModal(false)} title="Catat Penjualan">
         <SaleForm onSuccess={() => setShowSaleModal(false)} />

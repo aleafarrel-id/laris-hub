@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react'
-import { Banknote, QrCode, X } from 'lucide-react'
+import { Banknote, QrCode } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
+import { Portal } from '@/components/ui/Portal'
 
 interface PaymentMethodModalProps {
   isOpen: boolean
@@ -20,18 +21,18 @@ export function PaymentMethodModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <Portal className="z-50" role="dialog">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={!isPending ? onClose : undefined}
-            className="fixed inset-0 z-50 bg-neutral-900/60"
+            className="absolute inset-0 bg-neutral-900/60"
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -40,16 +41,8 @@ export function PaymentMethodModal({
               className="w-full max-w-sm bg-white rounded-3xl shadow-2xl pointer-events-auto overflow-hidden flex flex-col will-change-transform"
             >
               {/* Header */}
-              <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
+              <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-center">
                 <h3 className="text-lg font-bold text-neutral-900">Pilih Pembayaran</h3>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isPending}
-                  className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors disabled:opacity-50"
-                >
-                  <X size={20} />
-                </button>
               </div>
 
               {/* Amount Summary */}
@@ -94,7 +87,7 @@ export function PaymentMethodModal({
               </div>
             </motion.div>
           </div>
-        </>
+        </Portal>
       )}
     </AnimatePresence>
   )

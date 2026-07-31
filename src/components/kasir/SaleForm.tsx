@@ -29,6 +29,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     cart,
     addToCart,
     changeQty,
+    setQty,
     totalAmount,
     totalItems,
     cartArray,
@@ -134,6 +135,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
                 quantity={cart.get(product.id)?.quantity ?? 0}
                 onAdd={() => addToCart(product)}
                 onChangeQty={(delta) => changeQty(product.id, delta)}
+                onSetQty={(qty) => setQty(product.id, qty)}
               />
             ))}
           </div>

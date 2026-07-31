@@ -1,4 +1,5 @@
 import { CheckCircle, Minus, Package, Plus, Tag } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import type { Product } from '@/types'
 import { formatRupiah } from '@/lib/utils'
 
@@ -15,27 +16,33 @@ interface ProductCardProps {
   quantity: number
   onAdd: () => void
   onChangeQty: (delta: number) => void
+  onSetQty?: (qty: number) => void
 }
 
 /**
  * A single tappable product card for the sale form.
  * Shows image/placeholder, name, SKU, price, and an add/quantity stepper control.
  */
-export function ProductCard({ product, quantity, onAdd, onChangeQty }: ProductCardProps) {
+export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }: ProductCardProps) {
   const colorIdx = product.name.length % PRODUCT_COLORS.length
   const gradient = PRODUCT_COLORS[colorIdx]
   const isInCart = quantity > 0
+
+  const [localQty, setLocalQty] = useState<string>(quantity > 0 ? quantity.toString() : '')
+
+  useEffect(() => {
+    setLocalQty(quantity > 0 ? quantity.toString() : '')
+  }, [quantity])
 
   return (
     <div
       onClick={() => {
         if (!isInCart) onAdd()
       }}
-      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${
-        isInCart
+      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${isInCart
           ? 'border-primary ring-1 ring-primary shadow-sm shadow-primary/10 bg-primary/5'
           : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
-      }`}
+        }`}
     >
       {/* Product image / placeholder */}
       <div
@@ -99,9 +106,30 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty }: ProductCa
             >
               <Minus size={14} strokeWidth={3} />
             </button>
-            <span className="text-white font-bold tabular-nums text-xs sm:text-sm px-2 sm:px-3 min-w-[1.5rem] text-center">
-              {quantity}
-            </span>
+            <input
+              type="number"
+              placeholder="Qty"
+              value={localQty}
+              onChange={(e) => {
+                e.stopPropagation()
+                const val = e.target.value
+                setLocalQty(val)
+                if (val !== '' && onSetQty) {
+                  const parsed = parseInt(val, 10)
+                  if (!isNaN(parsed) && parsed > 0) {
+                    onSetQty(parsed)
+                  }
+                }
+              }}
+              onBlur={() => {
+                if (localQty === '' || parseInt(localQty, 10) <= 0) {
+                  if (onSetQty) onSetQty(0)
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              min={1}
+              className="w-10 bg-transparent text-white font-bold text-center text-xs sm:text-sm focus:outline-none tabular-nums placeholder:text-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+            />
             <button
               type="button"
               onClick={(e) => {

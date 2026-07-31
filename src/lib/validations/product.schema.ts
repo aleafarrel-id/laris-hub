@@ -13,19 +13,23 @@ export const productSchema = z.object({
     .nullable()
     .transform((val) => val || null),
   hpp: z
+    .coerce
     .number({
       required_error: 'HPP tidak boleh kosong',
       invalid_type_error: 'HPP harus berupa angka',
     })
-    .min(0, 'HPP tidak boleh negatif')
-    .max(999_999_999, 'HPP terlalu besar'),
+    .refine((val) => !isNaN(val), { message: 'HPP tidak boleh kosong' })
+    .refine((val) => val >= 0, { message: 'HPP tidak boleh negatif' })
+    .refine((val) => val <= 999_999_999, { message: 'HPP terlalu besar' }),
   selling_price: z
+    .coerce
     .number({
       required_error: 'Harga jual tidak boleh kosong',
       invalid_type_error: 'Harga jual harus berupa angka',
     })
-    .min(0, 'Harga jual tidak boleh negatif')
-    .max(999_999_999, 'Harga jual terlalu besar'),
+    .refine((val) => !isNaN(val), { message: 'Harga jual tidak boleh kosong' })
+    .refine((val) => val >= 0, { message: 'Harga jual tidak boleh negatif' })
+    .refine((val) => val <= 999_999_999, { message: 'Harga jual terlalu besar' }),
   description: z
     .string()
     .max(500, 'Deskripsi maksimal 500 karakter')
@@ -34,7 +38,6 @@ export const productSchema = z.object({
     .transform((val) => val || null),
   image_url: z
     .string()
-    .url('URL gambar tidak valid')
     .optional()
     .nullable()
     .transform((val) => val || null),

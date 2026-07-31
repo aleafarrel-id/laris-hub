@@ -34,8 +34,8 @@ export function ProductForm({
     defaultValues: {
       name: product?.name ?? '',
       sku: product?.sku ?? '',
-      hpp: product?.hpp ?? 0,
-      selling_price: product?.selling_price ?? 0,
+      hpp: product?.hpp ?? ('' as unknown as number),
+      selling_price: product?.selling_price ?? ('' as unknown as number),
       description: product?.description ?? '',
       image_url: product?.image_url ?? '',
       is_active: product?.is_active ?? true,
@@ -105,7 +105,7 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-full relative">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-full relative">
       <div className="flex-1 px-5 py-6 pb-24 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
           {/* Left column: image & status toggle */}
@@ -184,7 +184,7 @@ export function ProductForm({
                 <Input
                   id="hpp"
                   label="Modal Dasar (HPP)"
-                  {...register('hpp', { valueAsNumber: true })}
+                  {...register('hpp')}
                   error={errors.hpp?.message}
                   type="number"
                   inputMode="numeric"
@@ -197,7 +197,7 @@ export function ProductForm({
                   <Input
                     id="selling_price"
                     label="Harga Jual"
-                    {...register('selling_price', { valueAsNumber: true })}
+                    {...register('selling_price')}
                     error={errors.selling_price?.message}
                     type="number"
                     inputMode="numeric"

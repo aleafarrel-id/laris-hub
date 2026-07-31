@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Portal } from './Portal'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -43,12 +44,7 @@ export function ConfirmDialog({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className="fixed inset-0 z-[100] antialiased"
-          style={{ left: 'var(--sidebar-offset)' }}
-          role="alertdialog"
-          aria-modal="true"
-        >
+        <Portal className="z-[100]" role="alertdialog">
           <motion.div
             className="absolute inset-0 bg-neutral-900/60"
             initial={{ opacity: 0 }}
@@ -86,7 +82,7 @@ export function ConfirmDialog({
                     {title}
                   </h3>
                 </div>
-                <div className="flex flex-col gap-1 mb-5">
+                <div className="flex flex-col gap-1.5 mb-5 text-sm text-neutral-600 leading-relaxed">
                   {description}
                 </div>
               </div>
@@ -111,7 +107,7 @@ export function ConfirmDialog({
               </div>
             </motion.div>
           </div>
-        </div>
+        </Portal>
       )}
     </AnimatePresence>
   )

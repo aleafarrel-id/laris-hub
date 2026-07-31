@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,11 +27,15 @@ export const Route = createFileRoute('/_auth')({
 function AuthLayout() {
   const { profile } = useAuth()
 
+  useEffect(() => {
+    document.body.style.setProperty('--sidebar-offset', 'var(--layout-sidebar-width)')
+    return () => {
+      document.body.style.setProperty('--sidebar-offset', '0px')
+    }
+  }, [])
+
   return (
-    <div
-      className="flex min-h-dvh bg-neutral-50/50"
-      style={{ '--sidebar-offset': 'var(--layout-sidebar-width)' } as React.CSSProperties}
-    >
+    <div className="flex min-h-dvh bg-neutral-50/50">
       <Sidebar role={profile?.role} userName={profile?.full_name} />
 
       <div className="flex-1 min-w-0 md:ml-64 pb-[72px] md:pb-0 flex flex-col">

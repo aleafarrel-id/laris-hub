@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   AlertTriangle,
@@ -15,10 +15,10 @@ import {
   ShieldOff,
   Trash2,
   UserCheck,
-  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Portal } from '@/components/ui/Portal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import {
   useDeleteKasir,
@@ -73,16 +73,21 @@ function DeleteConfirmModal({
   isPending: boolean
 }) {
   return (
-    <div
-      className="fixed inset-0 bg-neutral-900/60 z-[60] flex items-center justify-center p-4"
-      onClick={(e) => e.target === e.currentTarget && onCancel()}
-    >
+    <Portal className="z-[60] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-neutral-900/60"
+        onClick={onCancel}
+      />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ type: 'spring', duration: 0.25, bounce: 0 }}
-        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 will-change-transform"
+        className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 will-change-transform"
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center flex-shrink-0">
@@ -120,35 +125,45 @@ function DeleteConfirmModal({
           </Button>
         </div>
       </motion.div>
-    </div>
+    </Portal>
   )
 }
 
 export function KasirDetailDrawer({
+  isOpen,
   kasir,
   onClose,
   onToggle,
   isToggling,
   adminId,
 }: {
-  kasir: Profile
+  isOpen: boolean
+  kasir: Profile | null
   onClose: () => void
   onToggle: (id: string, isActive: boolean) => void
   isToggling: boolean
   adminId?: string
 }) {
+  const [cachedKasir, setCachedKasir] = useState<Profile | null>(kasir)
+
+  useEffect(() => {
+    if (kasir) setCachedKasir(kasir)
+  }, [kasir])
+
+  const kasirToRender = kasir || cachedKasir
+
   const [isEditing, setIsEditing] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [editForm, setEditForm] = useState({
-    full_name: kasir.full_name,
-    phone: kasir.phone ?? '',
+    full_name: kasirToRender?.full_name || '',
+    phone: kasirToRender?.phone ?? '',
     email: '',
     password: '',
   })
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
 
-  const { data: authDetails, isLoading: isLoadingEmail } = useKasirAuthDetails(kasir.id)
+  const { data: authDetails, isLoading: isLoadingEmail } = useKasirAuthDetails(kasirToRender?.id || '')
   const { mutate: updateKasir, isPending: isUpdating } = useUpdateKasir(() => {
     setIsEditing(false)
     setEditForm((f) => ({ ...f, password: '', email: '' }))
@@ -167,9 +182,9 @@ export function KasirDetailDrawer({
   }
 
   const handleSave = () => {
-    if (!validateEdit()) return
+    if (!validateEdit() || !kasirToRender) return
     updateKasir({
-      id: kasir.id,
+      id: kasirToRender.id,
       full_name: editForm.full_name.trim(),
       phone: editForm.phone.trim() || null,
       email: editForm.email.trim() || undefined,
@@ -178,30 +193,36 @@ export function KasirDetailDrawer({
   }
 
   const handleCancel = () => {
+    if (!kasirToRender) return
     setIsEditing(false)
-    setEditForm({ full_name: kasir.full_name, phone: kasir.phone ?? '', email: '', password: '' })
+    setEditForm({ full_name: kasirToRender.full_name, phone: kasirToRender.phone ?? '', email: '', password: '' })
     setEditErrors({})
   }
 
-  const isOwnAccount = kasir.id === adminId
+  const isOwnAccount = kasirToRender?.id === adminId
+
+  if (!kasirToRender) return null
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-neutral-900/60 z-50 flex"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
-      >
-        <motion.aside
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="ml-auto w-full max-w-sm bg-white h-full overflow-y-auto flex flex-col shadow-2xl will-change-transform"
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <Portal className="z-50 flex">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-neutral-900/60"
+              onClick={onClose}
+            />
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="relative ml-auto w-full max-w-sm bg-white h-full overflow-y-auto flex flex-col shadow-2xl will-change-transform"
+            >
           {/* Header */}
           <div className="sticky top-0 bg-white z-10 px-5 py-4 border-b border-neutral-100 flex items-center gap-3">
             <button
@@ -213,30 +234,22 @@ export function KasirDetailDrawer({
               <ArrowLeft size={18} className="text-neutral-600" />
             </button>
             <h2 className="text-base font-bold text-neutral-900 flex-1">Detail Kasir</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors"
-              aria-label="Tutup panel"
-            >
-              <X size={16} className="text-neutral-400" />
-            </button>
           </div>
 
           {/* Profile hero */}
           <div
-            className={`px-5 py-5 border-b border-neutral-100 ${kasir.is_active ? 'bg-neutral-50/30' : 'bg-amber-50/40'}`}
+            className={`px-5 py-5 border-b border-neutral-100 ${kasirToRender.is_active ? 'bg-neutral-50/30' : 'bg-amber-50/40'}`}
           >
             <div className="flex items-center gap-4">
               <div className="relative">
-                <KasirAvatar profile={kasir} size="lg" />
+                <KasirAvatar profile={kasirToRender} size="lg" />
                 <span
-                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasir.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasirToRender.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`}
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-lg font-bold text-neutral-900 leading-tight truncate">
-                  {kasir.full_name}
+                  {kasirToRender.full_name}
                 </p>
                 {isLoadingEmail ? (
                   <Skeleton className="h-3.5 w-36 mt-1" />
@@ -246,10 +259,10 @@ export function KasirDetailDrawer({
                   </p>
                 )}
                 <span
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasirToRender.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
                 >
-                  {kasir.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
-                  {kasir.is_active ? 'Aktif' : 'Ditangguhkan'}
+                  {kasirToRender.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
+                  {kasirToRender.is_active ? 'Aktif' : 'Ditangguhkan'}
                 </span>
               </div>
             </div>
@@ -266,11 +279,11 @@ export function KasirDetailDrawer({
                     value={authDetails?.email}
                     isLoading={isLoadingEmail}
                   />
-                  <InfoRow icon={Phone} label="No. HP" value={kasir.phone} />
+                  <InfoRow icon={Phone} label="No. HP" value={kasirToRender.phone} />
                   <InfoRow
                     icon={Calendar}
                     label="Bergabung Sejak"
-                    value={formatDate(kasir.created_at)}
+                    value={formatDate(kasirToRender.created_at)}
                   />
                   <InfoRow
                     icon={Clock}
@@ -289,8 +302,8 @@ export function KasirDetailDrawer({
                     type="button"
                     onClick={() => {
                       setEditForm({
-                        full_name: kasir.full_name,
-                        phone: kasir.phone ?? '',
+                        full_name: kasirToRender.full_name,
+                        phone: kasirToRender.phone ?? '',
                         email: '',
                         password: '',
                       })
@@ -307,16 +320,15 @@ export function KasirDetailDrawer({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => onToggle(kasir.id, !kasir.is_active)}
+                      onClick={() => onToggle(kasirToRender.id, !kasirToRender.is_active)}
                       disabled={isToggling}
-                      className={`w-full border ${
-                        kasir.is_active
+                      className={`w-full border ${kasirToRender.is_active
                           ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'
                           : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
-                      }`}
-                      leftIcon={kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
+                        }`}
+                      leftIcon={kasirToRender.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
                     >
-                      {kasir.is_active ? 'Tangguhkan Akun' : 'Aktifkan Kembali'}
+                      {kasirToRender.is_active ? 'Tangguhkan Akun' : 'Aktifkan Kembali'}
                     </Button>
                   )}
 
@@ -438,16 +450,18 @@ export function KasirDetailDrawer({
                 </div>
               </div>
             )}
-          </div>
-        </motion.aside>
-      </motion.div>
+            </div>
+          </motion.aside>
+        </Portal>
+      )}
+    </AnimatePresence>
 
       {/* Delete confirmation modal - rendered above drawer (z-[60]) */}
       <AnimatePresence>
         {showDeleteConfirm && (
           <DeleteConfirmModal
-            kasir={kasir}
-            onConfirm={() => deleteKasir(kasir.id)}
+            kasir={kasirToRender}
+            onConfirm={() => deleteKasir(kasirToRender.id)}
             onCancel={() => setShowDeleteConfirm(false)}
             isPending={isDeleting}
           />

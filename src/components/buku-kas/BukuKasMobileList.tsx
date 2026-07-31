@@ -2,9 +2,11 @@ import { Edit3, TrendingDown, TrendingUp, Trash2, CheckCircle2 } from 'lucide-re
 import { motion } from 'motion/react'
 import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
+import { useState } from 'react'
 
 interface BukuKasMobileListProps {
   transactions: TransactionWithProfile[]
@@ -53,18 +55,22 @@ export function BukuKasMobileList({
   onSelectKasirProfile,
   onUpdateStatus,
 }: BukuKasMobileListProps) {
+  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+
   if (isLoading) return <MobileListSkeleton isAdmin={isAdmin} />
 
   return (
-    <div className="space-y-2 md:hidden">
-      {transactions.map((tx, idx) => (
-        <motion.div
-          key={tx.id}
-          className="app-card p-3.5 flex items-center gap-3 relative"
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut' as const, delay: Math.min(idx * 0.03, 0.3) }}
-        >
+    <>
+      <div className="space-y-2 md:hidden">
+        {transactions.map((tx, idx) => (
+          <motion.div
+            key={tx.id}
+            onClick={() => setViewingTx(tx)}
+            className="app-card p-3.5 flex items-center gap-3 relative cursor-pointer hover:border-primary/30 transition-colors"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' as const, delay: Math.min(idx * 0.03, 0.3) }}
+          >
           <div
             className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
               tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
@@ -81,7 +87,10 @@ export function BukuKasMobileList({
             <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEditTransaction(tx as unknown as TransactionWithItems)
+                }}
                 className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Edit Transaksi"
               >
@@ -89,7 +98,10 @@ export function BukuKasMobileList({
               </button>
               <button
                 type="button"
-                onClick={() => onDeleteTransaction(tx.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteTransaction(tx.id)
+                }}
                 className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
                 title="Hapus Transaksi"
               >
@@ -115,7 +127,10 @@ export function BukuKasMobileList({
               <div className="mt-1.5">
                 <button
                   type="button"
-                  onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                  }}
                   className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
                 >
                   <span className="truncate max-w-[120px]">{tx.profiles.full_name}</span>
@@ -144,7 +159,10 @@ export function BukuKasMobileList({
                 {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                   <button
                     type="button"
-                    onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onUpdateStatus(tx.id, 'sukses')
+                    }}
                     className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
                   >
                     <CheckCircle2 size={12} />
@@ -156,6 +174,13 @@ export function BukuKasMobileList({
           </div>
         </motion.div>
       ))}
-    </div>
+      </div>
+
+      <TransactionDetailModal
+        isOpen={!!viewingTx}
+        onClose={() => setViewingTx(null)}
+        transaction={viewingTx as unknown as TransactionWithItems}
+      />
+    </>
   )
 }

@@ -9,19 +9,22 @@ import type { TransactionWithItems } from '@/types'
 interface TransactionListItemProps {
   tx: TransactionWithItems
   idx: number
+  onClick?: (tx: TransactionWithItems) => void
   onUpdateStatus?: (id: string, status: 'sukses' | 'pending') => void
 }
 
 export const TransactionListItem = memo(function TransactionListItem({
   tx,
   idx,
+  onClick,
   onUpdateStatus,
 }: TransactionListItemProps) {
   const isPendingQris = tx.type === 'penjualan' && tx.status === 'pending'
 
   return (
     <motion.div
-      className={`app-card p-3.5 flex items-stretch gap-3 ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''}`}
+      onClick={() => onClick?.(tx)}
+      className={`app-card p-3.5 flex items-stretch gap-3 cursor-pointer hover:border-primary/30 transition-colors ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''}`}
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut', delay: idx * 0.04 }}
@@ -70,7 +73,10 @@ export const TransactionListItem = memo(function TransactionListItem({
         {isPendingQris && onUpdateStatus && (
           <button
             type="button"
-            onClick={() => onUpdateStatus(tx.id, 'sukses')}
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdateStatus(tx.id, 'sukses')
+            }}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95 mt-2"
           >
             <CheckCircle2 size={15} />

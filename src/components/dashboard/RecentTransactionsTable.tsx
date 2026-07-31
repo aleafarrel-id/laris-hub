@@ -2,9 +2,11 @@ import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from '
 import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatRupiah, formatTime } from '@/lib/utils'
 import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
+import { useState } from 'react'
 
 interface RecentTransactionsTableProps {
   transactions: TransactionWithProfile[] | undefined
@@ -25,6 +27,8 @@ export function RecentTransactionsTable({
   onSelectKasirProfile,
   onUpdateStatus,
 }: RecentTransactionsTableProps) {
+  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -58,7 +62,8 @@ export function RecentTransactionsTable({
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className="flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative"
+            onClick={() => setViewingTx(tx)}
+            className="flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer"
           >
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -71,7 +76,10 @@ export function RecentTransactionsTable({
               <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                 <button
                   type="button"
-                  onClick={() => onEditTransaction(tx as TransactionWithItems)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEditTransaction(tx as TransactionWithItems)
+                  }}
                   className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                   title="Edit Transaksi"
                 >
@@ -79,7 +87,10 @@ export function RecentTransactionsTable({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDeleteTransaction(tx.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteTransaction(tx.id)
+                  }}
                   className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                   title="Hapus Transaksi"
                 >
@@ -92,13 +103,14 @@ export function RecentTransactionsTable({
                 <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
               </div>
 
-
-
               {tx.profiles && (
                 <div className="mt-1.5">
                   <button
                     type="button"
-                    onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                    }}
                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
                   >
                     <span className="truncate max-w-[120px]">{tx.profiles.full_name}</span>
@@ -124,7 +136,10 @@ export function RecentTransactionsTable({
                   {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                     <button
                       type="button"
-                      onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUpdateStatus(tx.id, 'sukses')
+                      }}
                       className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
                     >
                       <CheckCircle2 size={12} />
@@ -162,7 +177,11 @@ export function RecentTransactionsTable({
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {transactions.map((tx) => (
-              <tr key={tx.id} className="hover:bg-neutral-50/80 transition-colors">
+              <tr 
+                key={tx.id} 
+                onClick={() => setViewingTx(tx)}
+                className="hover:bg-neutral-50/80 transition-colors cursor-pointer"
+              >
                 <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                   {formatTime(tx.transaction_at)}
                 </td>
@@ -183,7 +202,10 @@ export function RecentTransactionsTable({
                 <td className="py-2.5 px-4 text-neutral-600 truncate max-w-[120px] align-top">
                   <button
                     type="button"
-                    onClick={() => onSelectKasirProfile(tx.profiles as Partial<Profile>)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                    }}
                     className="hover:text-primary transition-colors focus:outline-none"
                   >
                     {tx.profiles?.full_name ?? 'Sistem'}
@@ -202,7 +224,10 @@ export function RecentTransactionsTable({
                     {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button
                         type="button"
-                        onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateStatus(tx.id, 'sukses')
+                        }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
                       >
                         <CheckCircle2 size={14} />
@@ -211,7 +236,10 @@ export function RecentTransactionsTable({
                     )}
                     <button
                       type="button"
-                      onClick={() => onEditTransaction(tx as TransactionWithItems)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEditTransaction(tx as unknown as TransactionWithItems)
+                      }}
                       className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                       title="Edit Transaksi"
                     >
@@ -219,7 +247,10 @@ export function RecentTransactionsTable({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onDeleteTransaction(tx.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteTransaction(tx.id)
+                      }}
                       className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                       title="Hapus Transaksi"
                     >
@@ -232,6 +263,12 @@ export function RecentTransactionsTable({
           </tbody>
         </table>
       </div>
+
+      <TransactionDetailModal
+        isOpen={!!viewingTx}
+        onClose={() => setViewingTx(null)}
+        transaction={viewingTx as unknown as TransactionWithItems}
+      />
     </>
   )
 }

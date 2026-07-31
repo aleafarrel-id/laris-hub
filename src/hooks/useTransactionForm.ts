@@ -41,6 +41,20 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
     })
   }, [])
 
+  const setQty = useCallback((productId: string, qty: number) => {
+    setCart((prev) => {
+      const existing = prev.get(productId)
+      if (!existing) return prev
+      const next = new Map(prev)
+      if (qty <= 0) {
+        next.delete(productId)
+      } else {
+        next.set(productId, { ...existing, quantity: qty })
+      }
+      return next
+    })
+  }, [])
+
   const { totalAmount, totalItems, cartArray } = useMemo(() => {
     let amount = 0
     let items = 0
@@ -53,7 +67,7 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
     return { totalAmount: amount, totalItems: items, cartArray: arr }
   }, [cart])
 
-  return { cart, setCart, addToCart, changeQty, totalAmount, totalItems, cartArray }
+  return { cart, setCart, addToCart, changeQty, setQty, totalAmount, totalItems, cartArray }
 }
 
 /**

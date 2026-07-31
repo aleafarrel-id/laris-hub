@@ -1,6 +1,6 @@
-import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
+import { Portal } from './Portal'
 
 interface ModalProps {
   isOpen: boolean
@@ -71,13 +71,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className="fixed inset-0 z-50 antialiased"
-          style={{ left: 'var(--sidebar-offset)' }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-        >
+        <Portal className="z-50" role="dialog" aria-labelledby="modal-title">
           <motion.div
             className="absolute inset-0 bg-neutral-900/60"
             initial={{ opacity: 0 }}
@@ -111,27 +105,21 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
                 </div>
               )}
 
-              <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
-                <h2
-                  id="modal-title"
-                  className="text-base font-semibold text-neutral-900 text-balance tracking-tight"
-                >
-                  {title}
-                </h2>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all active:scale-[0.96]"
-                  aria-label="Tutup modal"
-                >
-                  <X size={18} strokeWidth={2} />
-                </button>
-              </div>
+              {title && (
+                <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
+                  <h2
+                    id="modal-title"
+                    className="text-base font-semibold text-neutral-900 text-balance tracking-tight"
+                  >
+                    {title}
+                  </h2>
+                </div>
+              )}
 
               <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
             </motion.div>
           </div>
-        </div>
+        </Portal>
       )}
     </AnimatePresence>
   )
