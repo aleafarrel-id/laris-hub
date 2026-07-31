@@ -1,5 +1,5 @@
-import { Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from 'lucide-react'
-import { TransactionBadge } from '@/components/ui/Badge'
+import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from 'lucide-react'
+import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
@@ -14,6 +14,7 @@ interface RecentTransactionsTableProps {
   onEditTransaction: (tx: TransactionWithItems) => void
   onDeleteTransaction: (id: string) => void
   onSelectKasirProfile: (profile: Partial<Profile>) => void
+  onUpdateStatus?: (id: string, status: 'sukses' | 'pending') => void
 }
 
 export function RecentTransactionsTable({
@@ -23,6 +24,7 @@ export function RecentTransactionsTable({
   onEditTransaction,
   onDeleteTransaction,
   onSelectKasirProfile,
+  onUpdateStatus,
 }: RecentTransactionsTableProps) {
   if (isLoading) {
     return (
@@ -71,7 +73,7 @@ export function RecentTransactionsTable({
                 <button
                   type="button"
                   onClick={() => onEditTransaction(tx as TransactionWithItems)}
-                  className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                  className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                   title="Edit Transaksi"
                 >
                   <Edit3 size={14} />
@@ -79,7 +81,7 @@ export function RecentTransactionsTable({
                 <button
                   type="button"
                   onClick={() => onDeleteTransaction(tx.id)}
-                  className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
+                  className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                   title="Hapus Transaksi"
                 >
                   <Trash2 size={14} />
@@ -131,6 +133,16 @@ export function RecentTransactionsTable({
                     {tx.type === 'penjualan' ? '+' : '−'}
                     {formatRupiah(tx.total_amount)}
                   </span>
+                  {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                      className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <CheckCircle2 size={12} />
+                      Selesai
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -211,7 +223,15 @@ export function RecentTransactionsTable({
                   )}
                 </td>
                 <td className="py-2.5 px-4">
-                  <TransactionBadge type={tx.type} />
+                  <div className="flex flex-col items-start gap-1">
+                    <TransactionBadge type={tx.type} />
+                    {tx.type === 'penjualan' && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <PaymentMethodBadge method={tx.payment_method} />
+                        <StatusBadge status={tx.status} />
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="py-2.5 px-4 text-neutral-600 truncate max-w-[120px]">
                   <button
@@ -231,11 +251,21 @@ export function RecentTransactionsTable({
                   {formatRupiah(tx.total_amount)}
                 </td>
                 <td className="py-2.5 px-4 text-right">
-                  <div className="flex justify-end gap-1">
+                  <div className="flex justify-end items-center gap-1">
+                    {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                      <button
+                        type="button"
+                        onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
+                      >
+                        <CheckCircle2 size={14} />
+                        Selesai
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onEditTransaction(tx as TransactionWithItems)}
-                      className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors"
+                      className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                       title="Edit Transaksi"
                     >
                       <Edit3 size={15} />
@@ -243,7 +273,7 @@ export function RecentTransactionsTable({
                     <button
                       type="button"
                       onClick={() => onDeleteTransaction(tx.id)}
-                      className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
+                      className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                       title="Hapus Transaksi"
                     >
                       <Trash2 size={15} />

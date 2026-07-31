@@ -1,5 +1,6 @@
-import { Edit3, TrendingDown, TrendingUp, Trash2 } from 'lucide-react'
+import { Edit3, TrendingDown, TrendingUp, Trash2, CheckCircle2 } from 'lucide-react'
 import { motion } from 'motion/react'
+import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsMobileDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
@@ -13,6 +14,7 @@ interface BukuKasMobileListProps {
   onEditTransaction: (tx: TransactionWithItems) => void
   onDeleteTransaction: (id: string) => void
   onSelectKasirProfile: (profile: Partial<Profile>) => void
+  onUpdateStatus?: (id: string, status: 'sukses' | 'pending') => void
 }
 
 const SKELETON_COUNT = 5
@@ -50,6 +52,7 @@ export function BukuKasMobileList({
   onEditTransaction,
   onDeleteTransaction,
   onSelectKasirProfile,
+  onUpdateStatus,
 }: BukuKasMobileListProps) {
   if (isLoading) return <MobileListSkeleton isAdmin={isAdmin} />
 
@@ -113,6 +116,13 @@ export function BukuKasMobileList({
                 )}
               </div>
             )}
+            
+            {tx.type === 'penjualan' && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <PaymentMethodBadge method={tx.payment_method} />
+                <StatusBadge status={tx.status} />
+              </div>
+            )}
 
             {isAdmin && tx.profiles && (
               <div className="mt-1.5">
@@ -143,6 +153,16 @@ export function BukuKasMobileList({
                   <span className="text-[10px] text-neutral-400 tabular-nums mt-0.5">
                     profit {formatRupiah(tx.total_profit)}
                   </span>
+                )}
+                {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                    className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                  >
+                    <CheckCircle2 size={12} />
+                    Selesai
+                  </button>
                 )}
               </div>
             </div>

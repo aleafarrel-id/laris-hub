@@ -9,6 +9,7 @@ export type BukuKasSearch = {
   customTo?: string
   typeFilter?: TransactionFilters['type']
   kasirFilter?: string
+  paymentMethodFilter?: TransactionFilters['paymentMethod']
 }
 
 export const todayStart = () => {
@@ -46,6 +47,7 @@ export function useBukuKasFilters() {
   const customTo = search.customTo || new Date().toISOString().split('T')[0]
   const typeFilter = search.typeFilter || 'all'
   const kasirFilter = search.kasirFilter || 'all'
+  const paymentMethodFilter = search.paymentMethodFilter || 'all'
 
   const updateSearch = (updates: Partial<BukuKasSearch>) => {
     navigate({ search: (prev) => ({ ...prev, ...updates }) })
@@ -64,8 +66,9 @@ export function useBukuKasFilters() {
       dateRange,
       type: typeFilter,
       recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
+      paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
     }
-  }, [quickRange, customFrom, customTo, typeFilter, kasirFilter])
+  }, [quickRange, customFrom, customTo, typeFilter, kasirFilter, paymentMethodFilter])
 
   return {
     quickRange,
@@ -73,6 +76,7 @@ export function useBukuKasFilters() {
     customTo,
     typeFilter,
     kasirFilter,
+    paymentMethodFilter,
     filters,
     updateSearch,
   }

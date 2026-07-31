@@ -12,6 +12,8 @@ export type Transaction = Database['public']['Tables']['transactions']['Row']
 export type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 export type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
 
+export type PaymentMethod = 'tunai' | 'qris'
+export type TransactionStatus = 'sukses' | 'pending'
 export type TransactionItem = Database['public']['Tables']['transaction_items']['Row']
 export type TransactionItemInsert = Database['public']['Tables']['transaction_items']['Insert']
 
@@ -47,6 +49,8 @@ export interface TransactionFilters {
   recordedBy?: string
   search?: string
   limit?: number
+  paymentMethod?: PaymentMethod | 'all'
+  status?: TransactionStatus
 }
 
 export interface DailySummary {
@@ -59,6 +63,9 @@ export interface DailySummary {
 
 export interface KPISummary {
   omzet: number
+  omzetTunai?: number
+  omzetQris?: number
+  pendingQris?: number
   pengeluaran: number
   profit: number
   transactionCount: number

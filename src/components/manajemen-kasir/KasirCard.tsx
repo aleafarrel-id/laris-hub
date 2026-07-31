@@ -24,7 +24,7 @@ export function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => v
       <div className="relative flex-shrink-0">
         <KasirAvatar profile={kasir} />
         <span
-          className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`}
+          className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${kasir.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`}
         />
       </div>
 
@@ -50,7 +50,7 @@ export function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => v
       <div className="flex-shrink-0 flex flex-col items-end gap-2">
         <span
           className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
-            kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+            kasir.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
           }`}
         >
           {kasir.is_active ? <CheckCircle2 size={10} /> : <ShieldOff size={10} />}

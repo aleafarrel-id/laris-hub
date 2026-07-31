@@ -11,6 +11,7 @@ import {
   getTransactions,
   updateExpenseTransaction,
   updateSaleTransaction,
+  updateTransactionStatus,
 } from '@/services/transaction.service'
 import { getKPISummaryForRange } from '@/services/dashboard.service'
 import { useAuthStore } from '@/store/auth.store'
@@ -71,6 +72,9 @@ export function useTransactionSummary(filters: Pick<TransactionFilters, 'dateRan
       const kpi = await getKPISummaryForRange(from, to, filters.recordedBy)
       return {
         totalSales: filters.type === 'pengeluaran' ? 0 : kpi.omzet,
+        totalSalesTunai: filters.type === 'pengeluaran' ? 0 : (kpi.omzetTunai ?? 0),
+        totalSalesQris: filters.type === 'pengeluaran' ? 0 : (kpi.omzetQris ?? 0),
+        totalPendingQris: filters.type === 'pengeluaran' ? 0 : (kpi.pendingQris ?? 0),
         totalExpenses: filters.type === 'penjualan' ? 0 : kpi.pengeluaran,
         totalProfit: filters.type === 'pengeluaran' ? 0 : kpi.profit,
       }
@@ -153,6 +157,15 @@ export const useUpdateExpense = createTransactionMutation<UpdateExpenseArgs, any
   {
     successMessage: 'Pengeluaran berhasil diperbarui!',
     errorAction: 'memperbarui pengeluaran',
+  },
+)
+
+type UpdateStatusArgs = { id: string; status: 'sukses' | 'pending' }
+export const useUpdateTransactionStatus = createTransactionMutation<UpdateStatusArgs, any>(
+  ({ id, status }) => updateTransactionStatus(id, status),
+  {
+    successMessage: 'Status transaksi berhasil diperbarui!',
+    errorAction: 'memperbarui status transaksi',
   },
 )
 

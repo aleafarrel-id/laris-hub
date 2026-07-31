@@ -26,7 +26,7 @@ export async function getTransactions(
   let query = supabase
     .from('transactions')
     .select(`
-      id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at,
+      id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at, payment_method, status,
       transaction_items(product_name, quantity),
       profiles!recorded_by(id, full_name, avatar_url, phone)
     `, { count: 'exact' })
@@ -49,6 +49,12 @@ export async function getTransactions(
   }
   if (filters.search) {
     query = query.ilike('description', `%${filters.search}%`)
+  }
+  if (filters.paymentMethod && filters.paymentMethod !== 'all') {
+    query = query.eq('payment_method', filters.paymentMethod)
+  }
+  if (filters.status) {
+    query = query.eq('status', filters.status)
   }
 
   const { data, error, count } = await query
@@ -83,7 +89,7 @@ export async function getTransactionWithItems(id: string): Promise<TransactionWi
   const { data, error } = await supabase
     .from('transactions')
     .select(`
-      id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at,
+      id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at, payment_method, status,
       transaction_items(id, transaction_id, product_id, product_name, product_hpp, selling_price, quantity, subtotal, profit, created_at),
       profiles!recorded_by(id, full_name, avatar_url, phone)
     `)
@@ -105,11 +111,26 @@ export async function updateTransaction(
     .from('transactions')
     .update({ ...updates, updated_at: nowIso() })
     .eq('id', id)
-    .select('id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at')
+    .select('id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at, payment_method, status')
     .single()
 
   if (error) throw error
   return data as Transaction
+}
+
+/**
+ * Update transaction status.
+ */
+export async function updateTransactionStatus(
+  id: string,
+  status: 'sukses' | 'pending'
+): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({ status, updated_at: nowIso() })
+    .eq('id', id)
+
+  if (error) throw error
 }
 
 /**

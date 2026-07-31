@@ -1,5 +1,5 @@
-import { Edit3, Trash2 } from 'lucide-react'
-import { TransactionBadge } from '@/components/ui/Badge'
+import { Edit3, Trash2, CheckCircle2 } from 'lucide-react'
+import { TransactionBadge, PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionItemsDisplay } from '@/components/ui/TransactionItemsDisplay'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
@@ -13,11 +13,11 @@ interface BukuKasTableDesktopProps {
   onEditTransaction: (tx: TransactionWithItems) => void
   onDeleteTransaction: (id: string) => void
   onSelectKasirProfile: (profile: Partial<Profile>) => void
+  onUpdateStatus?: (id: string, status: 'sukses' | 'pending') => void
 }
 
 const TABLE_SKELETON_ROWS = 5
 
-/** Desktop table skeleton while transactions are loading. */
 function TableSkeleton({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="app-card overflow-hidden hidden md:block">
@@ -35,7 +35,6 @@ function TableSkeleton({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {Array.from({ length: TABLE_SKELETON_ROWS }, (_, k) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
               <tr key={k}>
                 <td className="py-3 px-4"><Skeleton className="h-4 w-24" /></td>
                 <td className="py-3 px-4"><Skeleton className="h-4 w-48" /></td>
@@ -68,10 +67,6 @@ function TableHeader({
   )
 }
 
-/**
- * Desktop-only table view of Buku Kas transactions.
- * Rendered only on `md:` breakpoints and above.
- */
 export function BukuKasTableDesktop({
   transactions,
   isAdmin,
@@ -79,6 +74,7 @@ export function BukuKasTableDesktop({
   onEditTransaction,
   onDeleteTransaction,
   onSelectKasirProfile,
+  onUpdateStatus,
 }: BukuKasTableDesktopProps) {
   if (isLoading) return <TableSkeleton isAdmin={isAdmin} />
 
@@ -94,7 +90,7 @@ export function BukuKasTableDesktop({
               {isAdmin && <TableHeader>Kasir</TableHeader>}
               <TableHeader align="right">Jumlah</TableHeader>
               {isAdmin && <TableHeader align="right">Profit</TableHeader>}
-              {isAdmin && <th className="w-20" />}
+              <th className="w-32" />
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
@@ -121,7 +117,15 @@ export function BukuKasTableDesktop({
                   )}
                 </td>
                 <td className="py-3 px-4">
-                  <TransactionBadge type={tx.type} />
+                  <div className="flex flex-col items-start gap-1">
+                    <TransactionBadge type={tx.type} />
+                    {tx.type === 'penjualan' && (
+                      <div className="flex items-center gap-1">
+                        <PaymentMethodBadge method={tx.payment_method} />
+                        <StatusBadge status={tx.status} />
+                      </div>
+                    )}
+                  </div>
                 </td>
                 {isAdmin && (
                   <td className="py-3 px-4 text-neutral-600 truncate max-w-[120px]">
@@ -147,28 +151,40 @@ export function BukuKasTableDesktop({
                     {tx.type === 'penjualan' ? formatRupiah(tx.total_profit) : '-'}
                   </td>
                 )}
-                {isAdmin && (
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex justify-end gap-1">
+                <td className="py-3 px-4 text-right">
+                  <div className="flex justify-end items-center gap-1">
+                    {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button
                         type="button"
-                        onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
-                        className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors"
-                        title="Edit Transaksi"
+                        onClick={() => onUpdateStatus(tx.id, 'sukses')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
                       >
-                        <Edit3 size={15} />
+                        <CheckCircle2 size={14} />
+                        Selesai
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onDeleteTransaction(tx.id)}
-                        className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors"
-                        title="Hapus Transaksi"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
-                )}
+                    )}
+                    {isAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onEditTransaction(tx as unknown as TransactionWithItems)}
+                          className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                          title="Edit Transaksi"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteTransaction(tx.id)}
+                          className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                          title="Hapus Transaksi"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

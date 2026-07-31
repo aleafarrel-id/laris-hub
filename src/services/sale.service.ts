@@ -7,6 +7,8 @@ export interface CreateSalePayload {
   items: SaleItemFormData[]
   notes?: string | null
   transaction_at?: string
+  payment_method?: 'tunai' | 'qris'
+  status?: 'sukses' | 'pending'
 }
 
 /**
@@ -24,6 +26,8 @@ export async function createSaleTransaction(payload: CreateSalePayload): Promise
       p_notes: payload.notes ?? null,
       p_transaction_at: payload.transaction_at ?? nowIso(),
       p_items: payload.items,
+      p_payment_method: payload.payment_method ?? 'tunai',
+      p_status: payload.status ?? 'sukses',
     },
   )
 
@@ -47,6 +51,8 @@ export async function updateSaleTransaction(
       p_notes: payload.notes ?? null,
       p_transaction_at: payload.transaction_at ?? nowIso(),
       p_items: payload.items,
+      p_payment_method: payload.payment_method ?? 'tunai',
+      p_status: payload.status ?? 'sukses',
     },
   )
 

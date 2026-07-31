@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'
 import type { KPISummary } from '@/types'
-
 interface DailySummaryRow {
   date: string
   total_sales_count: number
@@ -8,6 +7,9 @@ interface DailySummaryRow {
   total_gross_profit: number
   total_expense: number
   net_cashflow: number
+  total_revenue_tunai: number
+  total_revenue_qris: number
+  total_pending_qris: number
 }
 
 /**
@@ -19,19 +21,32 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
 
   const { data, error } = await supabase
     .from('daily_summary')
-    .select('total_sales_count, total_revenue, total_gross_profit, total_expense')
+    .select(
+      'total_sales_count, total_revenue, total_gross_profit, total_expense, total_revenue_tunai, total_revenue_qris, total_pending_qris',
+    )
     .eq('date', dateStr)
     .maybeSingle()
 
   if (error) throw error
 
   if (!data) {
-    return { omzet: 0, pengeluaran: 0, profit: 0, transactionCount: 0 }
+    return {
+      omzet: 0,
+      omzetTunai: 0,
+      omzetQris: 0,
+      pendingQris: 0,
+      pengeluaran: 0,
+      profit: 0,
+      transactionCount: 0,
+    }
   }
 
   const row = data as DailySummaryRow
   return {
     omzet: Number(row.total_revenue),
+    omzetTunai: Number(row.total_revenue_tunai),
+    omzetQris: Number(row.total_revenue_qris),
+    pendingQris: Number(row.total_pending_qris),
     pengeluaran: Number(row.total_expense),
     profit: Number(row.total_gross_profit),
     transactionCount: Number(row.total_sales_count),
@@ -52,7 +67,7 @@ export async function getKPISummaryForRange(
 
   let query = supabase
     .from('transactions')
-    .select('type, total_amount, total_profit')
+    .select('type, total_amount, total_profit, payment_method, status')
     .gte('transaction_at', from.toISOString())
     .lte('transaction_at', endOfDay.toISOString())
 
@@ -64,19 +79,41 @@ export async function getKPISummaryForRange(
 
   if (error) throw error
 
-  type Row = { type: string; total_amount: number; total_profit: number }
+  type Row = {
+    type: string
+    total_amount: number
+    total_profit: number
+    payment_method: string
+    status: string
+  }
+
   return ((data ?? []) as Row[]).reduce(
     (acc, tx) => {
       if (tx.type === 'penjualan') {
-        acc.omzet += Number(tx.total_amount)
-        acc.profit += Number(tx.total_profit)
-        acc.transactionCount += 1
-      } else {
+        if (tx.status === 'sukses') {
+          acc.omzet += Number(tx.total_amount)
+          acc.profit += Number(tx.total_profit)
+          acc.transactionCount += 1
+
+          if (tx.payment_method === 'tunai') acc.omzetTunai! += Number(tx.total_amount)
+          if (tx.payment_method === 'qris') acc.omzetQris! += Number(tx.total_amount)
+        } else if (tx.status === 'pending' && tx.payment_method === 'qris') {
+          acc.pendingQris! += Number(tx.total_amount)
+        }
+      } else if (tx.status === 'sukses') {
         acc.pengeluaran += Number(tx.total_amount)
       }
       return acc
     },
-    { omzet: 0, pengeluaran: 0, profit: 0, transactionCount: 0 },
+    {
+      omzet: 0,
+      omzetTunai: 0,
+      omzetQris: 0,
+      pendingQris: 0,
+      pengeluaran: 0,
+      profit: 0,
+      transactionCount: 0,
+    },
   )
 }
 

@@ -23,12 +23,14 @@ interface BukuKasFiltersProps {
   customTo: string
   typeFilter: TransactionFilters['type']
   kasirFilter: string
+  paymentMethodFilter: TransactionFilters['paymentMethod']
   cashiers?: CashierOption[]
   onQuickRangeChange: (range: QuickRange) => void
   onCustomFromChange: (val: string) => void
   onCustomToChange: (val: string) => void
   onTypeFilterChange: (val: TransactionFilters['type']) => void
   onKasirFilterChange: (val: string) => void
+  onPaymentMethodFilterChange: (val: TransactionFilters['paymentMethod']) => void
 }
 
 export function BukuKasFilters({
@@ -38,18 +40,21 @@ export function BukuKasFilters({
   customTo,
   typeFilter,
   kasirFilter,
+  paymentMethodFilter,
   cashiers,
   onQuickRangeChange,
   onCustomFromChange,
   onCustomToChange,
   onTypeFilterChange,
   onKasirFilterChange,
+  onPaymentMethodFilterChange,
 }: BukuKasFiltersProps) {
   return (
-    <div className="flex flex-col gap-3 mb-4">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full min-w-0">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full min-w-0">
-          <Filter size={14} className="text-neutral-400 flex-shrink-0" />
+    <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Filter size={14} className="text-neutral-400 flex-shrink-0" />
+
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           {QUICK_RANGES.map(({ key, label }) => (
             <button
               key={key}
@@ -66,7 +71,9 @@ export function BukuKasFilters({
           ))}
         </div>
 
-        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-2">
+        <div className="h-5 w-px bg-neutral-200 flex-shrink-0 hidden sm:block" />
+
+        <div className="flex items-center gap-2 flex-wrap">
           {isAdmin && (
             <CustomSelect
               value={kasirFilter}
@@ -75,9 +82,19 @@ export function BukuKasFilters({
                 { value: 'all', label: 'Semua Kasir' },
                 ...(cashiers?.map((c) => ({ value: c.id, label: c.full_name })) || []),
               ]}
-              className="min-w-[130px]"
+              className="min-w-[120px]"
             />
           )}
+          <CustomSelect
+            value={paymentMethodFilter as string}
+            onChange={(val) => onPaymentMethodFilterChange(val as TransactionFilters['paymentMethod'])}
+            options={[
+              { value: 'all', label: 'Semua Metode' },
+              { value: 'tunai', label: 'Tunai' },
+              { value: 'qris', label: 'QRIS' },
+            ]}
+            className="min-w-[120px]"
+          />
           <CustomSelect
             value={typeFilter as string}
             onChange={(val) => onTypeFilterChange(val as TransactionFilters['type'])}
@@ -86,12 +103,13 @@ export function BukuKasFilters({
               { value: 'penjualan', label: 'Penjualan' },
               { value: 'pengeluaran', label: 'Pengeluaran' },
             ]}
+            className="min-w-[120px]"
           />
         </div>
       </div>
 
       {quickRange === 'custom' && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 bg-white border border-neutral-200 rounded-xl p-2 sm:p-1.5 shadow-sm w-full sm:max-w-fit">
+        <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-xl p-1.5 shadow-sm w-fit">
           <input
             type="date"
             value={customFrom}

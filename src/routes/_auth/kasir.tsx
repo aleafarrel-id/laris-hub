@@ -9,7 +9,7 @@ import { TransactionListItem } from '@/components/kasir/TransactionListItem'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
-import { useTodayTransactions } from '@/hooks/useTransactions'
+import { useTodayTransactions, useUpdateTransactionStatus } from '@/hooks/useTransactions'
 import { formatRupiah } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
 
@@ -23,6 +23,7 @@ function KasirPage() {
 
   const [showSaleModal, setShowSaleModal] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const updateStatusMutation = useUpdateTransactionStatus()
 
   const todayOmzet = useMemo(() => {
     return todayTx?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
@@ -165,7 +166,12 @@ function KasirPage() {
           {!isLoading && (
             <div className="space-y-2">
               {todayTx?.slice(0, 15).map((tx, idx) => (
-                <TransactionListItem key={tx.id} tx={tx as TransactionWithItems} idx={idx} />
+                <TransactionListItem
+                  key={tx.id}
+                  tx={tx as TransactionWithItems}
+                  idx={idx}
+                  onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
+                />
               ))}
             </div>
           )}

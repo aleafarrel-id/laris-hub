@@ -11,9 +11,10 @@ interface SummaryCardProps {
   color: string
   bg: string
   isLoading: boolean
+  subText?: React.ReactNode
 }
 
-function SummaryCard({ label, value, icon: Icon, color, bg, isLoading }: SummaryCardProps) {
+function SummaryCard({ label, value, icon: Icon, color, bg, isLoading, subText }: SummaryCardProps) {
   return (
     <motion.div
       className="app-card p-4 flex items-center gap-4"
@@ -32,9 +33,12 @@ function SummaryCard({ label, value, icon: Icon, color, bg, isLoading }: Summary
         {isLoading ? (
           <Skeleton className="h-6 w-3/4 rounded-md" />
         ) : (
-          <p className={`text-lg sm:text-xl md:text-2xl font-bold tabular-nums break-words ${color}`}>
-            {value}
-          </p>
+          <>
+            <p className={`text-lg sm:text-xl md:text-2xl font-bold tabular-nums break-words ${color}`}>
+              {value}
+            </p>
+            {subText && <div className="mt-1">{subText}</div>}
+          </>
         )}
       </div>
     </motion.div>
@@ -43,6 +47,9 @@ function SummaryCard({ label, value, icon: Icon, color, bg, isLoading }: Summary
 
 interface BukuKasSummaryProps {
   omzet: number
+  omzetTunai?: number
+  omzetQris?: number
+  pendingQris?: number
   pengeluaran: number
   profit: number
   net: number
@@ -53,7 +60,16 @@ interface BukuKasSummaryProps {
  * 4 summary cards for Buku Kas: Omzet, Pengeluaran, Profit Kotor, Profit Bersih.
  * Stagger animation via parent motion variants.
  */
-export function BukuKasSummary({ omzet, pengeluaran, profit, net, isLoading }: BukuKasSummaryProps) {
+export function BukuKasSummary({
+  omzet,
+  omzetTunai = 0,
+  omzetQris = 0,
+  pendingQris = 0,
+  pengeluaran,
+  profit,
+  net,
+  isLoading,
+}: BukuKasSummaryProps) {
   return (
     <motion.div
       className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"
@@ -71,6 +87,24 @@ export function BukuKasSummary({ omzet, pengeluaran, profit, net, isLoading }: B
         color="text-primary"
         bg="bg-primary/10"
         isLoading={isLoading}
+        subText={
+          <div className="text-[10px] sm:text-xs text-neutral-500 flex flex-col gap-0.5 mt-1">
+            <div className="flex justify-between gap-2">
+              <span>Tunai:</span>
+              <span className="font-semibold text-neutral-700">{formatRupiah(omzetTunai)}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span>QRIS:</span>
+              <span className="font-semibold text-neutral-700">{formatRupiah(omzetQris)}</span>
+            </div>
+            {pendingQris > 0 && (
+              <div className="flex justify-between gap-2 border-t border-neutral-100 pt-0.5 mt-0.5">
+                <span className="text-warning font-medium">Pending QRIS:</span>
+                <span className="font-semibold text-warning">{formatRupiah(pendingQris)}</span>
+              </div>
+            )}
+          </div>
+        }
       />
       <SummaryCard
         label="Total Pengeluaran"

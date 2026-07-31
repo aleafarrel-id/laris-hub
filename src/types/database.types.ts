@@ -99,6 +99,8 @@ export interface Database {
           expense_category: 'operasional' | 'bahan_baku' | 'lainnya' | null
           expense_items: Json | null
           notes: string | null
+          payment_method: 'tunai' | 'qris' | null
+          status: 'sukses' | 'pending' | null
           created_at: string
           updated_at: string
         }
@@ -113,6 +115,8 @@ export interface Database {
           expense_category?: 'operasional' | 'bahan_baku' | 'lainnya' | null
           expense_items?: Json | null
           notes?: string | null
+          payment_method?: 'tunai' | 'qris' | null
+          status?: 'sukses' | 'pending' | null
           created_at?: string
           updated_at?: string
         }
@@ -125,6 +129,8 @@ export interface Database {
           expense_category?: 'operasional' | 'bahan_baku' | 'lainnya' | null
           expense_items?: Json | null
           notes?: string | null
+          payment_method?: 'tunai' | 'qris' | null
+          status?: 'sukses' | 'pending' | null
           updated_at?: string
         }
         Relationships: []
@@ -171,6 +177,9 @@ export interface Database {
           total_gross_profit: number
           total_expense: number
           net_cashflow: number
+          total_revenue_tunai: number
+          total_revenue_qris: number
+          total_pending_qris: number
         }
         Relationships: []
       }

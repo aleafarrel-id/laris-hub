@@ -32,8 +32,8 @@ export function KasirStats({ kasirList }: KasirStatsProps) {
         {
           label: 'Tangguhkan',
           value: suspendedCount,
-          color: suspendedCount > 0 ? 'text-blue-700' : 'text-neutral-400',
-          bg: suspendedCount > 0 ? 'bg-blue-50' : 'bg-neutral-50',
+          color: suspendedCount > 0 ? 'text-amber-700' : 'text-neutral-400',
+          bg: suspendedCount > 0 ? 'bg-amber-50' : 'bg-neutral-50',
         },
       ].map(({ label, value, color, bg }) => (
         <div

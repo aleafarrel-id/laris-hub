@@ -85,15 +85,17 @@ function ManajemenKasirPage() {
               <span>Profil</span>
             </Link>
 
-            <Button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="flex-shrink-0 h-[44px]"
-              leftIcon={<Plus size={16} strokeWidth={2.5} />}
-            >
-              <span className="hidden sm:inline">Tambah Kasir</span>
-              <span className="inline sm:hidden">Tambah</span>
-            </Button>
+            {kasirList.length > 0 && (
+              <Button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="flex-shrink-0 h-[44px]"
+                leftIcon={<Plus size={16} strokeWidth={2.5} />}
+              >
+                <span className="hidden sm:inline">Tambah Kasir</span>
+                <span className="inline sm:hidden">Tambah</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -127,6 +129,10 @@ function ManajemenKasirPage() {
               icon={Users}
               title="Belum Ada Kasir"
               description="Tambahkan kasir pertama agar bisa mulai mencatat transaksi."
+              action={{
+                label: 'Tambah Kasir',
+                onClick: () => setShowCreateModal(true),
+              }}
             />
           ) : (
             <AnimatePresence mode="popLayout">

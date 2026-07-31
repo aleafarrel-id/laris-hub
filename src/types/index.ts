@@ -22,6 +22,8 @@ export type {
   TransactionWithItems,
   TransactionWithProfile,
   UserRole,
+  PaymentMethod,
+  TransactionStatus,
 } from './app.types'
 
 export type { Database, Json } from './database.types'

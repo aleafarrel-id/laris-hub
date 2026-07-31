@@ -2,12 +2,13 @@ import { Search } from 'lucide-react'
 import { useCallback, useState, useDeferredValue } from 'react'
 import { CheckoutPanel } from '@/components/kasir/CheckoutPanel'
 import { ProductCard } from '@/components/kasir/ProductCard'
+import { PaymentMethodModal } from '@/components/kasir/PaymentMethodModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
 import { useSaleFormState } from '@/hooks/useTransactionForm'
-import type { TransactionWithItems } from '@/types'
+import type { PaymentMethod, TransactionStatus, TransactionWithItems } from '@/types'
 
 interface SaleFormProps {
   /** When provided, the form operates in "edit" mode. */
@@ -39,6 +40,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
 
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState(transaction?.notes ?? '')
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const deferredSearch = useDeferredValue(search)
 
   // Simple derivations — no useMemo needed for cheap operations (Vercel guideline)
@@ -57,8 +59,16 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     displayProducts = all
   }
 
-  const handleSubmit = useCallback(() => {
+  const handlePreSubmit = useCallback(() => {
     if (cart.size === 0) return
+    setIsModalOpen(true)
+  }, [cart])
+
+  const handleSubmit = useCallback((paymentMethod: PaymentMethod, status: TransactionStatus) => {
+    if (cart.size === 0) return
+    
+    // Optimistically close modal
+    setIsModalOpen(false)
 
     const items = cartArray.map((cartItem) => ({
       product_id: cartItem.original_product_id !== undefined ? cartItem.original_product_id : cartItem.product.id,
@@ -76,12 +86,24 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
             items,
             notes: notes.trim() || null,
             transaction_at: transaction.transaction_at,
+            payment_method: paymentMethod,
+            status,
           },
         },
         { onSuccess },
       )
     } else {
-      createSale({ payload: { items, notes: notes.trim() || null } }, { onSuccess })
+      createSale(
+        { 
+          payload: { 
+            items, 
+            notes: notes.trim() || null,
+            payment_method: paymentMethod,
+            status,
+          } 
+        }, 
+        { onSuccess }
+      )
     }
   }, [cart, cartArray, notes, isEditing, transaction, createSale, updateSale, onSuccess])
 
@@ -132,7 +154,15 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         notes={notes}
         isPending={isPending}
         onNotesChange={setNotes}
-        onSubmit={handleSubmit}
+        onSubmit={handlePreSubmit}
+      />
+
+      <PaymentMethodModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleSubmit}
+        totalAmount={totalAmount}
+        isPending={isPending}
       />
     </div>
   )

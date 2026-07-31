@@ -16,6 +16,7 @@ import {
   useDeleteTransaction,
   useInfiniteTransactions,
   useTransactionSummary,
+  useUpdateTransactionStatus,
 } from '@/hooks/useTransactions'
 import type { Profile, TransactionWithItems } from '@/types'
 
@@ -29,6 +30,7 @@ export const Route = createFileRoute('/_auth/buku-kas')({
       customTo: search.customTo as string | undefined,
       typeFilter: search.typeFilter as any,
       kasirFilter: search.kasirFilter as string | undefined,
+      paymentMethodFilter: search.paymentMethodFilter as any,
     }
   },
   component: BukuKasPage,
@@ -44,6 +46,7 @@ function BukuKasPage() {
     customTo,
     typeFilter,
     kasirFilter,
+    paymentMethodFilter,
     filters,
     updateSearch,
   } = useBukuKasFilters()
@@ -72,6 +75,11 @@ function BukuKasPage() {
 
   // Mutations
   const deleteTxMutation = useDeleteTransaction()
+  const updateStatusMutation = useUpdateTransactionStatus()
+
+  const handleUpdateStatus = (id: string, status: 'sukses' | 'pending') => {
+    updateStatusMutation.mutate({ id, status })
+  }
 
   // Prepare data
   const transactions = useMemo(() => {
@@ -79,9 +87,12 @@ function BukuKasPage() {
   }, [paginatedData])
 
   const omzet = summaryData?.totalSales ?? 0
+  const omzetTunai = summaryData?.totalSalesTunai ?? 0
+  const omzetQris = summaryData?.totalSalesQris ?? 0
+  const pendingQris = summaryData?.totalPendingQris ?? 0
   const pengeluaran = summaryData?.totalExpenses ?? 0
   const profit = summaryData?.totalProfit ?? 0
-  const net = omzet - pengeluaran
+  const net = profit - pengeluaran
 
   return (
     <div className="page-container">
@@ -99,16 +110,21 @@ function BukuKasPage() {
         customTo={customTo}
         typeFilter={typeFilter}
         kasirFilter={kasirFilter}
+        paymentMethodFilter={paymentMethodFilter}
         cashiers={cashiers}
         onQuickRangeChange={(val) => updateSearch({ quickRange: val })}
         onCustomFromChange={(val) => updateSearch({ customFrom: val })}
         onCustomToChange={(val) => updateSearch({ customTo: val })}
         onTypeFilterChange={(val) => updateSearch({ typeFilter: val })}
         onKasirFilterChange={(val) => updateSearch({ kasirFilter: val })}
+        onPaymentMethodFilterChange={(val) => updateSearch({ paymentMethodFilter: val })}
       />
 
       <BukuKasSummary
         omzet={omzet}
+        omzetTunai={omzetTunai}
+        omzetQris={omzetQris}
+        pendingQris={pendingQris}
         pengeluaran={pengeluaran}
         profit={profit}
         net={net}
@@ -146,6 +162,7 @@ function BukuKasPage() {
               onEditTransaction={setEditingTx}
               onDeleteTransaction={setDeletingTxId}
               onSelectKasirProfile={setSelectedKasirProfile}
+              onUpdateStatus={handleUpdateStatus}
             />
 
             <BukuKasMobileList
@@ -155,6 +172,7 @@ function BukuKasPage() {
               onEditTransaction={setEditingTx}
               onDeleteTransaction={setDeletingTxId}
               onSelectKasirProfile={setSelectedKasirProfile}
+              onUpdateStatus={handleUpdateStatus}
             />
 
             {/* Load More Button */}

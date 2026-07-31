@@ -21,7 +21,7 @@ import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { useCashiers } from '@/hooks/useProfile'
-import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions'
+import { useDeleteTransaction, useTransactions, useUpdateTransactionStatus } from '@/hooks/useTransactions'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithItems } from '@/types'
@@ -127,11 +127,12 @@ function DashboardPage() {
   const recentTransactions = recentTransactionsResult?.data
 
   const deleteTxMutation = useDeleteTransaction()
+  const updateStatusMutation = useUpdateTransactionStatus()
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null)
   const [editingTx, setEditingTx] = useState<TransactionWithItems | null>(null)
 
   const isAdmin = profile?.role === 'admin'
-  const netCashflow = (kpi?.omzet ?? 0) - (kpi?.pengeluaran ?? 0)
+  const netProfit = (kpi?.profit ?? 0) - (kpi?.pengeluaran ?? 0)
 
   return (
     <div className="page-container">
@@ -215,11 +216,11 @@ function DashboardPage() {
           />
           <KPICard
             label="Profit Bersih"
-            value={kpi ? formatRupiah(netCashflow) : null}
+            value={kpi ? formatRupiah(netProfit) : null}
             isLoading={kpiLoading}
             icon={DollarSign}
-            iconColor={netCashflow >= 0 ? 'text-success' : 'text-danger'}
-            iconBg={netCashflow >= 0 ? 'bg-success/10' : 'bg-danger/10'}
+            iconColor={netProfit >= 0 ? 'text-success' : 'text-danger'}
+            iconBg={netProfit >= 0 ? 'bg-success/10' : 'bg-danger/10'}
             sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
           />
         </div>
@@ -337,6 +338,7 @@ function DashboardPage() {
           onEditTransaction={setEditingTx}
           onDeleteTransaction={setDeletingTxId}
           onSelectKasirProfile={setSelectedKasirProfile}
+          onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
         />
       </div>
 

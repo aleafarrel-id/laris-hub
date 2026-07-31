@@ -225,13 +225,13 @@ export function KasirDetailDrawer({
 
           {/* Profile hero */}
           <div
-            className={`px-5 py-5 border-b border-neutral-100 ${kasir.is_active ? 'bg-neutral-50/30' : 'bg-blue-50/40'}`}
+            className={`px-5 py-5 border-b border-neutral-100 ${kasir.is_active ? 'bg-neutral-50/30' : 'bg-amber-50/40'}`}
           >
             <div className="flex items-center gap-4">
               <div className="relative">
                 <KasirAvatar profile={kasir} size="lg" />
                 <span
-                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasir.is_active ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${kasir.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -246,7 +246,7 @@ export function KasirDetailDrawer({
                   </p>
                 )}
                 <span
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full mt-2 ${kasir.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
                 >
                   {kasir.is_active ? <CheckCircle2 size={11} /> : <ShieldOff size={11} />}
                   {kasir.is_active ? 'Aktif' : 'Ditangguhkan'}
@@ -311,7 +311,7 @@ export function KasirDetailDrawer({
                       disabled={isToggling}
                       className={`w-full border ${
                         kasir.is_active
-                          ? 'text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300'
+                          ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'
                           : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
                       }`}
                       leftIcon={kasir.is_active ? <ShieldOff size={15} /> : <UserCheck size={15} />}
