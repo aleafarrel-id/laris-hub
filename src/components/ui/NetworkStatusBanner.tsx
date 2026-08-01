@@ -17,7 +17,7 @@ export function NetworkStatusBanner() {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 pointer-events-none">
       <div
-        className={`flex items-center gap-3 px-4 py-3 sm:py-2.5 rounded-full shadow-lg border backdrop-blur-md transition-all duration-500 ease-out pointer-events-auto
+        className={`flex items-center gap-3 px-4 py-2.5 rounded-full shadow-lg border backdrop-blur-md transition-all duration-500 ease-out pointer-events-auto
           ${
             state === 'offline'
               ? 'bg-neutral-900/90 border-neutral-700/50 text-white translate-y-0 opacity-100'
@@ -41,17 +41,17 @@ export function NetworkStatusBanner() {
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-          <span className="text-sm font-medium tracking-tight">
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-semibold tracking-tight whitespace-nowrap">
             {state === 'offline' ? 'Koneksi Terputus' : 'Online'}
           </span>
           <span
-            className={`text-[11px] sm:text-xs font-medium sm:border-l sm:pl-2 transition-colors duration-300 flex items-center gap-2 ${
+            className={`text-xs font-medium border-l pl-2.5 transition-colors duration-300 flex items-center gap-2 whitespace-nowrap ${
               state === 'offline'
-                ? 'text-neutral-400 sm:border-neutral-700'
+                ? 'text-neutral-400 border-neutral-700'
                 : pendingCount > 0
-                  ? 'text-warning-light sm:border-warning'
-                  : 'text-emerald-100 sm:border-emerald-500'
+                  ? 'text-warning-light border-warning/50'
+                  : 'text-emerald-100 border-emerald-500/50'
             }`}
           >
             {state === 'offline' ? (
