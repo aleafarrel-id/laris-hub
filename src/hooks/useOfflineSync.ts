@@ -88,7 +88,7 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         },
       )
     }
-    
+
     if (failedItems.length > 0) {
       toast.warning(`${failedItems.length} transaksi gagal disinkronkan`, {
         description: 'Akan dicoba kembali saat koneksi tersedia.',

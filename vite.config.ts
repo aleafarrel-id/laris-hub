@@ -28,7 +28,7 @@ export default defineConfig({
         description: 'Aplikasi Kasir & Pencatatan Keuangan UMKM',
         theme_color: '#285eaf',
         background_color: '#F5F5F5',
-        display: 'standalone',
+        display: 'fullscreen',
         orientation: 'portrait-primary',
         start_url: '/',
         scope: '/',

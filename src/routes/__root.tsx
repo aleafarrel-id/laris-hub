@@ -15,8 +15,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
       <NetworkStatusBanner />
+      <Outlet />
       <Toaster
         position="top-right"
         expand={false}
