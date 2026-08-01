@@ -26,7 +26,6 @@ export function useKasirList() {
     enabled: !!user,
     queryKey: QUERY_KEYS.CASHIERS,
     queryFn: getKasirList,
-    staleTime: 1000 * 60 * 2, // 2 min
   })
 
   // Transform pending offline items
@@ -59,7 +58,6 @@ export function useKasirAuthDetails(kasirId: string | null) {
     queryKey: [...QUERY_KEYS.CASHIERS, 'auth', kasirId],
     queryFn: () => getKasirAuthDetails(kasirId!),
     enabled: !!user && !!kasirId && !kasirId.startsWith('pending-') && (typeof navigator !== 'undefined' ? navigator.onLine : true),
-    staleTime: 1000 * 60 * 5, // 5 min - email rarely changes
     retry: 1,
   })
 }
@@ -145,6 +143,7 @@ export function useDeleteKasir(onSuccess?: () => void) {
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
             toast.success('Pendaftaran akun kasir dibatalkan.')
             onSuccess?.()
+            options?.onSuccess?.()
           })
         })
       } else {

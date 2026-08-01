@@ -59,7 +59,6 @@ export function useKPISummary(
         ? getKPISummaryForDate(new Date())
         : getKPISummaryForRange(range.from, range.to)
     },
-    staleTime: 1000 * 60, // 1 min
   })
   
   return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
@@ -77,7 +76,6 @@ export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
       }
       return getMonthlyTrend(days)
     },
-    staleTime: 1000 * 60 * 5, // 5 min - chart doesn't need to be ultra-fresh
   })
   
   return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
@@ -102,7 +100,6 @@ export function useTopProducts(
       }
       return getTopProducts(range.from, range.to, limit)
     },
-    staleTime: 1000 * 60 * 5,
   })
   
   return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }

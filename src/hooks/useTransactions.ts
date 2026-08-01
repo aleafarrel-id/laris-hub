@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
@@ -98,7 +98,7 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, filters, page, pageSize],
     queryFn: () => getTransactions(filters, page, pageSize),
-    staleTime: 1000 * 30, // 30s - transactions change frequently
+    placeholderData: keepPreviousData,
   })
 
   return useInjectedTransactions(result)
@@ -113,7 +113,6 @@ export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSi
     queryFn: ({ pageParam = 1 }) => getTransactions(filters, pageParam, pageSize),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    staleTime: 1000 * 30,
   })
 
   return useInjectedTransactions(result)
@@ -141,7 +140,6 @@ export function useTransactionSummary(
         totalProfit: filters.type === 'pengeluaran' ? 0 : kpi.profit,
       }
     },
-    staleTime: 1000 * 30,
   })
 
   // Mix pending items into the summary optimistically
@@ -189,7 +187,6 @@ export function useTodayTransactions(recordedBy?: string) {
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'today', recordedBy],
     queryFn: () => getTodayTransactions(recordedBy),
-    staleTime: 1000 * 30,
     refetchInterval: 1000 * 60, // Auto-refresh every minute
   })
 

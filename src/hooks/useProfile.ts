@@ -16,7 +16,6 @@ export function useProfile() {
       return getProfile(userId)
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5,
   })
 }
 
@@ -27,7 +26,6 @@ export function useCashiers() {
     queryKey: [...QUERY_KEYS.CASHIERS, 'active-only'],
     queryFn: getActiveCashiers,
     enabled: !!user,
-    staleTime: 1000 * 60 * 60, // 1 hour
   })
 }
 

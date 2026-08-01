@@ -246,6 +246,7 @@ function BukuKasPage() {
               { id: deletingTxId },
               {
                 onSuccess: () => setDeletingTxId(null),
+                onError: () => setDeletingTxId(null),
               },
             )
           }

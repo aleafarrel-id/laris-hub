@@ -159,6 +159,21 @@ export function KasirDetailDrawer({
   })
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
 
+  useEffect(() => {
+    if (kasir?.id) {
+      setIsEditing(false)
+      setShowDeleteConfirm(false)
+      setShowNewPassword(false)
+      setEditErrors({})
+      setEditForm({
+        full_name: kasir.full_name,
+        phone: kasir.phone ?? '',
+        email: '',
+        password: '',
+      })
+    }
+  }, [kasir?.id])
+
   const { data: authDetails, isLoading: isLoadingEmail } = useKasirAuthDetails(
     kasirToRender?.id || '',
   )
@@ -166,7 +181,7 @@ export function KasirDetailDrawer({
     setIsEditing(false)
     setEditForm((f) => ({ ...f, password: '', email: '' }))
   })
-  const { mutate: deleteKasir, isPending: isDeleting } = useDeleteKasir(onClose)
+  const { mutate: deleteKasir, isPending: isDeleting } = useDeleteKasir()
 
   const validateEdit = (): boolean => {
     const errs: Record<string, string> = {}
@@ -481,7 +496,17 @@ export function KasirDetailDrawer({
         {showDeleteConfirm && (
           <DeleteConfirmModal
             kasir={kasirToRender}
-            onConfirm={() => deleteKasir(kasirToRender.id)}
+            onConfirm={() =>
+              deleteKasir(kasirToRender.id, {
+                onSuccess: () => {
+                  setShowDeleteConfirm(false)
+                  onClose()
+                },
+                onError: () => {
+                  setShowDeleteConfirm(false)
+                }
+              })
+            }
             onCancel={() => setShowDeleteConfirm(false)}
             isPending={isDeleting}
           />

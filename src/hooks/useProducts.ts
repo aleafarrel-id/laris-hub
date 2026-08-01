@@ -70,7 +70,6 @@ export function useProducts(activeOnly = false) {
     queryKey: QUERY_KEYS.PRODUCTS,
     queryFn: () => getProducts(false), // Always fetch all to populate cache for both views
     select: (data) => (activeOnly ? data.filter((p) => p.is_active) : data),
-    staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
   })
 
   return useInjectedProducts(result)
@@ -85,7 +84,6 @@ export function useInfiniteProducts(search = '', pageSize = 20) {
     queryFn: ({ pageParam = 1 }) => getProductsPaginated(pageParam, pageSize, search),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    staleTime: 1000 * 60 * 5,
   })
 
   return useInjectedProducts(result)

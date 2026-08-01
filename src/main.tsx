@@ -40,7 +40,7 @@ window.addEventListener('error', (e) => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute - aggressive caching
+      staleTime: 1000 * 30, // 30 seconds default for real-time feel
       gcTime: 1000 * 60 * 60 * 24, // 24 hours garbage collection for offline access
       retry: (failureCount, error) => {
         if (!navigator.onLine) return false
@@ -49,7 +49,7 @@ const queryClient = new QueryClient({
         return failureCount < 2
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true, // Auto-refetch when user focuses tab (if online)
       refetchOnReconnect: true,
     },
     mutations: {

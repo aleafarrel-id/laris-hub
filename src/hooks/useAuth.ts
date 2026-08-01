@@ -79,6 +79,14 @@ export function useAuthListener() {
         return
       }
 
+      if (!navigator.onLine) {
+        // If offline, just rely on the stored session state from Zustand
+        if (session.user) setUser(session.user)
+        setInitialized(true)
+        setLoading(false)
+        return
+      }
+
       supabase.auth.getUser().then(async ({ data: { user }, error }) => {
         if (!mounted) return
 
@@ -105,10 +113,12 @@ export function useAuthListener() {
 
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user)
-        try {
-          const profile = await getProfile(session.user.id)
-          if (mounted) setProfile(profile)
-        } catch {}
+        if (navigator.onLine) {
+          try {
+            const profile = await getProfile(session.user.id)
+            if (mounted) setProfile(profile)
+          } catch {}
+        }
       } else if (event === 'SIGNED_OUT') {
         clearAuth()
         queryClient.clear()

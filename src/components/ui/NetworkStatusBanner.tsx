@@ -44,7 +44,9 @@ export function NetworkStatusBanner() {
         <div
           className={`w-full flex items-center justify-between px-4 py-2.5 ${bgColor} text-white shadow-sm transition-colors duration-500`}
         >
-          <div className="flex items-center gap-3 overflow-hidden flex-1">
+          <div
+            className={`flex items-center gap-3 overflow-hidden flex-1 ${!(state === 'online' && pendingCount > 0 && !isSyncing) ? 'justify-center pr-6' : ''}`}
+          >
             <Icon
               className={`w-4 h-4 flex-shrink-0 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`}
             />
