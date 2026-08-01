@@ -50,7 +50,7 @@ const queryClient = new QueryClient({
         return failureCount < 2
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
     mutations: {
@@ -84,13 +84,16 @@ if (!rootElement) {
 
 // Request persistent storage for PWA
 if (navigator.storage && navigator.storage.persist) {
-  navigator.storage.persist().then((persistent) => {
-    if (persistent) {
-      console.log('[PWA] Storage will not be cleared except by explicit user action')
-    } else {
-      console.log('[PWA] Storage may be cleared by the UA under storage pressure.')
-    }
-  }).catch(console.error)
+  navigator.storage
+    .persist()
+    .then((persistent) => {
+      if (persistent) {
+        console.log('[PWA] Storage will not be cleared except by explicit user action')
+      } else {
+        console.log('[PWA] Storage may be cleared by the UA under storage pressure.')
+      }
+    })
+    .catch(console.error)
 }
 
 // Create IndexedDB persister instance

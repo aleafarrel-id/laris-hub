@@ -1,4 +1,5 @@
-import { Search } from 'lucide-react'
+import { Search, WifiOff } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useDeferredValue, useState } from 'react'
 import { CheckoutPanel } from '@/components/kasir/CheckoutPanel'
 import { PaymentMethodModal } from '@/components/kasir/PaymentMethodModal'
@@ -33,7 +34,11 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     totalAmount,
     totalItems,
     cartArray,
+    isOfflinePaused,
   } = useSaleFormState(transaction)
+
+  // Avoid skeleton trap if offline without data
+  const isLoading = productsLoading && !isOfflinePaused
 
   const { mutate: createSale, isPending: isCreating } = useCreateSale()
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale()
@@ -130,27 +135,48 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
 
       {/* Product list */}
       <div className="p-4 bg-neutral-50/50 flex-1">
-        {productsLoading ? (
+        {isLoading ? (
           <ProductListSkeleton />
+        ) : isOfflinePaused && !displayProducts.length ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <EmptyState
+              icon={WifiOff}
+              title="Katalog Tidak Tersedia"
+              description="Anda sedang offline dan data produk belum tersimpan."
+              action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
+            />
+          </motion.div>
         ) : displayProducts.length ? (
-          <div className="flex flex-col gap-3">
-            {displayProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                quantity={cart.get(product.id)?.quantity ?? 0}
-                onAdd={() => addToCart(product)}
-                onChangeQty={(delta) => changeQty(product.id, delta)}
-                onSetQty={(qty) => setQty(product.id, qty)}
-              />
-            ))}
-          </div>
+          <motion.div layout className="flex flex-col gap-3">
+            <AnimatePresence mode="popLayout">
+              {displayProducts.map((product, index) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.2) }}
+                  key={product.id}
+                >
+                  <ProductCard
+                    product={product}
+                    quantity={cart.get(product.id)?.quantity ?? 0}
+                    onAdd={() => addToCart(product)}
+                    onChangeQty={(delta) => changeQty(product.id, delta)}
+                    onSetQty={(qty) => setQty(product.id, qty)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         ) : (
-          <EmptyState
-            icon={Search}
-            title="Produk tidak ditemukan"
-            description="Coba gunakan kata kunci pencarian yang berbeda"
-          />
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <EmptyState
+              icon={Search}
+              title="Produk tidak ditemukan"
+              description="Coba gunakan kata kunci pencarian yang berbeda"
+            />
+          </motion.div>
         )}
       </div>
 

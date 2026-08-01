@@ -29,6 +29,7 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
   const isInCart = quantity > 0
 
   const [localQty, setLocalQty] = useState<string>(quantity > 0 ? quantity.toString() : '')
+  const [imgError, setImgError] = useState(false)
 
   useEffect(() => {
     setLocalQty(quantity > 0 ? quantity.toString() : '')
@@ -49,10 +50,12 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
       <div
         className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex-shrink-0 bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden group`}
       >
-        {product.image_url ? (
+        {product.image_url && !imgError ? (
           <img
             src={product.image_url}
             alt={product.name}
+            crossOrigin="anonymous"
+            onError={() => setImgError(true)}
             className="w-full h-full object-cover transition-transform duration-300 group-active:scale-[0.96] group-hover:scale-105"
           />
         ) : (

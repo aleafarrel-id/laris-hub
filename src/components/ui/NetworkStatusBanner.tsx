@@ -1,4 +1,4 @@
-import { Wifi, WifiOff, Loader2 } from 'lucide-react'
+import { Loader2, Wifi, WifiOff } from 'lucide-react'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 
@@ -45,16 +45,16 @@ export function NetworkStatusBanner() {
         <div
           className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 ${bgColor} text-white shadow-sm transition-colors duration-500`}
         >
-          <Icon className={`w-4 h-4 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`} />
-          
+          <Icon
+            className={`w-4 h-4 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`}
+          />
+
           <div className="flex items-center gap-2 text-[13px]">
             <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 mt-px">
               {title}
             </span>
             <span className="w-1 h-1 rounded-full bg-white/40" />
-            <span className="font-medium opacity-95">
-              {subtitle}
-            </span>
+            <span className="font-medium opacity-95">{subtitle}</span>
           </div>
 
           {state === 'online' && pendingCount > 0 && !isSyncing && (

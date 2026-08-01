@@ -103,6 +103,13 @@ export function RecentTransactionsTable({
                 <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
               </div>
 
+              {tx.type === 'penjualan' && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <PaymentMethodBadge method={tx.payment_method} />
+                  <StatusBadge status={tx.status} />
+                </div>
+              )}
+
               {tx.profiles && (
                 <div className="mt-1.5">
                   <button

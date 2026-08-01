@@ -15,6 +15,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { WifiOff } from 'lucide-react'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
@@ -28,6 +29,7 @@ import {
 } from '@/hooks/useTransactions'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth.store'
 import type { Profile, TransactionWithItems } from '@/types'
 
 const DashboardCharts = lazy(() =>
@@ -63,14 +65,8 @@ export const Route = createFileRoute('/_auth/dashboard')({
     } = await supabase.auth.getSession()
     if (!session) throw redirect({ to: '/login' })
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    const profileData = profile as { role: 'admin' | 'kasir' } | null
-    if (profileData?.role !== 'admin') {
+    const profile = useAuthStore.getState().profile
+    if (profile?.role !== 'admin') {
       throw redirect({ to: '/kasir' })
     }
   },
@@ -120,15 +116,15 @@ function DashboardPage() {
       : undefined
   }, [period, customFrom, customTo])
 
-  const { data: kpi, isLoading: kpiLoading } = useKPISummary(period, customRange, kasirFilter)
-  const { data: trend, isLoading: trendLoading } = useMonthlyTrend(30, kasirFilter)
-  const { data: topProducts, isLoading: topProductsLoading } = useTopProducts(
+  const { data: kpi, isLoading: kpiLoading, isOfflinePaused: kpiOffline } = useKPISummary(period, customRange, kasirFilter)
+  const { data: trend, isLoading: trendLoading, isOfflinePaused: trendOffline } = useMonthlyTrend(30, kasirFilter)
+  const { data: topProducts, isLoading: topProductsLoading, isOfflinePaused: topProductsOffline } = useTopProducts(
     period,
     customRange,
     5,
     kasirFilter,
   )
-  const { data: recentTransactionsResult, isLoading: recentLoading } = useTransactions({
+  const { data: recentTransactionsResult, isLoading: recentLoading, isOfflinePaused: recentOffline } = useTransactions({
     limit: 10,
     recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
   })
@@ -198,6 +194,16 @@ function DashboardPage() {
           </div>
         )}
 
+        {kpiOffline ? (
+          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm col-span-full h-full min-h-[160px] flex items-center justify-center">
+             <EmptyState
+              icon={WifiOff}
+              title="Data Tidak Tersedia Offline"
+              description="Metrik untuk filter ini belum tersimpan. Coba lagi saat terhubung ke internet."
+              action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
+            />
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           <KPICard
             label="Total Omzet"
@@ -233,6 +239,7 @@ function DashboardPage() {
             sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
           />
         </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -242,7 +249,14 @@ function DashboardPage() {
             <Calendar size={16} className="text-neutral-400" />
           </div>
           <div className="flex-1 flex flex-col justify-end">
-            {trendLoading ? (
+            {trendOffline ? (
+               <EmptyState
+                icon={WifiOff}
+                title="Data Tren Tidak Tersedia"
+                description="Grafik ini membutuhkan koneksi internet atau belum di-cache."
+                action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
+              />
+            ) : trendLoading ? (
               <div className="flex items-end gap-1 flex-1 min-h-[9rem]">
                 {['h-[40%]', 'h-[60%]', 'h-[30%]', 'h-[80%]', 'h-[50%]', 'h-[70%]', 'h-[40%]'].map(
                   (h, i) => (
@@ -301,7 +315,14 @@ function DashboardPage() {
           <p className="text-xs text-neutral-400 mb-4">
             Distribusi penjualan {PERIOD_LABELS[period].toLowerCase()}
           </p>
-          {topProductsLoading ? (
+          {topProductsOffline ? (
+            <EmptyState
+              icon={WifiOff}
+              title="Produk Terlaris Tidak Tersedia"
+              description="Data tidak tersedia offline."
+              action={{ label: 'Muat Ulang', onClick: () => window.location.reload() }}
+            />
+          ) : topProductsLoading ? (
             <div className="flex flex-col items-center gap-4">
               <Skeleton className="w-40 h-40 rounded-full" />
               <div className="w-full space-y-2">
@@ -346,6 +367,14 @@ function DashboardPage() {
       <div className="mt-6 app-card p-6">
         <h2 className="text-sm font-semibold text-neutral-900 mb-5">10 Transaksi Terbaru</h2>
 
+        {recentOffline ? (
+          <EmptyState
+            icon={WifiOff}
+            title="Transaksi Terbaru Tidak Tersedia"
+            description="Riwayat transaksi untuk filter ini tidak tersimpan offline."
+            action={{ label: 'Muat Ulang', onClick: () => window.location.reload() }}
+          />
+        ) : (
         <RecentTransactionsTable
           transactions={recentTransactions}
           isLoading={recentLoading}
@@ -355,6 +384,7 @@ function DashboardPage() {
           onSelectKasirProfile={setSelectedKasirProfile}
           onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
         />
+        )}
       </div>
 
       <CashierProfileModal
@@ -379,9 +409,12 @@ function DashboardPage() {
         confirmText={deleteTxMutation.isPending ? 'Menghapus...' : 'Hapus'}
         onConfirm={() => {
           if (deletingTxId) {
-            deleteTxMutation.mutate({ id: deletingTxId }, {
-              onSuccess: () => setDeletingTxId(null),
-            })
+            deleteTxMutation.mutate(
+              { id: deletingTxId },
+              {
+                onSuccess: () => setDeletingTxId(null),
+              },
+            )
           }
         }}
         onCancel={() => setDeletingTxId(null)}

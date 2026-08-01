@@ -55,7 +55,11 @@ export function TopProductsDonutChart({ products }: { products: TopProduct[] }) 
               animationDuration={700}
             >
               {chartData.map((entry, index) => (
-                <Cell key={`${entry.product_id}-${index}`} fill={entry.color} style={{ outline: 'none' }} />
+                <Cell
+                  key={`${entry.product_id}-${index}`}
+                  fill={entry.color}
+                  style={{ outline: 'none' }}
+                />
               ))}
             </Pie>
             <Tooltip

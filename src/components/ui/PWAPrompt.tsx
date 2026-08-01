@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 /**
  * PWAPrompt
  * Handles Service Worker registration and auto-updates.
- * Since vite.config.ts uses registerType: 'autoUpdate', 
+ * Since vite.config.ts uses registerType: 'autoUpdate',
  * this component just needs to call useRegisterSW() to activate it.
  */
 export function PWAPrompt() {
@@ -24,7 +24,7 @@ export function PWAPrompt() {
   // We can optionally show a toast when offlineReady is true or needRefresh is true,
   // but since we are using 'autoUpdate', it usually updates transparently.
   // For now, this component is headless.
-  
+
   useEffect(() => {
     if (offlineReady) {
       console.log('[PWA] App is ready to work offline.')

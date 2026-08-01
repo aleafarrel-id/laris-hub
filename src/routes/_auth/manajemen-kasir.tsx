@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useKasirList, useToggleKasirStatus } from '@/hooks/useKasirManagement'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/store/auth.store'
 import type { Profile } from '@/types'
 
 export const Route = createFileRoute('/_auth/manajemen-kasir')({
@@ -20,7 +21,8 @@ export const Route = createFileRoute('/_auth/manajemen-kasir')({
       data: { session },
     } = await supabase.auth.getSession()
     if (!session) throw redirect({ to: '/login', search: { redirect: location.href } })
-    if (session.user.app_metadata?.role !== 'admin') throw redirect({ to: '/kasir' })
+    const profile = useAuthStore.getState().profile
+    if (profile?.role !== 'admin') throw redirect({ to: '/kasir' })
   },
   component: ManajemenKasirPage,
 })

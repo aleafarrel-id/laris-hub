@@ -2,10 +2,9 @@ import type { QueryClient } from '@tanstack/react-query'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
-import { enqueueOfflineItem } from '@/lib/offline-queue'
 import type { OfflineQueueAction } from '@/lib/offline-queue'
+import { enqueueOfflineItem } from '@/lib/offline-queue'
 import { translateError } from '@/lib/utils'
-import { nowIso } from '@/services/transaction.utils'
 import { getKPISummaryForRange } from '@/services/dashboard.service'
 import {
   createExpenseTransaction,
@@ -17,6 +16,7 @@ import {
   updateSaleTransaction,
   updateTransactionStatus,
 } from '@/services/transaction.service'
+import { nowIso } from '@/services/transaction.utils'
 import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
@@ -40,18 +40,20 @@ function onTransactionError(action: string) {
 export function useTransactions(filters: TransactionFilters = {}, page = 1, pageSize = 20) {
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, filters, page, pageSize],
     queryFn: () => getTransactions(filters, page, pageSize),
     staleTime: 1000 * 30, // 30s - transactions change frequently
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSize = 20) {
   const user = useAuthStore((state) => state.user)
 
-  return useInfiniteQuery({
+  const result = useInfiniteQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'infinite', filters, pageSize],
     queryFn: ({ pageParam = 1 }) => getTransactions(filters, pageParam, pageSize),
@@ -59,6 +61,8 @@ export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSi
     initialPageParam: 1,
     staleTime: 1000 * 30,
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useTransactionSummary(
@@ -66,7 +70,7 @@ export function useTransactionSummary(
 ) {
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'summary', filters],
     queryFn: async () => {
@@ -84,6 +88,8 @@ export function useTransactionSummary(
     },
     staleTime: 1000 * 30,
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useTodayTransactions(recordedBy?: string) {
@@ -116,14 +122,14 @@ function createOfflineMutation<TVariables, TData>(
         // Ensure timestamp is recorded exactly when created if offline
         const targetPayload = (payload as any).payload || payload
         if (
-          typeof targetPayload === 'object' && 
-          targetPayload !== null && 
-          !('id' in targetPayload) && 
+          typeof targetPayload === 'object' &&
+          targetPayload !== null &&
+          !('id' in targetPayload) &&
           targetPayload.transaction_at === undefined
         ) {
-           targetPayload.transaction_at = nowIso()
+          targetPayload.transaction_at = nowIso()
         }
-        
+
         if (!navigator.onLine) {
           try {
             await enqueueOfflineItem(action, payload)
@@ -135,7 +141,7 @@ function createOfflineMutation<TVariables, TData>(
             throw queueErr
           }
         }
-        
+
         try {
           return await mutationFn(payload)
         } catch (err) {
@@ -180,7 +186,7 @@ export const useCreateSale = createOfflineMutation<CreateSaleArgs, any>(
     successMessage: 'Transaksi penjualan berhasil disimpan!',
     successDescription: 'Data telah tersimpan ke Buku Kas.',
     errorAction: 'menyimpan transaksi',
-  }
+  },
 )
 
 type CreateExpenseArgs = { payload: Parameters<typeof createExpenseTransaction>[0] }

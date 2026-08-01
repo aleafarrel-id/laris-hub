@@ -10,7 +10,9 @@ import {
   Tag,
   Trash2,
   TrendingUp,
+  WifiOff,
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { Button } from '@/components/ui/Button'
@@ -25,6 +27,7 @@ import { useDeleteProduct, useInfiniteProducts, useToggleProductStatus } from '@
 import { MARGIN_GOOD_THRESHOLD, MARGIN_WARNING_THRESHOLD } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { calcMargin, formatRupiah } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth.store'
 import type { Product } from '@/types'
 
 export const Route = createFileRoute('/_auth/produk/')({
@@ -34,14 +37,8 @@ export const Route = createFileRoute('/_auth/produk/')({
     } = await supabase.auth.getSession()
     if (!session) throw redirect({ to: '/login' })
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    const profileData = profile as { role: 'admin' | 'kasir' } | null
-    if (profileData?.role !== 'admin') throw redirect({ to: '/kasir' })
+    const profile = useAuthStore.getState().profile
+    if (profile?.role !== 'admin') throw redirect({ to: '/kasir' })
   },
   component: ProdukPage,
 })
@@ -52,11 +49,15 @@ function ProdukPage() {
 
   const {
     data: paginatedData,
-    isLoading,
+    isLoading: isQueryLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isOfflinePaused,
   } = useInfiniteProducts(debouncedSearch, 12) // Show 12 items per page for better grid
+
+  // If we're offline and don't have data, we'll consider it loading but it's actually offline
+  const isLoading = isQueryLoading && !isOfflinePaused
 
   const products = useMemo(() => {
     return paginatedData?.pages.flatMap((page) => page.data) ?? []
@@ -190,136 +191,173 @@ function ProdukPage() {
         </div>
       )}
 
-      {!isLoading && !products.length && (
-        <EmptyState
-          icon={Package}
-          title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
-          description={
-            search
-              ? 'Coba kata kunci pencarian yang berbeda'
-              : 'Mulailah dengan menambahkan produk pertama Anda'
-          }
-          action={!search ? { label: 'Tambah Produk', onClick: openCreate } : undefined}
-        />
+      {!isLoading && !isOfflinePaused && !products.length && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <EmptyState
+            icon={Package}
+            title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
+            description={
+              search
+                ? 'Coba kata kunci pencarian yang berbeda'
+                : 'Mulailah dengan menambahkan produk pertama Anda'
+            }
+            action={!search ? { label: 'Tambah Produk', onClick: openCreate } : undefined}
+          />
+        </motion.div>
+      )}
+
+      {isOfflinePaused && !products.length && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <EmptyState
+            icon={WifiOff}
+            title="Katalog Tidak Tersedia"
+            description="Anda sedang offline dan data katalog belum tersimpan."
+            action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
+          />
+        </motion.div>
       )}
 
       {!isLoading && products.length > 0 && (
         <div className="pb-24">
-          <div
+          <motion.div
+            layout
             className={`grid gap-5 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
           >
-            {products.map((product) => {
-              const margin = calcMargin(product.selling_price, product.hpp)
-              const marginColor =
-                margin >= MARGIN_GOOD_THRESHOLD
-                  ? 'text-success bg-success/10'
-                  : margin >= MARGIN_WARNING_THRESHOLD
-                    ? 'text-warning bg-warning/10'
-                    : 'text-danger bg-danger/10'
+            <AnimatePresence mode="popLayout">
+              {products.map((product, index) => {
+                const margin = calcMargin(product.selling_price, product.hpp)
+                const marginColor =
+                  margin >= MARGIN_GOOD_THRESHOLD
+                    ? 'text-success bg-success/10'
+                    : margin >= MARGIN_WARNING_THRESHOLD
+                      ? 'text-warning bg-warning/10'
+                      : 'text-danger bg-danger/10'
 
-              return (
-                <div
-                  key={product.id}
-                  className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
-                >
-                  <div
-                    className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
+                return (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.2) }}
+                    key={product.id}
+                    className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
                   >
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2">
-                        <ImageIcon size={32} strokeWidth={1.5} />
-                      </div>
-                    )}
-
-                    <div className="absolute top-2 right-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          toggleStatus({ id: product.id, isActive: !product.is_active })
-                        }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
-                          product.is_active
-                            ? 'bg-white/80 text-success shadow-sm'
-                            : 'bg-neutral-800/80 text-white shadow-sm'
-                        }`}
-                        title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
-                      >
-                        {product.is_active ? 'AKTIF' : 'NONAKTIF'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0">
-                    <div className="flex flex-col gap-1.5">
-                      <h3
-                        className="font-bold text-neutral-900 leading-snug line-clamp-2"
-                        title={product.name}
-                      >
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
-                        {product.sku ? (
-                          <>
-                            <Tag size={12} className="text-neutral-400 flex-shrink-0" />
-                            <span className="truncate">{product.sku}</span>
-                          </>
-                        ) : (
-                          <span className="text-neutral-400 italic">Tanpa SKU</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2.5 mt-auto">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">
-                            Harga Jual
-                          </p>
-                          <div
-                            className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}
-                          >
-                            <TrendingUp size={10} />
-                            <span className="text-[9px] font-bold tabular-nums leading-none">
-                              {margin.toFixed(0)}%
-                            </span>
+                    <div
+                      className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
+                    >
+                      {product.image_url ? (
+                        <>
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                            }}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="hidden w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2 fallback-icon">
+                            <ImageIcon size={32} strokeWidth={1.5} />
                           </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-2">
+                          <ImageIcon size={32} strokeWidth={1.5} />
                         </div>
-                        <p className="font-extrabold text-neutral-900 tabular-nums leading-none text-base">
-                          {formatRupiah(product.selling_price)}
-                        </p>
+                      )}
+
+                      <div className="absolute top-2 right-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            toggleStatus({ id: product.id, isActive: !product.is_active })
+                          }}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
+                            product.is_active
+                              ? 'bg-white/80 text-success shadow-sm'
+                              : 'bg-neutral-800/80 text-white shadow-sm'
+                          }`}
+                          title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
+                        >
+                          {product.is_active ? 'AKTIF' : 'NONAKTIF'}
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(product)}
-                        className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                      >
-                        <Pencil size={14} />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(product.id, product.name)}
-                        className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
-                        title="Hapus Produk"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <div className="p-4 flex flex-col flex-1 gap-3 sm:gap-4 min-w-0">
+                      <div className="flex flex-col gap-1.5">
+                        <h3
+                          className="font-bold text-neutral-900 leading-snug line-clamp-2"
+                          title={product.name}
+                        >
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
+                          {product.sku ? (
+                            <>
+                              <Tag size={12} className="text-neutral-400 flex-shrink-0" />
+                              <span className="truncate">{product.sku}</span>
+                            </>
+                          ) : (
+                            <span className="text-neutral-400 italic">Tanpa SKU</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2.5 mt-auto">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wide">
+                              Harga Jual
+                            </p>
+                            <div
+                              className={`px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0 ${marginColor}`}
+                            >
+                              <TrendingUp size={10} />
+                              <span className="text-[9px] font-bold tabular-nums leading-none">
+                                {margin.toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                          <p className="font-extrabold text-neutral-900 tabular-nums leading-none text-base">
+                            {formatRupiah(product.selling_price)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(product)}
+                          className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(product.id, product.name)}
+                          className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
+                          title="Hapus Produk"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </motion.div>
 
           {hasNextPage && (
             <div className="mt-8 flex justify-center">

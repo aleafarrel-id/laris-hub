@@ -1,6 +1,6 @@
 import { del, get, set } from 'idb-keyval'
-import type { CreateSalePayload } from '@/services/sale.service'
 import type { CreateExpensePayload } from '@/services/expense.service'
+import type { CreateSalePayload } from '@/services/sale.service'
 
 const QUEUE_KEY = 'laris-hub:offline-transaction-queue'
 

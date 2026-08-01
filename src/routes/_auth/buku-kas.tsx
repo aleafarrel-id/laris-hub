@@ -10,6 +10,7 @@ import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { WifiOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { type BukuKasSearch, useBukuKasFilters } from '@/hooks/useBukuKasFilters'
 import { useCashiers } from '@/hooks/useProfile'
@@ -64,9 +65,10 @@ function BukuKasPage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isTransactionsLoading,
+    isOfflinePaused: isTransactionsOffline,
   } = useInfiniteTransactions(filters, 25)
 
-  const { data: summaryData, isLoading: isSummaryLoading } = useTransactionSummary({
+  const { data: summaryData, isLoading: isSummaryLoading, isOfflinePaused: isSummaryOffline } = useTransactionSummary({
     dateRange: filters.dateRange,
     type: filters.type,
     recordedBy: filters.recordedBy,
@@ -119,6 +121,16 @@ function BukuKasPage() {
         onPaymentMethodFilterChange={(val) => updateSearch({ paymentMethodFilter: val })}
       />
 
+      {isSummaryOffline ? (
+        <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm mb-6 flex items-center justify-center">
+          <EmptyState
+            icon={WifiOff}
+            title="Ringkasan Tidak Tersedia"
+            description="Data ringkasan untuk filter ini tidak tersimpan offline."
+            action={{ label: 'Muat Ulang', onClick: () => window.location.reload() }}
+          />
+        </div>
+      ) : (
       <BukuKasSummary
         omzet={omzet}
         omzetTunai={omzetTunai}
@@ -129,9 +141,26 @@ function BukuKasPage() {
         net={net}
         isLoading={isSummaryLoading}
       />
+      )}
 
       <AnimatePresence mode="wait">
-        {!isTransactionsLoading && transactions.length === 0 ? (
+        {isTransactionsOffline ? (
+          <motion.div
+            key="offline"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white border border-neutral-200 rounded-2xl"
+          >
+            <EmptyState
+              icon={WifiOff}
+              title="Daftar Transaksi Tidak Tersedia"
+              description="Riwayat transaksi untuk filter ini tidak tersimpan offline. Coba lagi saat terhubung ke internet."
+              action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
+            />
+          </motion.div>
+        ) : !isTransactionsLoading && transactions.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 10 }}
@@ -213,9 +242,12 @@ function BukuKasPage() {
         confirmText={deleteTxMutation.isPending ? 'Menghapus...' : 'Hapus'}
         onConfirm={() => {
           if (deletingTxId) {
-            deleteTxMutation.mutate({ id: deletingTxId }, {
-              onSuccess: () => setDeletingTxId(null),
-            })
+            deleteTxMutation.mutate(
+              { id: deletingTxId },
+              {
+                onSuccess: () => setDeletingTxId(null),
+              },
+            )
           }
         }}
         onCancel={() => setDeletingTxId(null)}

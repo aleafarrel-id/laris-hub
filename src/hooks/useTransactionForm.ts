@@ -76,7 +76,7 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
  */
 export function useSaleFormState(transaction?: TransactionWithItems) {
   const isEditing = !!transaction
-  const { data: products = [], isLoading: productsLoading } = useProducts(true)
+  const { data: products = [], isLoading: productsLoading, isOfflinePaused } = useProducts(true)
   const cartState = useSaleCart()
   const { setCart } = cartState
 
@@ -115,6 +115,7 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
     isEditing,
     products,
     productsLoading,
+    isOfflinePaused,
     ...cartState,
   }
 }

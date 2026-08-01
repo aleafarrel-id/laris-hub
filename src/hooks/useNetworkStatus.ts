@@ -8,8 +8,8 @@
  * - Automatically resumes and retries mutations when online.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { onlineManager } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export interface NetworkStatus {
   isOnline: boolean

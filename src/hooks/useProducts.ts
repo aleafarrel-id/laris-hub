@@ -16,19 +16,21 @@ import { useAuthStore } from '@/store/auth.store'
 export function useProducts(activeOnly = false) {
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: QUERY_KEYS.PRODUCTS,
     queryFn: () => getProducts(false), // Always fetch all to populate cache for both views
     select: (data) => (activeOnly ? data.filter((p) => p.is_active) : data),
     staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
   })
+
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useInfiniteProducts(search = '', pageSize = 20) {
   const user = useAuthStore((state) => state.user)
 
-  return useInfiniteQuery({
+  const result = useInfiniteQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.PRODUCTS, 'infinite', search, pageSize],
     queryFn: ({ pageParam = 1 }) => getProductsPaginated(pageParam, pageSize, search),
@@ -36,6 +38,8 @@ export function useInfiniteProducts(search = '', pageSize = 20) {
     initialPageParam: 1,
     staleTime: 1000 * 60 * 5,
   })
+
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useCreateProduct() {

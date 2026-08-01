@@ -48,7 +48,7 @@ export function useKPISummary(
 
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange, kasirId],
     queryFn: () => {
@@ -61,12 +61,14 @@ export function useKPISummary(
     },
     staleTime: 1000 * 60, // 1 min
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days, kasirId],
     queryFn: () => {
@@ -77,6 +79,8 @@ export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
     },
     staleTime: 1000 * 60 * 5, // 5 min - chart doesn't need to be ultra-fresh
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useTopProducts(
@@ -89,7 +93,7 @@ export function useTopProducts(
 
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit, kasirId],
     queryFn: () => {
@@ -100,4 +104,6 @@ export function useTopProducts(
     },
     staleTime: 1000 * 60 * 5,
   })
+  
+  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }

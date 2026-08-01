@@ -12,25 +12,25 @@
  * Note: Acts as a safety net alongside React Query's built-in pause/resume mutations.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { QUERY_KEYS } from '@/lib/constants'
+import type { OfflineQueueItem } from '@/lib/offline-queue'
 import {
   clearOfflineQueue,
   dequeueOfflineItem,
   getOfflineQueue,
   incrementRetryCount,
 } from '@/lib/offline-queue'
-import type { OfflineQueueItem } from '@/lib/offline-queue'
-import { 
-  createSaleTransaction, 
+import {
   createExpenseTransaction,
-  updateSaleTransaction,
+  createSaleTransaction,
+  deleteTransaction,
   updateExpenseTransaction,
+  updateSaleTransaction,
   updateTransactionStatus,
-  deleteTransaction
 } from '@/services/transaction.service'
-import { QUERY_KEYS } from '@/lib/constants'
 
 const MAX_RETRIES = 3
 
@@ -116,12 +116,9 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
 
-      toast.success(
-        `${successCount} tindakan offline berhasil disinkronkan!`,
-        {
-          description: 'Data telah tersimpan ke database.',
-        },
-      )
+      toast.success(`${successCount} tindakan offline berhasil disinkronkan!`, {
+        description: 'Data telah tersimpan ke database.',
+      })
     }
 
     if (failedItems.length > 0) {

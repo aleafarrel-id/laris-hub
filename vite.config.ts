@@ -89,8 +89,36 @@ export default defineConfig({
               },
             },
           },
+          // Cache Supabase REST API for true Offline-First support
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              networkTimeoutSeconds: 3, // Fail fast if offline/poor connection
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // Cache Supabase Storage Images (Product photos, etc)
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // General image fallback
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'images',
