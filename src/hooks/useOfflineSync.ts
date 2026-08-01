@@ -153,17 +153,21 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       } catch (err: any) {
         // Detect permanent backend errors (PostgreSQL exceptions OR explicit error messages from Edge Functions/RPCs)
         const isPgError = err?.code && err.code.startsWith('22')
-        const isBackendRejection = err?.message && !err.message.includes('fetch') && !err.message.includes('network')
+        const errMessage = (err?.message || '').toLowerCase()
+        const isNetworkError = errMessage.includes('fetch') || errMessage.includes('network') || errMessage.includes('failed to fetch')
+        const isBackendRejection = errMessage && !isNetworkError
 
-        if (isPgError || isBackendRejection) {
+        if (isPgError || (isBackendRejection && err?.status >= 400 && err?.status < 500)) {
           console.error('[OfflineSync] Permanent error for item:', item, err)
           await dequeueOfflineItem(item.localId)
           failedItems.push(item) // Track it so we can notify the user that it was dropped
-        } else {
+        } else if (!isNetworkError) {
+          // Only increment retry count for 5xx server errors or unknown non-network errors.
+          // Never penalize network failures (Lie-Fi) to prevent data loss!
           await incrementRetryCount(item.localId)
-          // Don't add to failedItems immediately if we are still retrying, 
-          // wait until it exhausts retries to notify user.
-          // Wait, actually, if it's a network error during sync, we can just say "pending".
+        } else {
+          // It's a network error. Do nothing, just leave it in the queue.
+          console.log('[OfflineSync] Network error, keeping in queue:', item.localId)
         }
       }
     }

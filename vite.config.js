@@ -67,28 +67,6 @@ export default defineConfig({
                 // Exclude API calls from fallback routing
                 navigateFallbackDenylist: [/^\/api/, /^\/auth/],
                 runtimeCaching: [
-                    {
-                        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'google-fonts-stylesheets',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                            },
-                        },
-                    },
-                    {
-                        urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'google-fonts-webfonts',
-                            expiration: {
-                                maxEntries: 30,
-                                maxAgeSeconds: 60 * 60 * 24 * 365,
-                            },
-                        },
-                    },
                     // Cache Supabase REST API for true Offline-First support
                     {
                         urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
