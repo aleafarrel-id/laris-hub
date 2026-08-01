@@ -22,11 +22,11 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
   // Offline pending transactions inject `items` instead of `expense_items` / `transaction_items`
   const rawExpense = transaction.expense_items ?? (transaction as any).items
   const expenseItems = Array.isArray(rawExpense) ? rawExpense : []
-  const hasExpenseItems = isExpense && expenseItems.length > 0
+  const hasExpenseItems = isExpense && (expenseItems?.length ?? 0) > 0
   
   const rawSale = transaction.transaction_items ?? (transaction as any).items
   const saleItems = Array.isArray(rawSale) ? rawSale : []
-  const hasSaleItems = !isExpense && saleItems.length > 0
+  const hasSaleItems = !isExpense && (saleItems?.length ?? 0) > 0
 
   return (
     <div className={`flex flex-col ${isMobile ? 'gap-1.5' : 'gap-2'} text-left w-full`}>

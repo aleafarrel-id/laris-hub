@@ -82,7 +82,7 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
 
   // Pre-populate cart when editing an existing transaction
   useEffect(() => {
-    if (!isEditing || productsLoading || products.length === 0 || !transaction.transaction_items) {
+    if (!isEditing || productsLoading || !products?.length || !transaction.transaction_items) {
       return
     }
 

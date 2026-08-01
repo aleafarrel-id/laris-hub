@@ -7,6 +7,7 @@ import { LogoutDialog } from '@/components/ui/LogoutDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { useUpdateProfile } from '@/hooks/useProfile'
 import { getInitials } from '@/lib/utils'
+import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/_auth/profil')({
   component: ProfilPage,
@@ -59,9 +60,21 @@ function ProfilPage() {
       </header>
 
       <div className="page-container max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold mb-6 hidden md:block">Profil Saya</h1>
+        <motion.h1 
+          className="text-2xl font-bold mb-6 hidden md:block"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          Profil Saya
+        </motion.h1>
 
-        <div className="app-card p-6 mb-4">
+        <motion.div 
+          className="app-card p-6 mb-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
               {profile ? getInitials(profile.full_name) : '?'}
@@ -144,9 +157,14 @@ function ProfilPage() {
               </div>
             </form>
           )}
-        </div>
+        </motion.div>
 
-        <Button
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Button
           type="button"
           variant="ghost"
           onClick={() => setShowLogoutModal(true)}
@@ -155,6 +173,7 @@ function ProfilPage() {
         >
           Keluar dari Akun
         </Button>
+        </motion.div>
       </div>
 
       <LogoutDialog isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />

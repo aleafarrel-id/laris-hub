@@ -35,8 +35,8 @@ function ManajemenKasirPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedKasir, setSelectedKasir] = useState<Profile | null>(null)
 
-  const activeCount = useMemo(() => kasirList.filter((k) => k.is_active).length, [kasirList])
-  const suspendedCount = kasirList.length - activeCount
+  const activeCount = useMemo(() => kasirList?.filter((k) => k.is_active)?.length ?? 0, [kasirList])
+  const suspendedCount = (kasirList?.length ?? 0) - activeCount
 
   // Sync selectedKasir with the live kasirList data after any mutation refetch.
   // The drawer always receives syncedKasir (ground truth from the database),
@@ -66,7 +66,7 @@ function ManajemenKasirPage() {
             <p className="text-xs text-neutral-500 mt-0.5 tabular-nums">
               {isLoading
                 ? 'Memuat...'
-                : `${kasirList.length} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
+                : `${kasirList?.length ?? 0} kasir · ${activeCount} aktif${suspendedCount > 0 ? ` · ${suspendedCount} ditangguhkan` : ''}`}
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -80,7 +80,7 @@ function ManajemenKasirPage() {
               <span>Profil</span>
             </Link>
 
-            {kasirList.length > 0 && (
+            {(kasirList?.length ?? 0) > 0 && (
               <Button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
@@ -99,7 +99,7 @@ function ManajemenKasirPage() {
       <div className="flex-1 px-4 sm:px-6 py-5">
         <div className="max-w-3xl mx-auto space-y-3">
           {/* Stats */}
-          {!isLoading && kasirList.length > 0 && <KasirStats kasirList={kasirList} />}
+          {!isLoading && (kasirList?.length ?? 0) > 0 && <KasirStats kasirList={kasirList} />}
 
           {isLoading ? (
             <div className="space-y-3">
@@ -117,7 +117,7 @@ function ManajemenKasirPage() {
                 </div>
               ))}
             </div>
-          ) : kasirList.length === 0 ? (
+          ) : (kasirList?.length ?? 0) === 0 ? (
             <EmptyState
               icon={Users}
               title="Belum Ada Kasir"

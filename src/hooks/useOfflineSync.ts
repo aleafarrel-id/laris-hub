@@ -67,13 +67,13 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
   // Update pendingCount from IndexedDB
   const refreshPendingCount = useCallback(async () => {
     const queue = await getOfflineQueue()
-    setPendingCount(queue.length)
+    setPendingCount(queue?.length ?? 0)
   }, [])
 
   const syncQueue = useCallback(async () => {
     if (isSyncingRef.current) return
     const queue = await getOfflineQueue()
-    if (queue.length === 0) return
+    if ((queue?.length ?? 0) === 0) return
 
     isSyncingRef.current = true
     setIsSyncing(true)
@@ -181,8 +181,8 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       })
     }
 
-    if (failedItems.length > 0) {
-      toast.error(`${failedItems.length} tindakan batal disinkronkan`, {
+    if ((failedItems?.length ?? 0) > 0) {
+      toast.error(`${failedItems?.length ?? 0} tindakan batal disinkronkan`, {
         description: 'Tindakan ditolak oleh server atau melebihi batas percobaan. Data tersebut telah dihapus dari antrean.',
       })
     }

@@ -36,7 +36,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
   const [notes, setNotes] = useState(transaction?.notes ?? '')
   const [manualTotal, setManualTotal] = useState(() => {
     const hasItems =
-      Array.isArray(transaction?.expense_items) && transaction.expense_items.length > 0
+      Array.isArray(transaction?.expense_items) && transaction?.expense_items?.length > 0
     return hasItems ? '' : (transaction?.total_amount.toString() ?? '')
   })
 
@@ -57,7 +57,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
 
   // Removed useMemo per Vercel Best Practices for simple primitives
   let totalAmount = 0
-  if (items.length > 0) {
+  if (items?.length > 0) {
     totalAmount = lineItemsTotal
   } else {
     const parsed = Number(manualTotal.replace(/[^0-9]/g, ''))
@@ -75,7 +75,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
       description: desc,
       total_amount: safeTotal,
       expense_category: category,
-      expense_items: items.length
+      expense_items: items?.length
         ? items.map(({ name, qty, unit_price }) => ({ name, qty, unit_price }))
         : [],
       notes: notes.trim() || null,
@@ -153,7 +153,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
           <span className="text-sm font-semibold text-neutral-700">Detail Item</span>
         </div>
 
-        {items.length > 0 ? (
+        {items?.length > 0 ? (
           <div className="space-y-3 pr-1 pb-2">
             {items.map((item) => (
               <motion.div
@@ -247,7 +247,7 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
           />
         )}
 
-        {items.length > 0 && (
+        {items?.length > 0 && (
           <div className="mt-2 bg-neutral-50 rounded-xl px-3 py-2 flex justify-between items-center">
             <span className="text-xs text-neutral-500">Total</span>
             <span className="text-sm font-bold tabular-nums text-danger">

@@ -24,7 +24,7 @@ interface ProductCardProps {
  * Shows image/placeholder, name, SKU, price, and an add/quantity stepper control.
  */
 export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }: ProductCardProps) {
-  const colorIdx = product.name.length % PRODUCT_COLORS.length
+  const colorIdx = (product.name?.length ?? 0) % PRODUCT_COLORS.length
   const gradient = PRODUCT_COLORS[colorIdx]
   const isInCart = quantity > 0
 

@@ -137,7 +137,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
       <div className="p-4 bg-neutral-50/50 flex-1">
         {isLoading ? (
           <ProductListSkeleton />
-        ) : isOfflinePaused && !displayProducts.length ? (
+        ) : isOfflinePaused && !displayProducts?.length ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <EmptyState
               icon={WifiOff}
@@ -146,7 +146,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
               action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
             />
           </motion.div>
-        ) : displayProducts.length ? (
+        ) : displayProducts?.length ? (
           <motion.div layout className="flex flex-col gap-3">
             <AnimatePresence mode="popLayout">
               {displayProducts.map((product, index) => (

@@ -118,5 +118,5 @@ export async function clearOfflineQueue(): Promise<void> {
 /** Check if there are any pending items in the queue. */
 export async function hasOfflinePendingItems(): Promise<boolean> {
   const queue = await getOfflineQueue()
-  return queue.length > 0
+  return (queue?.length ?? 0) > 0
 }

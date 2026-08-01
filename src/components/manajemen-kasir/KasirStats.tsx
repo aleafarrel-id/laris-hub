@@ -6,8 +6,8 @@ interface KasirStatsProps {
 }
 
 export function KasirStats({ kasirList }: KasirStatsProps) {
-  const activeCount = kasirList.filter((k) => k.is_active).length
-  const suspendedCount = kasirList.length - activeCount
+  const activeCount = kasirList?.filter((k) => k.is_active)?.length ?? 0
+  const suspendedCount = (kasirList?.length ?? 0) - activeCount
 
   return (
     <motion.div
@@ -19,7 +19,7 @@ export function KasirStats({ kasirList }: KasirStatsProps) {
       {[
         {
           label: 'Total',
-          value: kasirList.length,
+          value: kasirList?.length ?? 0,
           color: 'text-neutral-900',
           bg: 'bg-white',
         },
