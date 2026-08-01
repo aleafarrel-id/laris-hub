@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
@@ -29,24 +30,27 @@ export function useKasirList() {
   })
 
   // Transform pending offline items
-  const createCashiers = pendingItems.filter(item => item.action === 'CREATE_KASIR')
-  const offlineCashiers = createCashiers.map((item) => {
-    const payload = item.payload.payload || item.payload
-    return {
-      id: `pending-${item.localId}`,
-      full_name: payload.full_name,
-      role: 'kasir',
-      is_active: true,
-      created_at: item.createdAt,
-      updated_at: item.createdAt,
-      isOfflinePending: true,
-    } as any
-  })
+  const mergedData = useMemo(() => {
+    const createCashiers = pendingItems.filter(item => item.action === 'CREATE_KASIR')
+    const offlineCashiers = createCashiers.map((item) => {
+      const payload = item.payload.payload || item.payload
+      return {
+        id: `pending-${item.localId}`,
+        full_name: payload.full_name,
+        role: 'kasir',
+        is_active: true,
+        created_at: item.createdAt,
+        updated_at: item.createdAt,
+        isOfflinePending: true,
+      } as any
+    })
 
-  let mergedData = result.data ? [...offlineCashiers, ...result.data] : result.data
-  if (mergedData) {
-    mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'KASIR')
-  }
+    let currentData = result.data ? [...offlineCashiers, ...result.data] : result.data
+    if (currentData) {
+      currentData = applyOptimisticUpdates(currentData, pendingItems, 'KASIR')
+    }
+    return currentData
+  }, [result.data, pendingItems])
 
   return { ...result, data: mergedData, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }

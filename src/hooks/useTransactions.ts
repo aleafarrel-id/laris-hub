@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
 import { createOfflineMutation } from './useOfflineMutation'
@@ -56,35 +57,37 @@ function useInjectedTransactions<T extends object>(result: T): T & { isOfflinePa
   const res = result as any
   const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
-  if (!res.data) {
-    return { ...result, isOfflinePaused }
-  }
+  const data = useMemo(() => {
+    if (!res.data) return res.data
 
-  const creates = pendingItems.filter(i => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE')
-  const offlineTransactions = transformOfflineTransactions(creates, user)
+    const creates = pendingItems.filter(i => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE')
+    const offlineTransactions = transformOfflineTransactions(creates, user)
 
-  let data = res.data
+    let currentData = res.data
 
-  if (data.pages) {
-    // Infinite Query
-    data = {
-      ...data,
-      pages: data.pages.map((page: any, index: number) => {
-        let mergedData = index === 0 ? [...offlineTransactions, ...page.data] : page.data
-        mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'TRANSACTION')
-        return { ...page, data: mergedData }
-      })
+    if (currentData.pages) {
+      // Infinite Query
+      currentData = {
+        ...currentData,
+        pages: currentData.pages.map((page: any, index: number) => {
+          let mergedData = index === 0 ? [...offlineTransactions, ...page.data] : page.data
+          mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'TRANSACTION')
+          return { ...page, data: mergedData }
+        })
+      }
+    } else if (currentData.data && Array.isArray(currentData.data)) {
+      // Paginated structure
+      currentData = {
+        ...currentData,
+        data: applyOptimisticUpdates([...offlineTransactions, ...currentData.data], pendingItems, 'TRANSACTION')
+      }
+    } else if (Array.isArray(currentData)) {
+      // Flat array
+      currentData = applyOptimisticUpdates([...offlineTransactions, ...currentData], pendingItems, 'TRANSACTION')
     }
-  } else if (data.data && Array.isArray(data.data)) {
-    // Paginated structure
-    data = {
-      ...data,
-      data: applyOptimisticUpdates([...offlineTransactions, ...data.data], pendingItems, 'TRANSACTION')
-    }
-  } else if (Array.isArray(data)) {
-    // Flat array
-    data = applyOptimisticUpdates([...offlineTransactions, ...data], pendingItems, 'TRANSACTION')
-  }
+
+    return currentData
+  }, [res.data, pendingItems, user])
 
   return { ...result, data, isOfflinePaused }
 }
@@ -143,39 +146,42 @@ export function useTransactionSummary(
   })
 
   // Mix pending items into the summary optimistically
-  let data = result.data
-  if (data) {
-    let extraSales = 0
-    let extraSalesTunai = 0
-    let extraSalesQris = 0
-    let extraPendingQris = 0
-    let extraExpenses = 0
+  const data = useMemo(() => {
+    let currentData = result.data
+    if (currentData) {
+      let extraSales = 0
+      let extraSalesTunai = 0
+      let extraSalesQris = 0
+      let extraPendingQris = 0
+      let extraExpenses = 0
 
-    pendingItems.forEach(item => {
-      const payload = item.payload.payload || item.payload
-      const amt = payload.items?.reduce((sum: number, i: any) => sum + (i.selling_price * i.quantity), 0) || payload.total_amount || 0
+      pendingItems.forEach(item => {
+        const payload = item.payload.payload || item.payload
+        const amt = payload.items?.reduce((sum: number, i: any) => sum + (i.selling_price * i.quantity), 0) || payload.total_amount || 0
 
-      if (item.action === 'CREATE_SALE' && filters.type !== 'pengeluaran') {
-        extraSales += amt
-        if (payload.payment_method === 'tunai') extraSalesTunai += amt
-        if (payload.payment_method === 'qris') {
-          extraSalesQris += amt
-          if (payload.status === 'pending') extraPendingQris += amt
+        if (item.action === 'CREATE_SALE' && filters.type !== 'pengeluaran') {
+          extraSales += amt
+          if (payload.payment_method === 'tunai') extraSalesTunai += amt
+          if (payload.payment_method === 'qris') {
+            extraSalesQris += amt
+            if (payload.status === 'pending') extraPendingQris += amt
+          }
+        } else if (item.action === 'CREATE_EXPENSE' && filters.type !== 'penjualan') {
+          extraExpenses += amt
         }
-      } else if (item.action === 'CREATE_EXPENSE' && filters.type !== 'penjualan') {
-        extraExpenses += amt
-      }
-    })
+      })
 
-    data = {
-      totalSales: data.totalSales + extraSales,
-      totalSalesTunai: data.totalSalesTunai + extraSalesTunai,
-      totalSalesQris: data.totalSalesQris + extraSalesQris,
-      totalPendingQris: data.totalPendingQris + extraPendingQris,
-      totalExpenses: data.totalExpenses + extraExpenses,
-      totalProfit: data.totalProfit + extraSales - extraExpenses,
+      currentData = {
+        totalSales: currentData.totalSales + extraSales,
+        totalSalesTunai: currentData.totalSalesTunai + extraSalesTunai,
+        totalSalesQris: currentData.totalSalesQris + extraSalesQris,
+        totalPendingQris: currentData.totalPendingQris + extraPendingQris,
+        totalExpenses: currentData.totalExpenses + extraExpenses,
+        totalProfit: currentData.totalProfit + extraSales - extraExpenses,
+      }
     }
-  }
+    return currentData
+  }, [result.data, pendingItems, filters.type])
 
   return { ...result, data, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }

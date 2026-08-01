@@ -19,7 +19,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true, // Enable PWA in development
+        enabled: true,
         type: 'module',
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'logo-192.png', 'logo-512.png', 'robots.txt'],
@@ -29,7 +29,6 @@ export default defineConfig({
         description: 'Aplikasi Kasir & Pencatatan Keuangan UMKM',
         theme_color: '#285eaf',
         background_color: '#F5F5F5',
-        display: 'fullscreen',
         orientation: 'portrait-primary',
         start_url: '/',
         scope: '/',

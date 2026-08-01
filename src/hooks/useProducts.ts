@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
@@ -22,42 +23,44 @@ function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused
   const res = result as any
   const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
-  if (!res.data) return { ...result, isOfflinePaused }
+  const data = useMemo(() => {
+    if (!res.data) return res.data
 
-  const createProducts = pendingItems.filter(item => item.action === 'CREATE_PRODUCT')
-  const offlineProducts = createProducts.map((item: any) => {
-    const payload = item.payload.payload || item.payload
-    return {
-      id: `pending-${item.localId}`,
-      name: payload.name,
-      sku: payload.sku,
-      hpp: payload.hpp,
-      selling_price: payload.selling_price,
-      description: payload.description,
-      image_url: payload.image_url,
-      is_active: payload.is_active,
-      created_at: item.createdAt,
-      updated_at: item.createdAt,
-      isOfflinePending: true,
-    } as any
-  })
+    const createProducts = pendingItems.filter(item => item.action === 'CREATE_PRODUCT')
+    const offlineProducts = createProducts.map((item: any) => {
+      const payload = item.payload.payload || item.payload
+      return {
+        id: `pending-${item.localId}`,
+        name: payload.name,
+        sku: payload.sku,
+        hpp: payload.hpp,
+        selling_price: payload.selling_price,
+        description: payload.description,
+        image_url: payload.image_url,
+        is_active: payload.is_active,
+        created_at: item.createdAt,
+        updated_at: item.createdAt,
+        isOfflinePending: true,
+      } as any
+    })
 
-  let data = res.data
+    let currentData = res.data
 
-  if (data.pages) {
-    // Infinite query structure
-    data = {
-      ...data,
-      pages: data.pages.map((page: any, index: number) => {
-        let mergedPageData = index === 0 ? [...offlineProducts, ...page.data] : page.data
-        mergedPageData = applyOptimisticUpdates(mergedPageData, pendingItems, 'PRODUCT')
-        return { ...page, data: mergedPageData }
-      }),
+    if (currentData.pages) {
+      // Infinite query structure
+      currentData = {
+        ...currentData,
+        pages: currentData.pages.map((page: any, index: number) => {
+          let mergedPageData = index === 0 ? [...offlineProducts, ...page.data] : page.data
+          mergedPageData = applyOptimisticUpdates(mergedPageData, pendingItems, 'PRODUCT')
+          return { ...page, data: mergedPageData }
+        }),
+      }
+    } else if (Array.isArray(currentData)) {
+      currentData = applyOptimisticUpdates([...offlineProducts, ...currentData], pendingItems, 'PRODUCT')
     }
-  } else if (Array.isArray(data)) {
-    // Flat array structure
-    data = applyOptimisticUpdates([...offlineProducts, ...data], pendingItems, 'PRODUCT')
-  }
+    return currentData
+  }, [res.data, pendingItems])
 
   return { ...result, data, isOfflinePaused }
 }
@@ -65,11 +68,16 @@ function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused
 export function useProducts(activeOnly = false) {
   const user = useAuthStore((state) => state.user)
 
+  const selectFn = useCallback(
+    (data: any[]) => (activeOnly ? data.filter((p) => p.is_active) : data),
+    [activeOnly]
+  )
+
   const result = useQuery({
     enabled: !!user,
     queryKey: QUERY_KEYS.PRODUCTS,
     queryFn: () => getProducts(false), // Always fetch all to populate cache for both views
-    select: (data) => (activeOnly ? data.filter((p) => p.is_active) : data),
+    select: selectFn,
   })
 
   return useInjectedProducts(result)

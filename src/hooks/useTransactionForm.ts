@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import type { Product, TransactionWithItems } from '@/types'
 
@@ -79,10 +79,15 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
   const { data: products = [], isLoading: productsLoading, isOfflinePaused } = useProducts(true)
   const cartState = useSaleCart()
   const { setCart } = cartState
+  const initializedForTx = useRef<string | null>(null)
 
   // Pre-populate cart when editing an existing transaction
   useEffect(() => {
     if (!isEditing || productsLoading || !products?.length || !transaction.transaction_items) {
+      return
+    }
+
+    if (initializedForTx.current === transaction.id) {
       return
     }
 
@@ -115,6 +120,7 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
       })
     })
     setCart(initialCart)
+    initializedForTx.current = transaction.id
   }, [isEditing, transaction, products, productsLoading, setCart])
 
   return {
