@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
 import { createOfflineMutation } from './useOfflineMutation'
@@ -57,37 +56,35 @@ function useInjectedTransactions<T extends object>(result: T): T & { isOfflinePa
   const res = result as any
   const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
-  if (!res.data) return { ...result, isOfflinePaused }
+  if (!res.data) {
+    return { ...result, isOfflinePaused }
+  }
 
-  const data = useMemo(() => {
-    const creates = pendingItems.filter(i => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE')
-    const offlineTransactions = transformOfflineTransactions(creates, user)
+  const creates = pendingItems.filter(i => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE')
+  const offlineTransactions = transformOfflineTransactions(creates, user)
 
-    let currentData = res.data
+  let data = res.data
 
-    if (currentData.pages) {
-      // Infinite Query
-      currentData = {
-        ...currentData,
-        pages: currentData.pages.map((page: any, index: number) => {
-          let mergedData = index === 0 ? [...offlineTransactions, ...page.data] : page.data
-          mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'TRANSACTION')
-          return { ...page, data: mergedData }
-        })
-      }
-    } else if (currentData.data && Array.isArray(currentData.data)) {
-      // Paginated structure
-      currentData = {
-        ...currentData,
-        data: applyOptimisticUpdates([...offlineTransactions, ...currentData.data], pendingItems, 'TRANSACTION')
-      }
-    } else if (Array.isArray(currentData)) {
-      // Flat array
-      currentData = applyOptimisticUpdates([...offlineTransactions, ...currentData], pendingItems, 'TRANSACTION')
+  if (data.pages) {
+    // Infinite Query
+    data = {
+      ...data,
+      pages: data.pages.map((page: any, index: number) => {
+        let mergedData = index === 0 ? [...offlineTransactions, ...page.data] : page.data
+        mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'TRANSACTION')
+        return { ...page, data: mergedData }
+      })
     }
-
-    return currentData
-  }, [res.data, pendingItems, user])
+  } else if (data.data && Array.isArray(data.data)) {
+    // Paginated structure
+    data = {
+      ...data,
+      data: applyOptimisticUpdates([...offlineTransactions, ...data.data], pendingItems, 'TRANSACTION')
+    }
+  } else if (Array.isArray(data)) {
+    // Flat array
+    data = applyOptimisticUpdates([...offlineTransactions, ...data], pendingItems, 'TRANSACTION')
+  }
 
   return { ...result, data, isOfflinePaused }
 }
