@@ -20,6 +20,7 @@ export function EditTransactionModal({
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'detail', transaction?.id],
     queryFn: () => getTransactionWithItems(transaction!.id),
     enabled: isOpen && !!transaction?.id,
+    initialData: transaction ? (transaction as TransactionWithItems) : undefined,
   })
 
   const cachedTx = fullTx ?? (transaction as TransactionWithItems)

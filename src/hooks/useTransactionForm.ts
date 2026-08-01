@@ -88,15 +88,21 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
 
     const initialCart = new Map<string, CartItem>()
     transaction.transaction_items.forEach((item) => {
-      const product = products.find((p) => p.id === item.product_id)
-      const fallbackId = item.product_id ?? crypto.randomUUID()
+      let product = products.find((p) => p.id === item.product_id)
+      
+      // Backward compatibility for old cache that only had product_name
+      if (!product && !item.product_id && item.product_name) {
+        product = products.find((p) => p.name === item.product_name)
+      }
+
+      const fallbackId = item.product_id ?? product?.id ?? crypto.randomUUID()
       const productData =
         product ??
         ({
           id: fallbackId,
           name: item.product_name,
-          hpp: item.product_hpp,
-          selling_price: item.selling_price,
+          hpp: item.product_hpp ?? 0,
+          selling_price: item.selling_price ?? 0,
           image_url: null,
           sku: null,
           stock: 0,

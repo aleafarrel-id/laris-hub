@@ -28,7 +28,7 @@ export async function getTransactions(
     .select(
       `
       id, type, description, total_amount, total_profit, expense_category, expense_items, notes, recorded_by, transaction_at, created_at, updated_at, payment_method, status,
-      transaction_items(product_name, quantity),
+      transaction_items(id, transaction_id, product_id, product_name, product_hpp, selling_price, quantity, subtotal, profit, created_at),
       profiles!recorded_by(id, full_name, avatar_url, phone)
     `,
       { count: 'exact' },
