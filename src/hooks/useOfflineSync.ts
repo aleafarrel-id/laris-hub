@@ -23,6 +23,7 @@ import {
   getOfflineQueue,
   incrementRetryCount,
 } from '@/lib/offline-queue'
+import { dataUrlToFile } from '@/lib/utils'
 import {
   createExpenseTransaction,
   createSaleTransaction,
@@ -31,6 +32,20 @@ import {
   updateSaleTransaction,
   updateTransactionStatus,
 } from '@/services/transaction.service'
+import {
+  createKasir,
+  updateKasir,
+  deleteKasir,
+  toggleKasirStatus
+} from '@/services/kasir-management.service'
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  toggleProductStatus,
+  uploadProductImage,
+} from '@/services/product.service'
+import { updateProfile } from '@/services/auth.service'
 
 const MAX_RETRIES = 3
 
@@ -93,6 +108,41 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
           case 'DELETE_TRANSACTION':
             await deleteTransaction(item.payload.id)
             break
+          case 'CREATE_KASIR':
+            await createKasir(item.payload)
+            break
+          case 'UPDATE_KASIR':
+            await updateKasir(item.payload)
+            break
+          case 'DELETE_KASIR':
+            await deleteKasir(item.payload)
+            break
+          case 'TOGGLE_KASIR':
+            await toggleKasirStatus(item.payload.id, item.payload.isActive)
+            break
+          case 'CREATE_PRODUCT':
+            if (item.payload?.image_url?.startsWith('data:image')) {
+              const file = dataUrlToFile(item.payload.image_url, `offline-sync-${Date.now()}.jpg`)
+              item.payload.image_url = await uploadProductImage(file)
+            }
+            await createProduct(item.payload)
+            break
+          case 'UPDATE_PRODUCT':
+            if (item.payload?.data?.image_url?.startsWith('data:image')) {
+              const file = dataUrlToFile(item.payload.data.image_url, `offline-sync-${Date.now()}.jpg`)
+              item.payload.data.image_url = await uploadProductImage(file)
+            }
+            await updateProduct(item.payload.id, item.payload.data)
+            break
+          case 'DELETE_PRODUCT':
+            await deleteProduct(item.payload)
+            break
+          case 'TOGGLE_PRODUCT':
+            await toggleProductStatus(item.payload.id, item.payload.isActive)
+            break
+          case 'UPDATE_PROFILE':
+            await updateProfile(item.payload.id, item.payload.updates)
+            break
           default:
             console.warn('[OfflineSync] Unknown action:', item.action)
         }
@@ -111,10 +161,13 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       }
     }
 
-    // Refresh all transaction queries
+    // Refresh queries
     if (successCount > 0) {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE })
 
       toast.success(`${successCount} tindakan offline berhasil disinkronkan!`, {
         description: 'Data telah tersimpan ke database.',

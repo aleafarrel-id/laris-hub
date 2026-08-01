@@ -1,5 +1,6 @@
 import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from 'lucide-react'
 import { useState } from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -28,6 +29,8 @@ export function RecentTransactionsTable({
   onUpdateStatus,
 }: RecentTransactionsTableProps) {
   const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+  const [mobileListRef] = useAutoAnimate<HTMLDivElement>()
+  const [tbodyRef] = useAutoAnimate<HTMLTableSectionElement>()
 
   if (isLoading) {
     return (
@@ -58,12 +61,14 @@ export function RecentTransactionsTable({
 
   return (
     <>
-      <div className="flex flex-col gap-3 md:hidden">
+      <div ref={mobileListRef} className="flex flex-col gap-3 md:hidden">
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            onClick={() => setViewingTx(tx)}
-            className="flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer"
+            onClick={() => !(tx as any).isOfflinePending && setViewingTx(tx)}
+            className={`flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer ${
+              (tx as any).isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
+            }`}
           >
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -72,7 +77,7 @@ export function RecentTransactionsTable({
             >
               {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
             </div>
-            {isAdmin && (
+            {isAdmin && !(tx as any).isOfflinePending && (
               <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                 <button
                   type="button"
@@ -182,12 +187,14 @@ export function RecentTransactionsTable({
               <th className="text-right py-2.5 px-4 font-semibold text-neutral-500 text-xs uppercase tracking-wide rounded-tr-lg w-20" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody ref={tbodyRef} className="divide-y divide-neutral-100">
             {transactions.map((tx) => (
               <tr
                 key={tx.id}
-                onClick={() => setViewingTx(tx)}
-                className="hover:bg-neutral-50/80 transition-colors cursor-pointer"
+                onClick={() => !(tx as any).isOfflinePending && setViewingTx(tx)}
+                className={`hover:bg-neutral-50/80 transition-colors cursor-pointer ${
+                  (tx as any).isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
+                }`}
               >
                 <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
                   {formatTime(tx.transaction_at)}
@@ -227,43 +234,49 @@ export function RecentTransactionsTable({
                   {formatRupiah(tx.total_amount)}
                 </td>
                 <td className="py-2.5 px-4 text-right align-top">
-                  <div className="flex justify-end items-center gap-1">
-                    {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                  {!(tx as any).isOfflinePending ? (
+                    <div className="flex justify-end items-center gap-1">
+                      {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onUpdateStatus(tx.id, 'sukses')
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
+                        >
+                          <CheckCircle2 size={14} />
+                          Selesai
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          onUpdateStatus(tx.id, 'sukses')
+                          onEditTransaction(tx as unknown as TransactionWithItems)
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
+                        className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        title="Edit Transaksi"
                       >
-                        <CheckCircle2 size={14} />
-                        Selesai
+                        <Edit3 size={15} />
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onEditTransaction(tx as unknown as TransactionWithItems)
-                      }}
-                      className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                      title="Edit Transaksi"
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDeleteTransaction(tx.id)
-                      }}
-                      className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
-                      title="Hapus Transaksi"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onDeleteTransaction(tx.id)
+                        }}
+                        className="p-1.5 rounded-lg text-neutral-300 hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                        title="Hapus Transaksi"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end items-center gap-1 text-xs text-neutral-400 font-medium">
+                      Menunggu Sinkronisasi
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

@@ -71,8 +71,21 @@ export function ProductForm({
     let finalImageUrl = data.image_url
 
     if (imageFile) {
-      setIsUploadingImage(true)
-      try {
+      if (!navigator.onLine) {
+        // Read file as Base64 for offline cache
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(imageFile)
+        })
+        finalImageUrl = dataUrl
+        toast.info('Menyimpan Gambar Offline', {
+          description: 'Gambar akan diunggah otomatis saat koneksi tersedia.',
+        })
+      } else {
+        setIsUploadingImage(true)
+        try {
         const options = {
           maxSizeMB: 1,
           maxWidthOrHeight: 1920,
@@ -85,8 +98,9 @@ export function ProductForm({
         toast.error(message)
         setIsUploadingImage(false)
         return
-      } finally {
-        setIsUploadingImage(false)
+        } finally {
+          setIsUploadingImage(false)
+        }
       }
     }
 

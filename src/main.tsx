@@ -40,7 +40,6 @@ window.addEventListener('error', (e) => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      networkMode: 'offlineFirst',
       staleTime: 1000 * 60, // 1 minute - aggressive caching
       gcTime: 1000 * 60 * 60 * 24, // 24 hours garbage collection for offline access
       retry: (failureCount, error) => {

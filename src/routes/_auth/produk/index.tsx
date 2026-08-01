@@ -13,6 +13,7 @@ import {
   WifiOff,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { useCallback, useMemo, useState } from 'react'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { Button } from '@/components/ui/Button'
@@ -71,6 +72,7 @@ function ProdukPage() {
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'list'>('laris-hub-view-mode', 'grid')
+  const [listRef] = useAutoAnimate<HTMLDivElement>()
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: string; name: string }>({
     isOpen: false,
@@ -192,10 +194,7 @@ function ProdukPage() {
       )}
 
       {!isLoading && !isOfflinePaused && !products.length && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           <EmptyState
             icon={Package}
             title={search ? 'Produk tidak ditemukan' : 'Belum ada produk'}
@@ -206,32 +205,38 @@ function ProdukPage() {
             }
             action={!search ? { label: 'Tambah Produk', onClick: openCreate } : undefined}
           />
-        </motion.div>
+        </div>
       )}
 
       {isOfflinePaused && !products.length && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           <EmptyState
             icon={WifiOff}
             title="Katalog Tidak Tersedia"
             description="Anda sedang offline dan data katalog belum tersimpan."
             action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
           />
-        </motion.div>
+        </div>
       )}
 
       {!isLoading && products.length > 0 && (
         <div className="pb-24">
-          <motion.div
-            layout
-            className={`grid gap-5 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
-          >
-            <AnimatePresence mode="popLayout">
-              {products.map((product, index) => {
-                const margin = calcMargin(product.selling_price, product.hpp)
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              ref={listRef}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+                exit: { opacity: 0, scale: 0.98, transition: { duration: 0.15 } },
+              }}
+              className={`grid gap-5 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
+            >
+            {products.map((product) => {
+              const margin = calcMargin(product.selling_price, product.hpp)
                 const marginColor =
                   margin >= MARGIN_GOOD_THRESHOLD
                     ? 'text-success bg-success/10'
@@ -241,13 +246,12 @@ function ProdukPage() {
 
                 return (
                   <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.2) }}
                     key={product.id}
-                    className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active ? 'opacity-60 grayscale-[0.5]' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: { opacity: 1, y: 0, transition: { type: 'spring', duration: 0.5, bounce: 0 } },
+                    }}
+                    className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active || (product as any).isOfflinePending ? 'opacity-60 grayscale-[0.5]' : ''} ${(product as any).isOfflinePending ? 'cursor-not-allowed border-dashed' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
                   >
                     <div
                       className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
@@ -335,29 +339,37 @@ function ProdukPage() {
                       </div>
 
                       <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(product)}
-                          className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(product.id, product.name)}
-                          className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
-                          title="Hapus Produk"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {!(product as any).isOfflinePending ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEdit(product)}
+                              className="flex-1 py-2 bg-neutral-100 text-neutral-700 hover:bg-primary hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                              <Pencil size={14} />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(product.id, product.name)}
+                              className="w-10 flex-shrink-0 flex items-center justify-center bg-neutral-100 text-neutral-500 hover:bg-danger hover:text-white rounded-xl transition-colors"
+                              title="Hapus Produk"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex-1 py-2 bg-neutral-100 text-neutral-500 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                            Menunggu Sinkronisasi
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>
                 )
               })}
-            </AnimatePresence>
-          </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
           {hasNextPage && (
             <div className="mt-8 flex justify-center">

@@ -23,8 +23,12 @@ export const TransactionListItem = memo(function TransactionListItem({
 
   return (
     <motion.div
-      onClick={() => onClick?.(tx)}
-      className={`app-card p-3.5 flex items-stretch gap-3 cursor-pointer hover:border-primary/30 transition-colors ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''}`}
+      onClick={() => {
+        if (!(tx as any).isOfflinePending) onClick?.(tx)
+      }}
+      className={`app-card p-3.5 flex items-stretch gap-3 hover:border-primary/30 transition-colors ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''} ${
+        (tx as any).isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer'
+      }`}
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut', delay: idx * 0.04 }}
@@ -70,18 +74,24 @@ export const TransactionListItem = memo(function TransactionListItem({
           {formatRupiah(tx.total_amount)}
         </span>
 
-        {isPendingQris && onUpdateStatus && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onUpdateStatus(tx.id, 'sukses')
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95 mt-2"
-          >
-            <CheckCircle2 size={15} />
-            Selesai
-          </button>
+        {!(tx as any).isOfflinePending ? (
+          isPendingQris && onUpdateStatus && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onUpdateStatus(tx.id, 'sukses')
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95 mt-2"
+            >
+              <CheckCircle2 size={15} />
+              Selesai
+            </button>
+          )
+        ) : (
+          <span className="text-[10px] font-semibold text-neutral-400 mt-2 text-right">
+            Menunggu<br/>Sinkronisasi
+          </span>
         )}
       </div>
     </motion.div>

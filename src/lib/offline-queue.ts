@@ -11,6 +11,15 @@ export type OfflineQueueAction =
   | 'UPDATE_EXPENSE'
   | 'UPDATE_STATUS'
   | 'DELETE_TRANSACTION'
+  | 'CREATE_KASIR'
+  | 'UPDATE_KASIR'
+  | 'DELETE_KASIR'
+  | 'TOGGLE_KASIR'
+  | 'CREATE_PRODUCT'
+  | 'UPDATE_PRODUCT'
+  | 'DELETE_PRODUCT'
+  | 'TOGGLE_PRODUCT'
+  | 'UPDATE_PROFILE'
 
 export interface OfflineQueueItem<T = any> {
   localId: string
@@ -25,6 +34,13 @@ export type OfflineSalePayload = CreateSalePayload
 export type OfflineExpensePayload = CreateExpensePayload
 export type OfflineUpdateStatusPayload = { id: string; status: 'sukses' | 'pending' }
 export type OfflineDeletePayload = { id: string }
+export type OfflineCreateKasirPayload = any
+export type OfflineUpdateKasirPayload = any
+export type OfflineToggleKasirPayload = { id: string; isActive: boolean }
+export type OfflineCreateProductPayload = any
+export type OfflineUpdateProductPayload = { id: string; data: any }
+export type OfflineToggleProductPayload = { id: string; isActive: boolean }
+export type OfflineUpdateProfilePayload = { id: string; updates: any }
 
 /** Retrieve all queued offline transactions. */
 export async function getOfflineQueue(): Promise<OfflineQueueItem[]> {
@@ -53,6 +69,9 @@ export async function enqueueOfflineItem<T>(
 
   try {
     await set(QUEUE_KEY, queue)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('offline-queue-updated'))
+    }
   } catch (err: any) {
     if (err.name === 'QuotaExceededError') {
       throw new Error('Penyimpanan perangkat penuh. Tidak dapat menyimpan transaksi offline.')
@@ -68,6 +87,9 @@ export async function dequeueOfflineItem(localId: string): Promise<void> {
   const queue = await getOfflineQueue()
   const filtered = queue.filter((item) => item.localId !== localId)
   await set(QUEUE_KEY, filtered)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('offline-queue-updated'))
+  }
 }
 
 /** Increment retry count for an item. */
@@ -77,11 +99,17 @@ export async function incrementRetryCount(localId: string): Promise<void> {
     item.localId === localId ? { ...item, retryCount: item.retryCount + 1 } : item,
   )
   await set(QUEUE_KEY, updated)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('offline-queue-updated'))
+  }
 }
 
 /** Clear the entire queue (e.g. on logout). */
 export async function clearOfflineQueue(): Promise<void> {
   await del(QUEUE_KEY)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('offline-queue-updated'))
+  }
 }
 
 /** Check if there are any pending items in the queue. */

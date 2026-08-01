@@ -28,9 +28,12 @@ function ProfilPage() {
     e.preventDefault()
     updateProfile(
       {
-        full_name: form.full_name.trim(),
-        phone: form.phone.trim() || null,
-        avatar_url: profile?.avatar_url ?? null,
+        id: profile!.id,
+        updates: {
+          full_name: form.full_name.trim(),
+          phone: form.phone.trim() || null,
+          avatar_url: profile?.avatar_url ?? null,
+        }
       },
       {
         onSuccess: () => {

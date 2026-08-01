@@ -1,15 +1,18 @@
 import { CheckCircle2, ChevronRight, Phone, ShieldOff } from 'lucide-react'
 import { motion } from 'motion/react'
+import { forwardRef } from 'react'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types'
 import { KasirAvatar } from './KasirAvatar'
 
-export function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => void }) {
-  return (
-    <motion.button
+export const KasirCard = forwardRef<HTMLButtonElement, { kasir: Profile; onClick: () => void }>(
+  ({ kasir, onClick }, ref) => {
+    return (
+      <motion.button
+        ref={ref}
       type="button"
       layout
-      onClick={onClick}
+      onClick={!(kasir as any).isOfflinePending ? onClick : undefined}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
@@ -18,7 +21,7 @@ export function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => v
         kasir.is_active
           ? 'border-neutral-200 hover:border-primary/25'
           : 'border-neutral-100 opacity-70'
-      }`}
+      } ${(kasir as any).isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed hover:border-neutral-200' : ''}`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
@@ -56,11 +59,17 @@ export function KasirCard({ kasir, onClick }: { kasir: Profile; onClick: () => v
           {kasir.is_active ? <CheckCircle2 size={10} /> : <ShieldOff size={10} />}
           {kasir.is_active ? 'Aktif' : 'Tangguhkan'}
         </span>
-        <ChevronRight
-          size={15}
-          className="text-neutral-300 group-hover:text-primary transition-colors"
-        />
+        {(kasir as any).isOfflinePending ? (
+          <span className="text-[10px] font-semibold text-neutral-400">Menunggu Sinkronisasi</span>
+        ) : (
+          <ChevronRight
+            size={15}
+            className="text-neutral-300 group-hover:text-primary transition-colors"
+          />
+        )}
       </div>
     </motion.button>
   )
-}
+})
+
+KasirCard.displayName = 'KasirCard'

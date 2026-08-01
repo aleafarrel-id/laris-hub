@@ -1,7 +1,8 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { createOfflineMutation } from './useOfflineMutation'
+import { useOfflinePendingItems } from './useOfflinePendingItems'
+import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
 import { QUERY_KEYS } from '@/lib/constants'
-import { translateError } from '@/lib/utils'
 import type { ProductFormData } from '@/lib/validations/product.schema'
 import {
   createProduct,
@@ -12,6 +13,54 @@ import {
   updateProduct,
 } from '@/services/product.service'
 import { useAuthStore } from '@/store/auth.store'
+
+function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused: boolean } {
+  const pendingItems = useOfflinePendingItems([
+    'CREATE_PRODUCT', 'UPDATE_PRODUCT', 'DELETE_PRODUCT', 'TOGGLE_PRODUCT'
+  ])
+
+  const res = result as any
+  const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
+
+  if (!res.data) return { ...result, isOfflinePaused }
+
+  const createProducts = pendingItems.filter(item => item.action === 'CREATE_PRODUCT')
+  const offlineProducts = createProducts.map((item: any) => {
+    const payload = item.payload.payload || item.payload
+    return {
+      id: `pending-${item.localId}`,
+      name: payload.name,
+      sku: payload.sku,
+      hpp: payload.hpp,
+      selling_price: payload.selling_price,
+      description: payload.description,
+      image_url: payload.image_url,
+      is_active: payload.is_active,
+      created_at: item.createdAt,
+      updated_at: item.createdAt,
+      isOfflinePending: true,
+    } as any
+  })
+
+  let data = res.data
+
+  if (data.pages) {
+    // Infinite query structure
+    data = {
+      ...data,
+      pages: data.pages.map((page: any, index: number) => {
+        let mergedPageData = index === 0 ? [...offlineProducts, ...page.data] : page.data
+        mergedPageData = applyOptimisticUpdates(mergedPageData, pendingItems, 'PRODUCT')
+        return { ...page, data: mergedPageData }
+      }),
+    }
+  } else if (Array.isArray(data)) {
+    // Flat array structure
+    data = applyOptimisticUpdates([...offlineProducts, ...data], pendingItems, 'PRODUCT')
+  }
+
+  return { ...result, data, isOfflinePaused }
+}
 
 export function useProducts(activeOnly = false) {
   const user = useAuthStore((state) => state.user)
@@ -24,7 +73,7 @@ export function useProducts(activeOnly = false) {
     staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
   })
 
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+  return useInjectedProducts(result)
 }
 
 export function useInfiniteProducts(search = '', pageSize = 20) {
@@ -39,83 +88,66 @@ export function useInfiniteProducts(search = '', pageSize = 20) {
     staleTime: 1000 * 60 * 5,
   })
 
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+  return useInjectedProducts(result)
 }
 
 export function useCreateProduct() {
-  const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
 
-  return useMutation({
-    mutationFn: (data: ProductFormData) => {
+  return createOfflineMutation<ProductFormData, any>(
+    'CREATE_PRODUCT',
+    (data) => {
       if (!user) throw new Error('Belum login')
       return createProduct(data)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      toast.success('Produk berhasil ditambahkan!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
+    {
+      successMessage: 'Produk berhasil ditambahkan!',
+      errorAction: 'menambah produk',
+      onSuccess: (_data, _vars, queryClient) => {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
+      }
+    }
+  )()
 }
 
 export function useUpdateProduct() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ProductFormData }) => updateProduct(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      toast.success('Produk berhasil diperbarui!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
+  return createOfflineMutation<{ id: string; data: ProductFormData }, any>(
+    'UPDATE_PRODUCT',
+    ({ id, data }) => updateProduct(id, data),
+    {
+      successMessage: 'Produk berhasil diperbarui!',
+      errorAction: 'memperbarui produk',
+      onSuccess: (_data, _vars, queryClient) => {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
+      }
+    }
+  )()
 }
 
 export function useDeleteProduct() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: string) => deleteProduct(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      toast.success('Produk berhasil dihapus!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
+  return createOfflineMutation<string, any>(
+    'DELETE_PRODUCT',
+    (id) => deleteProduct(id),
+    {
+      successMessage: 'Produk berhasil dihapus!',
+      errorAction: 'menghapus produk',
+      onSuccess: (_data, _vars, queryClient) => {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
+      }
+    }
+  )()
 }
 
 export function useToggleProductStatus() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      toggleProductStatus(id, isActive),
-    onMutate: async ({ id, isActive }) => {
-      // Optimistic update
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      const prev = queryClient.getQueryData(QUERY_KEYS.PRODUCTS)
-      queryClient.setQueryData(
-        QUERY_KEYS.PRODUCTS,
-        (old: { id: string; is_active: boolean }[] | undefined) =>
-          old?.map((p) => (p.id === id ? { ...p, is_active: isActive } : p)),
-      )
-      return { prev }
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) {
-        queryClient.setQueryData(QUERY_KEYS.PRODUCTS, ctx.prev)
+  return createOfflineMutation<{ id: string; isActive: boolean }, any>(
+    'TOGGLE_PRODUCT',
+    ({ id, isActive }) => toggleProductStatus(id, isActive),
+    {
+      successMessage: 'Status produk berhasil diubah!',
+      errorAction: 'mengubah status produk',
+      onSuccess: (_data, _vars, queryClient) => {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
       }
-      toast.error('Gagal mengubah status produk')
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-    },
-  })
+    }
+  )()
 }

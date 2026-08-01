@@ -1,7 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
+import { createOfflineMutation } from './useOfflineMutation'
 import { QUERY_KEYS } from '@/lib/constants'
-import { translateError } from '@/lib/utils'
 import { getProfile, updateProfile } from '@/services/auth.service'
 import { getActiveCashiers } from '@/services/kasir-management.service'
 import { useAuthStore } from '@/store/auth.store'
@@ -33,23 +32,28 @@ export function useCashiers() {
 }
 
 export function useUpdateProfile() {
-  const queryClient = useQueryClient()
-  const { user, setProfile } = useAuthStore()
+  const { user, profile, setProfile } = useAuthStore()
 
-  return useMutation({
-    mutationFn: (updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'>) => {
+  return createOfflineMutation<{ id: string; updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'> }, any>(
+    'UPDATE_PROFILE',
+    ({ id, updates }) => {
       if (!user) throw new Error('Tidak ada sesi pengguna')
-      return updateProfile(user.id, updates)
+      return updateProfile(id, updates)
     },
-    onSuccess: (updatedProfile) => {
-      // Update Zustand store immediately
-      setProfile(updatedProfile)
-      // Invalidate cached profile query
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE })
-      toast.success('Profil berhasil diperbarui!')
-    },
-    onError: (error) => {
-      toast.error(translateError(error))
-    },
-  })
+    {
+      successMessage: 'Profil berhasil diperbarui!',
+      errorAction: 'memperbarui profil',
+      onSuccess: (updatedProfile, _vars, queryClient) => {
+        if ((updatedProfile as any)?.offline) {
+          // Optimistic update for offline mode
+          setProfile({ ...profile!, ..._vars.updates })
+          return
+        }
+        // Update Zustand store immediately
+        setProfile(updatedProfile)
+        // Invalidate cached profile query
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE })
+      }
+    }
+  )()
 }

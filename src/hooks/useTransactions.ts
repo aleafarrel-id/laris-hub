@@ -1,10 +1,9 @@
-import type { QueryClient } from '@tanstack/react-query'
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useMemo } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/lib/constants'
-import type { OfflineQueueAction } from '@/lib/offline-queue'
-import { enqueueOfflineItem } from '@/lib/offline-queue'
-import { translateError } from '@/lib/utils'
+import { createOfflineMutation } from './useOfflineMutation'
+import { useOfflinePendingItems } from './useOfflinePendingItems'
+import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
 import { getKPISummaryForRange } from '@/services/dashboard.service'
 import {
   createExpenseTransaction,
@@ -23,16 +22,74 @@ import type { TransactionFilters } from '@/types'
 // ─── Private Helpers ──────────────────────────────────────────────────────────
 
 /** Invalidate all data that depends on transaction changes. */
-function invalidateTransactionQueries(queryClient: QueryClient) {
+function invalidateTransactionQueries(queryClient: any) {
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TRANSACTIONS })
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
 }
 
-/** Standard error handler for transaction mutations. */
-function onTransactionError(action: string) {
-  return (error: unknown) => {
-    toast.error(`Gagal ${action}`, { description: translateError(error) })
-  }
+function transformOfflineTransactions(pendingItems: any[], user: any) {
+  return pendingItems.map((item) => {
+    const payload = item.payload.payload || item.payload
+    return {
+      id: `pending-${item.localId}`,
+      transaction_at: item.createdAt,
+      type: item.action === 'CREATE_SALE' ? 'penjualan' : 'pengeluaran',
+      payment_method: payload.payment_method || 'tunai',
+      status: payload.status || 'sukses',
+      total_amount: payload.items?.reduce((sum: number, i: any) => sum + (i.selling_price * i.quantity), 0) || payload.total_amount || 0,
+      notes: payload.notes || '',
+      recorded_by: user?.id,
+      profiles: {
+        full_name: user?.user_metadata?.full_name || 'Kasir',
+      },
+      isOfflinePending: true, // Custom flag
+      items: payload.items || [],
+    } as any
+  })
+}
+
+function useInjectedTransactions<T extends object>(result: T): T & { isOfflinePaused: boolean } {
+  const user = useAuthStore((state) => state.user)
+  const pendingItems = useOfflinePendingItems([
+    'CREATE_SALE', 'CREATE_EXPENSE', 'UPDATE_SALE', 'UPDATE_EXPENSE', 'UPDATE_STATUS', 'DELETE_TRANSACTION'
+  ])
+
+  const res = result as any
+  const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
+
+  if (!res.data) return { ...result, isOfflinePaused }
+
+  const data = useMemo(() => {
+    const creates = pendingItems.filter(i => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE')
+    const offlineTransactions = transformOfflineTransactions(creates, user)
+
+    let currentData = res.data
+
+    if (currentData.pages) {
+      // Infinite Query
+      currentData = {
+        ...currentData,
+        pages: currentData.pages.map((page: any, index: number) => {
+          let mergedData = index === 0 ? [...offlineTransactions, ...page.data] : page.data
+          mergedData = applyOptimisticUpdates(mergedData, pendingItems, 'TRANSACTION')
+          return { ...page, data: mergedData }
+        })
+      }
+    } else if (currentData.data && Array.isArray(currentData.data)) {
+      // Paginated structure
+      currentData = {
+        ...currentData,
+        data: applyOptimisticUpdates([...offlineTransactions, ...currentData.data], pendingItems, 'TRANSACTION')
+      }
+    } else if (Array.isArray(currentData)) {
+      // Flat array
+      currentData = applyOptimisticUpdates([...offlineTransactions, ...currentData], pendingItems, 'TRANSACTION')
+    }
+
+    return currentData
+  }, [res.data, pendingItems, user])
+
+  return { ...result, data, isOfflinePaused }
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
@@ -46,8 +103,8 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
     queryFn: () => getTransactions(filters, page, pageSize),
     staleTime: 1000 * 30, // 30s - transactions change frequently
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  return useInjectedTransactions(result)
 }
 
 export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSize = 20) {
@@ -61,14 +118,15 @@ export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSi
     initialPageParam: 1,
     staleTime: 1000 * 30,
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  return useInjectedTransactions(result)
 }
 
 export function useTransactionSummary(
   filters: Pick<TransactionFilters, 'dateRange' | 'type' | 'recordedBy'> = {},
 ) {
   const user = useAuthStore((state) => state.user)
+  const pendingItems = useOfflinePendingItems(['CREATE_SALE', 'CREATE_EXPENSE'])
 
   const result = useQuery({
     enabled: !!user,
@@ -88,92 +146,57 @@ export function useTransactionSummary(
     },
     staleTime: 1000 * 30,
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  // Mix pending items into the summary optimistically
+  let data = result.data
+  if (data) {
+    let extraSales = 0
+    let extraSalesTunai = 0
+    let extraSalesQris = 0
+    let extraPendingQris = 0
+    let extraExpenses = 0
+
+    pendingItems.forEach(item => {
+      const payload = item.payload.payload || item.payload
+      const amt = payload.items?.reduce((sum: number, i: any) => sum + (i.selling_price * i.quantity), 0) || payload.total_amount || 0
+
+      if (item.action === 'CREATE_SALE' && filters.type !== 'pengeluaran') {
+        extraSales += amt
+        if (payload.payment_method === 'tunai') extraSalesTunai += amt
+        if (payload.payment_method === 'qris') {
+          extraSalesQris += amt
+          if (payload.status === 'pending') extraPendingQris += amt
+        }
+      } else if (item.action === 'CREATE_EXPENSE' && filters.type !== 'penjualan') {
+        extraExpenses += amt
+      }
+    })
+
+    data = {
+      totalSales: data.totalSales + extraSales,
+      totalSalesTunai: data.totalSalesTunai + extraSalesTunai,
+      totalSalesQris: data.totalSalesQris + extraSalesQris,
+      totalPendingQris: data.totalPendingQris + extraPendingQris,
+      totalExpenses: data.totalExpenses + extraExpenses,
+      totalProfit: data.totalProfit + extraSales - extraExpenses,
+    }
+  }
+
+  return { ...result, data, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
 }
 
 export function useTodayTransactions(recordedBy?: string) {
   const user = useAuthStore((state) => state.user)
 
-  return useQuery({
+  const result = useQuery({
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'today', recordedBy],
     queryFn: () => getTodayTransactions(recordedBy),
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60, // Auto-refresh every minute
   })
-}
 
-// ─── Offline Mutation Factory ─────────────────────────────────────────────────
-
-function createOfflineMutation<TVariables, TData>(
-  action: OfflineQueueAction,
-  mutationFn: (vars: TVariables) => Promise<TData>,
-  options: {
-    successMessage: string
-    successDescription?: string
-    errorAction: string
-  },
-) {
-  return function useMutationHook() {
-    const queryClient = useQueryClient()
-    return useMutation({
-      mutationFn: async (payload: TVariables) => {
-        // Ensure timestamp is recorded exactly when created if offline
-        const targetPayload = (payload as any).payload || payload
-        if (
-          typeof targetPayload === 'object' &&
-          targetPayload !== null &&
-          !('id' in targetPayload) &&
-          targetPayload.transaction_at === undefined
-        ) {
-          targetPayload.transaction_at = nowIso()
-        }
-
-        if (!navigator.onLine) {
-          try {
-            await enqueueOfflineItem(action, payload)
-            return { offline: true } as any
-          } catch (queueErr: any) {
-            toast.error('Gagal Menyimpan Offline', {
-              description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
-            })
-            throw queueErr
-          }
-        }
-
-        try {
-          return await mutationFn(payload)
-        } catch (err) {
-          if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-            try {
-              await enqueueOfflineItem(action, payload)
-              return { offline: true } as any
-            } catch (queueErr: any) {
-              toast.error('Gagal Menyimpan Offline', {
-                description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
-              })
-              throw queueErr
-            }
-          }
-          throw err
-        }
-      },
-      onSuccess: (data) => {
-        if (data && (data as any).offline) {
-          toast.success('Disimpan secara offline!', {
-            description: 'Tindakan ini akan disinkronkan saat koneksi tersedia.',
-          })
-        } else {
-          invalidateTransactionQueries(queryClient)
-          toast.success(options.successMessage, {
-            description: options.successDescription,
-          })
-        }
-      },
-      onError: onTransactionError(options.errorAction),
-    })
-  }
+  return useInjectedTransactions(result)
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
@@ -181,22 +204,35 @@ function createOfflineMutation<TVariables, TData>(
 type CreateSaleArgs = { payload: Parameters<typeof createSaleTransaction>[0] }
 export const useCreateSale = createOfflineMutation<CreateSaleArgs, any>(
   'CREATE_SALE',
-  ({ payload }) => createSaleTransaction(payload),
+  async ({ payload }) => {
+    // Ensure timestamp is recorded exactly when created if offline
+    if (payload.transaction_at === undefined) {
+      payload.transaction_at = nowIso()
+    }
+    return createSaleTransaction(payload)
+  },
   {
     successMessage: 'Transaksi penjualan berhasil disimpan!',
     successDescription: 'Data telah tersimpan ke Buku Kas.',
     errorAction: 'menyimpan transaksi',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )
 
 type CreateExpenseArgs = { payload: Parameters<typeof createExpenseTransaction>[0] }
 export const useCreateExpense = createOfflineMutation<CreateExpenseArgs, any>(
   'CREATE_EXPENSE',
-  ({ payload }) => createExpenseTransaction(payload),
+  async ({ payload }) => {
+    if (payload.transaction_at === undefined) {
+      payload.transaction_at = nowIso()
+    }
+    return createExpenseTransaction(payload)
+  },
   {
     successMessage: 'Pengeluaran berhasil dicatat!',
     successDescription: 'Data telah tersimpan ke Buku Kas.',
     errorAction: 'mencatat pengeluaran',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )
 
@@ -207,6 +243,7 @@ export const useUpdateSale = createOfflineMutation<UpdateSaleArgs, any>(
   {
     successMessage: 'Transaksi penjualan berhasil diperbarui!',
     errorAction: 'memperbarui transaksi',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )
 
@@ -217,6 +254,7 @@ export const useUpdateExpense = createOfflineMutation<UpdateExpenseArgs, any>(
   {
     successMessage: 'Pengeluaran berhasil diperbarui!',
     errorAction: 'memperbarui pengeluaran',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )
 
@@ -227,6 +265,7 @@ export const useUpdateTransactionStatus = createOfflineMutation<UpdateStatusArgs
   {
     successMessage: 'Status transaksi berhasil diperbarui!',
     errorAction: 'memperbarui status transaksi',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )
 
@@ -237,5 +276,6 @@ export const useDeleteTransaction = createOfflineMutation<DeleteTransactionArgs,
   {
     successMessage: 'Transaksi berhasil dihapus!',
     errorAction: 'menghapus transaksi',
+    onSuccess: (_data, _vars, queryClient) => invalidateTransactionQueries(queryClient)
   },
 )

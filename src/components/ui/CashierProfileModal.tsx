@@ -38,7 +38,7 @@ export function CashierProfileModal({ isOpen, onClose, profile }: CashierProfile
     for (const tx of transactions.data) {
       if (tx.type === 'penjualan') {
         omzet += tx.total_amount
-        profit += Number(tx.total_profit) || 0
+        profit += Number((tx as any).total_profit) || 0
         count++
       }
     }

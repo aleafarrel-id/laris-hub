@@ -169,47 +169,53 @@ export function BukuKasTableDesktop({
                     </td>
                   )}
                   <td className="py-3 px-4 text-right align-top">
-                    <div className="flex justify-end items-center gap-1">
-                      {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onUpdateStatus(tx.id, 'sukses')
-                          }}
-                          className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center justify-center border border-transparent hover:border-emerald-200"
-                          title="Tandai Selesai"
-                        >
-                          <CheckCircle2 size={14} />
-                        </button>
-                      )}
-                      {isAdmin && (
-                        <div className="flex items-center gap-1">
+                    {!(tx as any).isOfflinePending ? (
+                      <div className="flex justify-end items-center gap-1">
+                        {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation()
-                              onEditTransaction(tx as unknown as TransactionWithItems)
+                              onUpdateStatus(tx.id, 'sukses')
                             }}
-                            className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                            title="Edit Transaksi"
+                            className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center justify-center border border-transparent hover:border-emerald-200"
+                            title="Tandai Selesai"
                           >
-                            <Edit3 size={15} />
+                            <CheckCircle2 size={14} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onDeleteTransaction(tx.id)
-                            }}
-                            className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
-                            title="Hapus Transaksi"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                        {isAdmin && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onEditTransaction(tx as unknown as TransactionWithItems)
+                              }}
+                              className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                              title="Edit Transaksi"
+                            >
+                              <Edit3 size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onDeleteTransaction(tx.id)
+                              }}
+                              className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
+                              title="Hapus Transaksi"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-neutral-400 block mt-1">
+                        Menunggu Sinkronisasi
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

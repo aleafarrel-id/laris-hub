@@ -8,6 +8,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { RecentTransactionsTable } from '@/components/dashboard/RecentTransactionsTable'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
@@ -204,45 +205,54 @@ function DashboardPage() {
             />
           </div>
         ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-          <KPICard
-            label="Total Omzet"
-            value={kpi ? formatRupiah(kpi.omzet) : null}
-            isLoading={kpiLoading}
-            icon={TrendingUp}
-            iconColor="text-primary"
-            iconBg="bg-primary/10"
-          />
-          <KPICard
-            label="Total Pengeluaran"
-            value={kpi ? formatRupiah(kpi.pengeluaran) : null}
-            isLoading={kpiLoading}
-            icon={TrendingDown}
-            iconColor="text-danger"
-            iconBg="bg-danger/10"
-          />
-          <KPICard
-            label="Profit Kotor"
-            value={kpi ? formatRupiah(kpi.profit) : null}
-            isLoading={kpiLoading}
-            icon={ArrowLeftRight}
-            iconColor="text-success"
-            iconBg="bg-success/10"
-          />
-          <KPICard
-            label="Profit Bersih"
-            value={kpi ? formatRupiah(netProfit) : null}
-            isLoading={kpiLoading}
-            icon={DollarSign}
-            iconColor={netProfit >= 0 ? 'text-success' : 'text-danger'}
-            iconBg={netProfit >= 0 ? 'bg-success/10' : 'bg-danger/10'}
-            sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
-          />
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4"
+          >
+            <KPICard
+              label="Total Omzet"
+              value={kpi ? formatRupiah(kpi.omzet) : null}
+              isLoading={kpiLoading}
+              icon={TrendingUp}
+              iconColor="text-primary"
+              iconBg="bg-primary/10"
+            />
+            <KPICard
+              label="Total Pengeluaran"
+              value={kpi ? formatRupiah(kpi.pengeluaran) : null}
+              isLoading={kpiLoading}
+              icon={TrendingDown}
+              iconColor="text-danger"
+              iconBg="bg-danger/10"
+            />
+            <KPICard
+              label="Profit Kotor"
+              value={kpi ? formatRupiah(kpi.profit) : null}
+              isLoading={kpiLoading}
+              icon={ArrowLeftRight}
+              iconColor="text-success"
+              iconBg="bg-success/10"
+            />
+            <KPICard
+              label="Profit Bersih"
+              value={kpi ? formatRupiah(netProfit) : null}
+              isLoading={kpiLoading}
+              icon={DollarSign}
+              iconColor={netProfit >= 0 ? 'text-success' : 'text-danger'}
+              iconBg={netProfit >= 0 ? 'bg-success/10' : 'bg-danger/10'}
+              sublabel={`${kpi?.transactionCount ?? 0} transaksi`}
+            />
+          </motion.div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
         <div className="lg:col-span-2 app-card p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-semibold text-neutral-900">Tren 30 Hari Terakhir</h2>
@@ -362,9 +372,14 @@ function DashboardPage() {
             />
           )}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mt-6 app-card p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mt-6 app-card p-6"
+      >
         <h2 className="text-sm font-semibold text-neutral-900 mb-5">10 Transaksi Terbaru</h2>
 
         {recentOffline ? (
@@ -375,17 +390,17 @@ function DashboardPage() {
             action={{ label: 'Muat Ulang', onClick: () => window.location.reload() }}
           />
         ) : (
-        <RecentTransactionsTable
-          transactions={recentTransactions}
-          isLoading={recentLoading}
-          isAdmin={isAdmin}
-          onEditTransaction={setEditingTx}
-          onDeleteTransaction={setDeletingTxId}
-          onSelectKasirProfile={setSelectedKasirProfile}
-          onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
-        />
+          <RecentTransactionsTable
+            transactions={recentTransactions as any}
+            isLoading={recentLoading}
+            isAdmin={isAdmin}
+            onEditTransaction={setEditingTx}
+            onDeleteTransaction={setDeletingTxId}
+            onSelectKasirProfile={setSelectedKasirProfile}
+            onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
+          />
         )}
-      </div>
+      </motion.div>
 
       <CashierProfileModal
         isOpen={!!selectedKasirProfile}

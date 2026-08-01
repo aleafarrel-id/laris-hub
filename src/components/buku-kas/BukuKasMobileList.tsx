@@ -65,8 +65,12 @@ export function BukuKasMobileList({
         {transactions.map((tx, idx) => (
           <motion.div
             key={tx.id}
-            onClick={() => setViewingTx(tx)}
-            className="app-card p-3.5 flex items-center gap-3 relative cursor-pointer hover:border-primary/30 transition-colors"
+            onClick={() => {
+              if (!(tx as any).isOfflinePending) setViewingTx(tx as unknown as TransactionWithItems)
+            }}
+            className={`relative app-card p-4 flex items-stretch gap-3 ${
+              tx.type === 'penjualan' && tx.status === 'pending' ? 'bg-amber-50/30 border-amber-200' : ''
+            } ${(tx as any).isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer hover:border-primary/30 transition-colors'}`}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{
@@ -159,18 +163,24 @@ export function BukuKasMobileList({
                       profit {formatRupiah(tx.total_profit)}
                     </span>
                   )}
-                  {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onUpdateStatus(tx.id, 'sukses')
-                      }}
-                      className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
-                    >
-                      <CheckCircle2 size={12} />
-                      Selesai
-                    </button>
+                  {!(tx as any).isOfflinePending ? (
+                    tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUpdateStatus(tx.id, 'sukses')
+                        }}
+                        className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                      >
+                        <CheckCircle2 size={12} />
+                        Selesai
+                      </button>
+                    )
+                  ) : (
+                    <span className="text-[10px] font-semibold text-neutral-400 mt-1">
+                      Menunggu Sinkronisasi
+                    </span>
                   )}
                 </div>
               </div>
