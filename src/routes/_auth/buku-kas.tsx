@@ -213,7 +213,7 @@ function BukuKasPage() {
         confirmText={deleteTxMutation.isPending ? 'Menghapus...' : 'Hapus'}
         onConfirm={() => {
           if (deletingTxId) {
-            deleteTxMutation.mutate(deletingTxId, {
+            deleteTxMutation.mutate({ id: deletingTxId }, {
               onSuccess: () => setDeletingTxId(null),
             })
           }

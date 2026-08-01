@@ -18,8 +18,9 @@ export function useProducts(activeOnly = false) {
 
   return useQuery({
     enabled: !!user,
-    queryKey: [...QUERY_KEYS.PRODUCTS, { activeOnly }],
-    queryFn: () => getProducts(activeOnly),
+    queryKey: QUERY_KEYS.PRODUCTS,
+    queryFn: () => getProducts(false), // Always fetch all to populate cache for both views
+    select: (data) => (activeOnly ? data.filter((p) => p.is_active) : data),
     staleTime: 1000 * 60 * 5, // 5 min - product catalog changes rarely
   })
 }
@@ -97,7 +98,7 @@ export function useToggleProductStatus() {
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.PRODUCTS })
       const prev = queryClient.getQueryData(QUERY_KEYS.PRODUCTS)
       queryClient.setQueryData(
-        [...QUERY_KEYS.PRODUCTS, { activeOnly: false }],
+        QUERY_KEYS.PRODUCTS,
         (old: { id: string; is_active: boolean }[] | undefined) =>
           old?.map((p) => (p.id === id ? { ...p, is_active: isActive } : p)),
       )
@@ -105,7 +106,7 @@ export function useToggleProductStatus() {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        queryClient.setQueryData([...QUERY_KEYS.PRODUCTS, { activeOnly: false }], ctx.prev)
+        queryClient.setQueryData(QUERY_KEYS.PRODUCTS, ctx.prev)
       }
       toast.error('Gagal mengubah status produk')
     },

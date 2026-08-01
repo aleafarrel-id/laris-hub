@@ -40,9 +40,11 @@ window.addEventListener('error', (e) => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      networkMode: 'offlineFirst',
       staleTime: 1000 * 60, // 1 minute - aggressive caching
       gcTime: 1000 * 60 * 60 * 24, // 24 hours garbage collection for offline access
       retry: (failureCount, error) => {
+        if (!navigator.onLine) return false
         // Don't retry on auth errors
         if (error instanceof Error && error.message.includes('403')) return false
         return failureCount < 2
@@ -52,6 +54,7 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true,
     },
     mutations: {
+      networkMode: 'offlineFirst',
       retry: 1,
     },
   },

@@ -1,31 +1,49 @@
 import { del, get, set } from 'idb-keyval'
 import type { CreateSalePayload } from '@/services/sale.service'
+import type { CreateExpensePayload } from '@/services/expense.service'
 
-const QUEUE_KEY = 'laris-hub:offline-sale-queue'
+const QUEUE_KEY = 'laris-hub:offline-transaction-queue'
 
-export interface OfflineSaleItem {
+export type OfflineQueueAction =
+  | 'CREATE_SALE'
+  | 'CREATE_EXPENSE'
+  | 'UPDATE_SALE'
+  | 'UPDATE_EXPENSE'
+  | 'UPDATE_STATUS'
+  | 'DELETE_TRANSACTION'
+
+export interface OfflineQueueItem<T = any> {
   localId: string
   createdAt: string
-  payload: CreateSalePayload
+  action: OfflineQueueAction
+  payload: T
   retryCount: number
 }
 
+// Payload types
+export type OfflineSalePayload = CreateSalePayload
+export type OfflineExpensePayload = CreateExpensePayload
+export type OfflineUpdateStatusPayload = { id: string; status: 'sukses' | 'pending' }
+export type OfflineDeletePayload = { id: string }
+
 /** Retrieve all queued offline transactions. */
-export async function getOfflineQueue(): Promise<OfflineSaleItem[]> {
+export async function getOfflineQueue(): Promise<OfflineQueueItem[]> {
   try {
-    return (await get<OfflineSaleItem[]>(QUEUE_KEY)) ?? []
+    return (await get<OfflineQueueItem[]>(QUEUE_KEY)) ?? []
   } catch {
     return []
   }
 }
 
-/** Add a new transaction to the offline queue. */
-export async function enqueueOfflineSale(
-  payload: OfflineSaleItem['payload'],
-): Promise<OfflineSaleItem> {
-  const item: OfflineSaleItem = {
+/** Add a new transaction action to the offline queue. */
+export async function enqueueOfflineItem<T>(
+  action: OfflineQueueAction,
+  payload: T,
+): Promise<OfflineQueueItem<T>> {
+  const item: OfflineQueueItem<T> = {
     localId: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
+    action,
     payload,
     retryCount: 0,
   }
@@ -46,7 +64,7 @@ export async function enqueueOfflineSale(
 }
 
 /** Remove an item from the queue after successful sync. */
-export async function dequeueOfflineSale(localId: string): Promise<void> {
+export async function dequeueOfflineItem(localId: string): Promise<void> {
   const queue = await getOfflineQueue()
   const filtered = queue.filter((item) => item.localId !== localId)
   await set(QUEUE_KEY, filtered)

@@ -20,6 +20,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       devOptions: {
         enabled: true, // Enable PWA in development
+        type: 'module',
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'logo-192.png', 'logo-512.png', 'robots.txt'],
       manifest: {
@@ -59,6 +60,9 @@ export default defineConfig({
       workbox: {
         // Cache shell aggressively
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         navigateFallback: '/index.html',
         // Exclude API calls from fallback routing
         navigateFallbackDenylist: [/^\/api/, /^\/auth/],

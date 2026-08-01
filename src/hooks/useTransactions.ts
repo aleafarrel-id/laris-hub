@@ -2,7 +2,8 @@ import type { QueryClient } from '@tanstack/react-query'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
-import { enqueueOfflineSale } from '@/lib/offline-queue'
+import { enqueueOfflineItem } from '@/lib/offline-queue'
+import type { OfflineQueueAction } from '@/lib/offline-queue'
 import { translateError } from '@/lib/utils'
 import { nowIso } from '@/services/transaction.utils'
 import { getKPISummaryForRange } from '@/services/dashboard.service'
@@ -71,8 +72,6 @@ export function useTransactionSummary(
     queryFn: async () => {
       const from = filters.dateRange?.from || new Date(2000, 0, 1)
       const to = filters.dateRange?.to || new Date()
-      // getKPISummaryForRange fetches lightweight aggregate columns (type, amount, profit)
-      // instead of joining full transaction data
       const kpi = await getKPISummaryForRange(from, to, filters.recordedBy)
       return {
         totalSales: filters.type === 'pengeluaran' ? 0 : kpi.omzet,
@@ -99,9 +98,10 @@ export function useTodayTransactions(recordedBy?: string) {
   })
 }
 
-// ─── Mutation Factory ──────────────────────────────────────────────────────────
+// ─── Offline Mutation Factory ─────────────────────────────────────────────────
 
-function createTransactionMutation<TVariables, TData>(
+function createOfflineMutation<TVariables, TData>(
+  action: OfflineQueueAction,
   mutationFn: (vars: TVariables) => Promise<TData>,
   options: {
     successMessage: string
@@ -112,12 +112,58 @@ function createTransactionMutation<TVariables, TData>(
   return function useMutationHook() {
     const queryClient = useQueryClient()
     return useMutation({
-      mutationFn,
-      onSuccess: () => {
-        invalidateTransactionQueries(queryClient)
-        toast.success(options.successMessage, {
-          description: options.successDescription,
-        })
+      mutationFn: async (payload: TVariables) => {
+        // Ensure timestamp is recorded exactly when created if offline
+        const targetPayload = (payload as any).payload || payload
+        if (
+          typeof targetPayload === 'object' && 
+          targetPayload !== null && 
+          !('id' in targetPayload) && 
+          targetPayload.transaction_at === undefined
+        ) {
+           targetPayload.transaction_at = nowIso()
+        }
+        
+        if (!navigator.onLine) {
+          try {
+            await enqueueOfflineItem(action, payload)
+            return { offline: true } as any
+          } catch (queueErr: any) {
+            toast.error('Gagal Menyimpan Offline', {
+              description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
+            })
+            throw queueErr
+          }
+        }
+        
+        try {
+          return await mutationFn(payload)
+        } catch (err) {
+          if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+            try {
+              await enqueueOfflineItem(action, payload)
+              return { offline: true } as any
+            } catch (queueErr: any) {
+              toast.error('Gagal Menyimpan Offline', {
+                description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
+              })
+              throw queueErr
+            }
+          }
+          throw err
+        }
+      },
+      onSuccess: (data) => {
+        if (data && (data as any).offline) {
+          toast.success('Disimpan secara offline!', {
+            description: 'Tindakan ini akan disinkronkan saat koneksi tersedia.',
+          })
+        } else {
+          invalidateTransactionQueries(queryClient)
+          toast.success(options.successMessage, {
+            description: options.successDescription,
+          })
+        }
       },
       onError: onTransactionError(options.errorAction),
     })
@@ -127,60 +173,19 @@ function createTransactionMutation<TVariables, TData>(
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 type CreateSaleArgs = { payload: Parameters<typeof createSaleTransaction>[0] }
-export const useCreateSale = function useMutationHook() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ payload }: CreateSaleArgs) => {
-      // Ensure offline transactions record the exact time of creation, not sync time
-      payload.transaction_at = payload.transaction_at || nowIso()
-      
-      if (!navigator.onLine) {
-        try {
-          await enqueueOfflineSale(payload)
-          return { offline: true }
-        } catch (queueErr: any) {
-          toast.error('Gagal Menyimpan Offline', {
-            description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
-          })
-          throw queueErr
-        }
-      }
-      try {
-        return await createSaleTransaction(payload)
-      } catch (err) {
-        // Fallback to offline queue if it's a network error
-        if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-          try {
-            await enqueueOfflineSale(payload)
-            return { offline: true }
-          } catch (queueErr: any) {
-            toast.error('Gagal Menyimpan Offline', {
-              description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
-            })
-            throw queueErr
-          }
-        }
-        throw err
-      }
-    },
-    onSuccess: (data) => {
-      if (data && (data as any).offline) {
-        toast.success('Disimpan secara offline!', {
-          description: 'Data penjualan akan disinkronkan saat koneksi tersedia.',
-        })
-      } else {
-        invalidateTransactionQueries(queryClient)
-        toast.success('Transaksi penjualan berhasil disimpan!', {
-          description: 'Data telah tersimpan ke Buku Kas.',
-        })
-      }
-    },
-    onError: onTransactionError('menyimpan transaksi'),
-  })
-}
+export const useCreateSale = createOfflineMutation<CreateSaleArgs, any>(
+  'CREATE_SALE',
+  ({ payload }) => createSaleTransaction(payload),
+  {
+    successMessage: 'Transaksi penjualan berhasil disimpan!',
+    successDescription: 'Data telah tersimpan ke Buku Kas.',
+    errorAction: 'menyimpan transaksi',
+  }
+)
 
 type CreateExpenseArgs = { payload: Parameters<typeof createExpenseTransaction>[0] }
-export const useCreateExpense = createTransactionMutation<CreateExpenseArgs, any>(
+export const useCreateExpense = createOfflineMutation<CreateExpenseArgs, any>(
+  'CREATE_EXPENSE',
   ({ payload }) => createExpenseTransaction(payload),
   {
     successMessage: 'Pengeluaran berhasil dicatat!',
@@ -190,7 +195,8 @@ export const useCreateExpense = createTransactionMutation<CreateExpenseArgs, any
 )
 
 type UpdateSaleArgs = { id: string; payload: Parameters<typeof updateSaleTransaction>[1] }
-export const useUpdateSale = createTransactionMutation<UpdateSaleArgs, any>(
+export const useUpdateSale = createOfflineMutation<UpdateSaleArgs, any>(
+  'UPDATE_SALE',
   ({ id, payload }) => updateSaleTransaction(id, payload),
   {
     successMessage: 'Transaksi penjualan berhasil diperbarui!',
@@ -199,7 +205,8 @@ export const useUpdateSale = createTransactionMutation<UpdateSaleArgs, any>(
 )
 
 type UpdateExpenseArgs = { id: string; payload: Parameters<typeof updateExpenseTransaction>[1] }
-export const useUpdateExpense = createTransactionMutation<UpdateExpenseArgs, any>(
+export const useUpdateExpense = createOfflineMutation<UpdateExpenseArgs, any>(
+  'UPDATE_EXPENSE',
   ({ id, payload }) => updateExpenseTransaction(id, payload),
   {
     successMessage: 'Pengeluaran berhasil diperbarui!',
@@ -208,16 +215,19 @@ export const useUpdateExpense = createTransactionMutation<UpdateExpenseArgs, any
 )
 
 type UpdateStatusArgs = { id: string; status: 'sukses' | 'pending' }
-export const useUpdateTransactionStatus = createTransactionMutation<UpdateStatusArgs, any>(
-  ({ id, status }) => updateTransactionStatus(id, status),
+export const useUpdateTransactionStatus = createOfflineMutation<UpdateStatusArgs, any>(
+  'UPDATE_STATUS',
+  (payload) => updateTransactionStatus(payload.id, payload.status),
   {
     successMessage: 'Status transaksi berhasil diperbarui!',
     errorAction: 'memperbarui status transaksi',
   },
 )
 
-export const useDeleteTransaction = createTransactionMutation<string, any>(
-  (id) => deleteTransaction(id),
+type DeleteTransactionArgs = { id: string }
+export const useDeleteTransaction = createOfflineMutation<DeleteTransactionArgs, any>(
+  'DELETE_TRANSACTION',
+  (payload) => deleteTransaction(payload.id),
   {
     successMessage: 'Transaksi berhasil dihapus!',
     errorAction: 'menghapus transaksi',

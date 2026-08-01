@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { NetworkStatusBanner } from '@/components/ui/NetworkStatusBanner'
+import { PWAPrompt } from '@/components/ui/PWAPrompt'
 
 interface RouterContext {
   queryClient: QueryClient
@@ -15,6 +16,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootComponent() {
   return (
     <AuthProvider>
+      <PWAPrompt />
       <NetworkStatusBanner />
       <Outlet />
       <Toaster

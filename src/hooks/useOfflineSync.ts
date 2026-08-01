@@ -5,7 +5,7 @@
  *
  * Workflow:
  * 1. Checks the `offline-queue` when connectivity is restored.
- * 2. Attempts to sync each item to Supabase.
+ * 2. Attempts to sync each item to Supabase based on its action type.
  * 3. On success, removes the item from the queue.
  * 4. On failure, increments the retry count and retries on the next connection.
  *
@@ -17,13 +17,20 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   clearOfflineQueue,
-  dequeueOfflineSale,
+  dequeueOfflineItem,
   getOfflineQueue,
   incrementRetryCount,
 } from '@/lib/offline-queue'
-import { createSaleTransaction } from '@/services/sale.service'
+import type { OfflineQueueItem } from '@/lib/offline-queue'
+import { 
+  createSaleTransaction, 
+  createExpenseTransaction,
+  updateSaleTransaction,
+  updateExpenseTransaction,
+  updateTransactionStatus,
+  deleteTransaction
+} from '@/services/transaction.service'
 import { QUERY_KEYS } from '@/lib/constants'
-import type { OfflineSaleItem } from '@/lib/offline-queue'
 
 const MAX_RETRIES = 3
 
@@ -57,7 +64,7 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
     setIsSyncing(true)
 
     let successCount = 0
-    const failedItems: OfflineSaleItem[] = []
+    const failedItems: OfflineQueueItem[] = []
 
     for (const item of queue) {
       if (item.retryCount >= MAX_RETRIES) {
@@ -67,12 +74,40 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       }
 
       try {
-        await createSaleTransaction(item.payload)
-        await dequeueOfflineSale(item.localId)
+        switch (item.action) {
+          case 'CREATE_SALE':
+            await createSaleTransaction(item.payload.payload)
+            break
+          case 'CREATE_EXPENSE':
+            await createExpenseTransaction(item.payload.payload)
+            break
+          case 'UPDATE_SALE':
+            await updateSaleTransaction(item.payload.id, item.payload.payload)
+            break
+          case 'UPDATE_EXPENSE':
+            await updateExpenseTransaction(item.payload.id, item.payload.payload)
+            break
+          case 'UPDATE_STATUS':
+            await updateTransactionStatus(item.payload.id, item.payload.status)
+            break
+          case 'DELETE_TRANSACTION':
+            await deleteTransaction(item.payload.id)
+            break
+          default:
+            console.warn('[OfflineSync] Unknown action:', item.action)
+        }
+        await dequeueOfflineItem(item.localId)
         successCount++
-      } catch {
-        await incrementRetryCount(item.localId)
-        failedItems.push(item)
+      } catch (err: any) {
+        // Don't retry validation or bad request errors (e.g. 4xx HTTP from Supabase RPC)
+        if (err?.code && err.code.startsWith('22')) {
+          // PostgreSQL Data Exception (e.g. invalid UUID, check violation)
+          console.error('[OfflineSync] Permanent error for item:', item, err)
+          await dequeueOfflineItem(item.localId)
+        } else {
+          await incrementRetryCount(item.localId)
+          failedItems.push(item)
+        }
       }
     }
 
@@ -82,15 +117,15 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD })
 
       toast.success(
-        `${successCount} transaksi offline berhasil disinkronkan!`,
+        `${successCount} tindakan offline berhasil disinkronkan!`,
         {
-          description: 'Data penjualan telah tersimpan ke database.',
+          description: 'Data telah tersimpan ke database.',
         },
       )
     }
 
     if (failedItems.length > 0) {
-      toast.warning(`${failedItems.length} transaksi gagal disinkronkan`, {
+      toast.warning(`${failedItems.length} tindakan gagal disinkronkan`, {
         description: 'Akan dicoba kembali saat koneksi tersedia.',
       })
     }
