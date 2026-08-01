@@ -83,7 +83,9 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
 
     for (const item of queue) {
       if (item.retryCount >= MAX_RETRIES) {
-        // Exceeded max retries, skip
+        // Exceeded max retries, dequeue permanently
+        console.error('[OfflineSync] Max retries reached for item:', item)
+        await dequeueOfflineItem(item.localId)
         failedItems.push(item)
         continue
       }
@@ -149,14 +151,19 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         await dequeueOfflineItem(item.localId)
         successCount++
       } catch (err: any) {
-        // Don't retry validation or bad request errors (e.g. 4xx HTTP from Supabase RPC)
-        if (err?.code && err.code.startsWith('22')) {
-          // PostgreSQL Data Exception (e.g. invalid UUID, check violation)
+        // Detect permanent backend errors (PostgreSQL exceptions OR explicit error messages from Edge Functions/RPCs)
+        const isPgError = err?.code && err.code.startsWith('22')
+        const isBackendRejection = err?.message && !err.message.includes('fetch') && !err.message.includes('network')
+
+        if (isPgError || isBackendRejection) {
           console.error('[OfflineSync] Permanent error for item:', item, err)
           await dequeueOfflineItem(item.localId)
+          failedItems.push(item) // Track it so we can notify the user that it was dropped
         } else {
           await incrementRetryCount(item.localId)
-          failedItems.push(item)
+          // Don't add to failedItems immediately if we are still retrying, 
+          // wait until it exhausts retries to notify user.
+          // Wait, actually, if it's a network error during sync, we can just say "pending".
         }
       }
     }
@@ -175,8 +182,8 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
     }
 
     if (failedItems.length > 0) {
-      toast.warning(`${failedItems.length} tindakan gagal disinkronkan`, {
-        description: 'Akan dicoba kembali saat koneksi tersedia.',
+      toast.error(`${failedItems.length} tindakan batal disinkronkan`, {
+        description: 'Tindakan ditolak oleh server atau melebihi batas percobaan. Data tersebut telah dihapus dari antrean.',
       })
     }
 

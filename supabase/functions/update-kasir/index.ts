@@ -59,10 +59,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
       const {
         data: { user: targetUser },
-        error,
       } = await supabaseAdmin.auth.admin.getUserById(targetId)
 
-      if (error || !targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
+      // If missing from auth.users (e.g. manually deleted), return graceful fallback
+      if (!targetUser) {
+        return json({
+          id: targetId,
+          email: null,
+          last_sign_in_at: null,
+          created_at: new Date().toISOString(),
+        })
+      }
 
       return json({
         id: targetUser.id,
@@ -88,8 +95,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const {
         data: { user: targetUser },
       } = await supabaseAdmin.auth.admin.getUserById(id)
-      if (!targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
-      if (targetUser.app_metadata?.role === 'admin' && targetUser.id !== caller.id) {
+      
+      if (targetUser && targetUser.app_metadata?.role === 'admin' && targetUser.id !== caller.id) {
         return json({ error: 'Tidak dapat mengubah akun admin lain' }, 403)
       }
 
@@ -105,9 +112,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
         authUpdates.password = password
       }
 
-      if (Object.keys(authUpdates).length > 0) {
+      // Only attempt auth updates if the user actually exists in auth.users
+      if (targetUser && Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates)
         if (authError) return json({ error: authError.message }, 400)
+      } else if (!targetUser && Object.keys(authUpdates).length > 0) {
+        return json({ error: 'Akun auth tidak ditemukan, gagal mengubah email/password' }, 404)
       }
 
       const profileUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() }
@@ -144,8 +154,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const {
         data: { user: targetUser },
       } = await supabaseAdmin.auth.admin.getUserById(id)
-      if (!targetUser) return json({ error: 'Kasir tidak ditemukan' }, 404)
-      if (targetUser.app_metadata?.role === 'admin') {
+      
+      if (targetUser && targetUser.app_metadata?.role === 'admin') {
         return json({ error: 'Tidak dapat menghapus akun admin' }, 403)
       }
 
@@ -168,7 +178,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         )
       }
 
-      // Delete profile first (it references auth.users via FK), then delete the auth user.
+      // Delete profile first (it references auth.users via FK, but might be detached if auth user was manually deleted)
       const { error: profileDeleteError } = await supabaseAdmin
         .from('profiles')
         .delete()
@@ -176,10 +186,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
       if (profileDeleteError) return json({ error: profileDeleteError.message }, 500)
 
-      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(id)
-      if (authDeleteError) {
-        console.error('Auth user deletion failed after profile delete:', authDeleteError)
-        return json({ error: 'Profil dihapus namun gagal menghapus akun auth.' }, 500)
+      if (targetUser) {
+        const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(id)
+        if (authDeleteError) {
+          console.error('Auth user deletion failed after profile delete:', authDeleteError)
+          return json({ error: 'Profil dihapus namun gagal menghapus akun auth.' }, 500)
+        }
       }
 
       return json({ success: true, deleted_id: id })

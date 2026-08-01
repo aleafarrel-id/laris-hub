@@ -254,11 +254,11 @@ export function KasirDetailDrawer({
                     <p className="text-lg font-bold text-neutral-900 leading-tight truncate">
                       {kasirToRender.full_name}
                     </p>
-                    {isLoadingEmail ? (
+                    {isLoadingEmail && (typeof navigator !== 'undefined' && navigator.onLine) ? (
                       <Skeleton className="h-3.5 w-36 mt-1" />
                     ) : (
                       <p className="text-sm text-neutral-500 mt-0.5 truncate">
-                        {authDetails?.email || '-'}
+                        {authDetails?.email || (typeof navigator !== 'undefined' && !navigator.onLine ? '(Offline)' : '-')}
                       </p>
                     )}
                     <span
@@ -318,6 +318,7 @@ export function KasirDetailDrawer({
                           setIsEditing(true)
                         }}
                         className="w-full"
+                        disabled={(kasirToRender as any).isOfflinePending}
                         leftIcon={<Edit2 size={15} />}
                       >
                         Edit Profil &amp; Akun
@@ -328,7 +329,7 @@ export function KasirDetailDrawer({
                           type="button"
                           variant="outline"
                           onClick={() => onToggle(kasirToRender.id, !kasirToRender.is_active)}
-                          disabled={isToggling}
+                          disabled={isToggling || (kasirToRender as any).isOfflinePending}
                           className={`w-full border ${
                             kasirToRender.is_active
                               ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'

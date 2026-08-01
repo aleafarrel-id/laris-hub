@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
 import { toast } from 'sonner'
@@ -58,7 +58,7 @@ export function useKasirAuthDetails(kasirId: string | null) {
   return useQuery({
     queryKey: [...QUERY_KEYS.CASHIERS, 'auth', kasirId],
     queryFn: () => getKasirAuthDetails(kasirId!),
-    enabled: !!user && !!kasirId,
+    enabled: !!user && !!kasirId && !kasirId.startsWith('pending-') && (typeof navigator !== 'undefined' ? navigator.onLine : true),
     staleTime: 1000 * 60 * 5, // 5 min - email rarely changes
     retry: 1,
   })
@@ -111,14 +111,15 @@ export function useToggleKasirStatus() {
 }
 
 export function useDeleteKasir(onSuccess?: () => void) {
-  return createOfflineMutation<string, any>(
+  const queryClient = useQueryClient()
+  const baseMutation = createOfflineMutation<string, any>(
     'DELETE_KASIR',
     (id) => deleteKasir(id),
     {
       successMessage: 'Akun kasir berhasil dihapus.',
       errorAction: 'menghapus akun kasir',
-      onSuccess: (_data, _vars, queryClient) => {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
+      onSuccess: (_data, _vars, qc) => {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
         onSuccess?.()
       },
       onError: (error: any) => {
@@ -133,4 +134,22 @@ export function useDeleteKasir(onSuccess?: () => void) {
       }
     }
   )()
+
+  return {
+    ...baseMutation,
+    mutate: (id: string, options?: any) => {
+      if (id.startsWith('pending-')) {
+        const localId = id.replace('pending-', '')
+        import('@/lib/offline-queue').then(({ dequeueOfflineItem }) => {
+          dequeueOfflineItem(localId).then(() => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
+            toast.success('Pendaftaran akun kasir dibatalkan.')
+            onSuccess?.()
+          })
+        })
+      } else {
+        baseMutation.mutate(id, options)
+      }
+    }
+  } as typeof baseMutation
 }

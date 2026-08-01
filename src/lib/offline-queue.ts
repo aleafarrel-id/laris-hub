@@ -1,4 +1,4 @@
-import { del, get, set } from 'idb-keyval'
+import { del, get, update } from 'idb-keyval'
 import type { CreateExpensePayload } from '@/services/expense.service'
 import type { CreateSalePayload } from '@/services/sale.service'
 
@@ -51,6 +51,12 @@ export async function getOfflineQueue(): Promise<OfflineQueueItem[]> {
   }
 }
 
+function dispatchUpdateEvent() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('offline-queue-updated'))
+  }
+}
+
 /** Add a new transaction action to the offline queue. */
 export async function enqueueOfflineItem<T>(
   action: OfflineQueueAction,
@@ -64,14 +70,13 @@ export async function enqueueOfflineItem<T>(
     retryCount: 0,
   }
 
-  const queue = await getOfflineQueue()
-  queue.push(item)
-
   try {
-    await set(QUEUE_KEY, queue)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('offline-queue-updated'))
-    }
+    await update<OfflineQueueItem[]>(QUEUE_KEY, (val) => {
+      const queue = val || []
+      queue.push(item)
+      return queue
+    })
+    dispatchUpdateEvent()
   } catch (err: any) {
     if (err.name === 'QuotaExceededError') {
       throw new Error('Penyimpanan perangkat penuh. Tidak dapat menyimpan transaksi offline.')
@@ -84,24 +89,22 @@ export async function enqueueOfflineItem<T>(
 
 /** Remove an item from the queue after successful sync. */
 export async function dequeueOfflineItem(localId: string): Promise<void> {
-  const queue = await getOfflineQueue()
-  const filtered = queue.filter((item) => item.localId !== localId)
-  await set(QUEUE_KEY, filtered)
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('offline-queue-updated'))
-  }
+  await update<OfflineQueueItem[]>(QUEUE_KEY, (val) => {
+    const queue = val || []
+    return queue.filter((item) => item.localId !== localId)
+  })
+  dispatchUpdateEvent()
 }
 
 /** Increment retry count for an item. */
 export async function incrementRetryCount(localId: string): Promise<void> {
-  const queue = await getOfflineQueue()
-  const updated = queue.map((item) =>
-    item.localId === localId ? { ...item, retryCount: item.retryCount + 1 } : item,
-  )
-  await set(QUEUE_KEY, updated)
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('offline-queue-updated'))
-  }
+  await update<OfflineQueueItem[]>(QUEUE_KEY, (val) => {
+    const queue = val || []
+    return queue.map((item) =>
+      item.localId === localId ? { ...item, retryCount: item.retryCount + 1 } : item,
+    )
+  })
+  dispatchUpdateEvent()
 }
 
 /** Clear the entire queue (e.g. on logout). */

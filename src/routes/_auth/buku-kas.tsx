@@ -160,7 +160,7 @@ function BukuKasPage() {
               action={{ label: 'Coba Lagi', onClick: () => window.location.reload() }}
             />
           </motion.div>
-        ) : !isTransactionsLoading && transactions.length === 0 ? (
+        ) : !isTransactionsLoading && (transactions?.length || 0) === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 10 }}

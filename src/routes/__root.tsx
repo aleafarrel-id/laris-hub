@@ -5,12 +5,15 @@ import { AuthProvider } from '@/components/auth/AuthProvider'
 import { NetworkStatusBanner } from '@/components/ui/NetworkStatusBanner'
 import { PWAPrompt } from '@/components/ui/PWAPrompt'
 
+import { GlobalErrorState } from '@/components/ui/GlobalErrorState'
+
 interface RouterContext {
   queryClient: QueryClient
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
+  errorComponent: GlobalErrorState,
 })
 
 function RootComponent() {

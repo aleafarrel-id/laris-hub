@@ -37,30 +37,43 @@ export function NetworkStatusBanner() {
 
   return (
     <div
-      className={`sticky top-0 w-full z-[9999] transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${
-        isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-      }`}
+      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
     >
       <div className="overflow-hidden">
         <div
-          className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 ${bgColor} text-white shadow-sm transition-colors duration-500`}
+          className={`w-full flex items-center justify-between px-4 py-2.5 ${bgColor} text-white shadow-sm transition-colors duration-500`}
         >
-          <Icon
-            className={`w-4 h-4 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`}
-          />
+          <div className="flex items-center gap-3 overflow-hidden flex-1">
+            <Icon
+              className={`w-4 h-4 flex-shrink-0 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`}
+            />
 
-          <div className="flex items-center gap-2 text-[13px]">
-            <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 mt-px">
-              {title}
-            </span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <span className="font-medium opacity-95">{subtitle}</span>
+            {state === 'online' && pendingCount > 0 && !isSyncing ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 overflow-hidden leading-tight">
+                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 truncate">
+                  {title}
+                </span>
+                <span className="hidden sm:block w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
+                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">
+                  {subtitle}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 overflow-hidden text-[13px]">
+                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 mt-px whitespace-nowrap">
+                  {title}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
+                <span className="font-medium opacity-95 truncate">{subtitle}</span>
+              </div>
+            )}
           </div>
 
           {state === 'online' && pendingCount > 0 && !isSyncing && (
             <button
               onClick={triggerSync}
-              className="ml-3 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer"
+              className="flex-shrink-0 ml-3 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer whitespace-nowrap"
             >
               Coba Lagi
             </button>

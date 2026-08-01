@@ -58,6 +58,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        inlineWorkboxRuntime: true,
         // Cache shell aggressively
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
         cleanupOutdatedCaches: true,
