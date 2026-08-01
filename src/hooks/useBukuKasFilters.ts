@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { Route } from '@/routes/_auth/buku-kas'
 import type { QuickRange } from '@/components/buku-kas/BukuKasFilters'
+import { Route } from '@/routes/_auth/buku-kas'
 import type { TransactionFilters } from '@/types'
 
 export type BukuKasSearch = {

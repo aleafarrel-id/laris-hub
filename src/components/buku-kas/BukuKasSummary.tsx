@@ -1,5 +1,5 @@
-import { ArrowLeftRight, DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, DollarSign, TrendingDown, TrendingUp } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatRupiah } from '@/lib/utils'
@@ -14,7 +14,15 @@ interface SummaryCardProps {
   subText?: React.ReactNode
 }
 
-function SummaryCard({ label, value, icon: Icon, color, bg, isLoading, subText }: SummaryCardProps) {
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  bg,
+  isLoading,
+  subText,
+}: SummaryCardProps) {
   return (
     <motion.div
       className="app-card p-4 flex items-center gap-4"
@@ -34,7 +42,9 @@ function SummaryCard({ label, value, icon: Icon, color, bg, isLoading, subText }
           <Skeleton className="h-6 w-3/4 rounded-md" />
         ) : (
           <>
-            <p className={`text-lg sm:text-xl md:text-2xl font-bold tabular-nums break-words ${color}`}>
+            <p
+              className={`text-lg sm:text-xl md:text-2xl font-bold tabular-nums break-words ${color}`}
+            >
               {value}
             </p>
             {subText && <div className="mt-1">{subText}</div>}

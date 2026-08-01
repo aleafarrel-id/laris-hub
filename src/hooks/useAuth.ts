@@ -87,7 +87,7 @@ export function useAuthListener() {
           try {
             const profile = await getProfile(user.id)
             if (mounted) setProfile(profile)
-          } catch { }
+          } catch {}
         }
 
         if (mounted) {
@@ -108,7 +108,7 @@ export function useAuthListener() {
         try {
           const profile = await getProfile(session.user.id)
           if (mounted) setProfile(profile)
-        } catch { }
+        } catch {}
       } else if (event === 'SIGNED_OUT') {
         clearAuth()
         queryClient.clear()

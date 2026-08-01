@@ -12,7 +12,12 @@ interface PortalProps {
  * Automatically handles React createPortal, font-family inheritance,
  * and smart sidebar offset alignment.
  */
-export function Portal({ children, className = '', role, 'aria-labelledby': ariaLabelledBy }: PortalProps) {
+export function Portal({
+  children,
+  className = '',
+  role,
+  'aria-labelledby': ariaLabelledBy,
+}: PortalProps) {
   const content = (
     <div
       className={`fixed inset-0 antialiased font-sans ${className}`}

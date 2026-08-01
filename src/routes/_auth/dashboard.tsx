@@ -8,7 +8,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react'
-import { lazy, Suspense, useState, useMemo } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { RecentTransactionsTable } from '@/components/dashboard/RecentTransactionsTable'
 import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -21,7 +21,11 @@ import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
 import { useKPISummary, useMonthlyTrend, useTopProducts } from '@/hooks/useDashboard'
 import { useCashiers } from '@/hooks/useProfile'
-import { useDeleteTransaction, useTransactions, useUpdateTransactionStatus } from '@/hooks/useTransactions'
+import {
+  useDeleteTransaction,
+  useTransactions,
+  useUpdateTransactionStatus,
+} from '@/hooks/useTransactions'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/utils'
 import type { Profile, TransactionWithItems } from '@/types'
@@ -29,12 +33,12 @@ import type { Profile, TransactionWithItems } from '@/types'
 const DashboardCharts = lazy(() =>
   import('@/components/dashboard/DashboardCharts').then((mod) => ({
     default: mod.TopProductsDonutChart,
-  }))
+  })),
 )
 const DashboardTrendChart = lazy(() =>
   import('@/components/dashboard/DashboardCharts').then((mod) => ({
     default: mod.TrendBarsChart,
-  }))
+  })),
 )
 
 type DashboardSearch = {
@@ -160,7 +164,6 @@ function DashboardPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-
             <CustomSelect
               value={kasirFilter}
               onChange={setKasirFilter}
@@ -259,19 +262,25 @@ function DashboardPage() {
               <Suspense
                 fallback={
                   <div className="flex items-end gap-1 flex-1 min-h-[9rem]">
-                    {['h-[40%]', 'h-[60%]', 'h-[30%]', 'h-[80%]', 'h-[50%]', 'h-[70%]', 'h-[40%]'].map(
-                      (h, i) => (
-                        <div
-                          key={`bar-${i}`}
-                          className="flex-1 flex flex-col items-center gap-1 group h-full"
-                        >
-                          <div className="relative w-full flex flex-col-reverse h-full">
-                            <Skeleton className={`w-full ${h} rounded-t-sm rounded-b-none`} />
-                          </div>
-                          <Skeleton className="h-2.5 w-4 rounded-sm" />
+                    {[
+                      'h-[40%]',
+                      'h-[60%]',
+                      'h-[30%]',
+                      'h-[80%]',
+                      'h-[50%]',
+                      'h-[70%]',
+                      'h-[40%]',
+                    ].map((h, i) => (
+                      <div
+                        key={`bar-${i}`}
+                        className="flex-1 flex flex-col items-center gap-1 group h-full"
+                      >
+                        <div className="relative w-full flex flex-col-reverse h-full">
+                          <Skeleton className={`w-full ${h} rounded-t-sm rounded-b-none`} />
                         </div>
-                      ),
-                    )}
+                        <Skeleton className="h-2.5 w-4 rounded-sm" />
+                      </div>
+                    ))}
                   </div>
                 }
               >

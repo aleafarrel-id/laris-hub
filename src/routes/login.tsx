@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { useAuth, useAuthActions } from '@/hooks/useAuth'
+import { APP_VERSION } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import type { LoginFormData } from '@/lib/validations/auth.schema'
 import { loginSchema } from '@/lib/validations/auth.schema'
-import { APP_VERSION } from '@/lib/constants'
 
 export const Route = createFileRoute('/login')({
   validateSearch: z.object({
@@ -304,10 +304,7 @@ function LoginPage() {
           </form>
         </motion.div>
 
-        <motion.div
-          className="text-center mt-8 font-medium flex flex-col gap-1"
-          {...fadeUp(0.16)}
-        >
+        <motion.div className="text-center mt-8 font-medium flex flex-col gap-1" {...fadeUp(0.16)}>
           <p className="text-xs text-neutral-400">
             &copy; {new Date().getFullYear()} Laris Hub. All rights reserved.
           </p>

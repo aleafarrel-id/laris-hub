@@ -1,13 +1,13 @@
+import { Minus, Plus, PlusCircle, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { PlusCircle, X, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { useExpenseItems } from '@/hooks/useTransactionForm'
 import { useCreateExpense, useUpdateExpense } from '@/hooks/useTransactions'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import { formatRupiah } from '@/lib/utils'
 import type { TransactionWithItems } from '@/types'
-import { useExpenseItems } from '@/hooks/useTransactionForm'
 
 const EXPENSE_CATEGORY_ENTRIES = Object.entries(EXPENSE_CATEGORIES) as [string, ExpenseCategory][]
 
@@ -177,7 +177,9 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                     <div className="flex items-center justify-between bg-primary rounded-xl p-1 shadow-sm shadow-primary/20 w-28 h-10 flex-shrink-0">
                       <button
                         type="button"
-                        onClick={() => updateItem(item.id, 'qty', Math.max(1, (Number(item.qty) || 1) - 1))}
+                        onClick={() =>
+                          updateItem(item.id, 'qty', Math.max(1, (Number(item.qty) || 1) - 1))
+                        }
                         className="w-8 h-8 flex items-center justify-center text-white active:scale-[0.96] transition-transform bg-black/10 rounded-lg hover:bg-black/20 cursor-pointer flex-shrink-0"
                       >
                         <Minus size={14} strokeWidth={3} />

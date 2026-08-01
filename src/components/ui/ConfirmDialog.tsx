@@ -78,9 +78,7 @@ export function ConfirmDialog({
                   >
                     <Icon size={20} strokeWidth={2} />
                   </div>
-                  <h3 className="text-base font-bold text-neutral-900">
-                    {title}
-                  </h3>
+                  <h3 className="text-base font-bold text-neutral-900">{title}</h3>
                 </div>
                 <div className="flex flex-col gap-1.5 mb-5 text-sm text-neutral-600 leading-relaxed">
                   {description}

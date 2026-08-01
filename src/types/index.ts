@@ -5,6 +5,7 @@ export type {
   DateRange,
   KPISummary,
   PaginationState,
+  PaymentMethod,
   Product,
   ProductInsert,
   ProductUpdate,
@@ -18,12 +19,11 @@ export type {
   TransactionInsert,
   TransactionItem,
   TransactionItemInsert,
+  TransactionStatus,
   TransactionUpdate,
   TransactionWithItems,
   TransactionWithProfile,
   UserRole,
-  PaymentMethod,
-  TransactionStatus,
 } from './app.types'
 
 export type { Database, Json } from './database.types'

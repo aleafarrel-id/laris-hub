@@ -1,11 +1,11 @@
-import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { Modal } from '@/components/ui/Modal'
-import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
-import { formatDateTime, formatRupiah } from '@/lib/utils'
+import { Calendar, CreditCard, FileText, Tag, TrendingDown, TrendingUp, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
-import { Calendar, CreditCard, User, Tag, FileText, TrendingDown, TrendingUp } from 'lucide-react'
-import type { TransactionWithItems, Profile } from '@/types'
+import { Modal } from '@/components/ui/Modal'
+import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { formatDateTime, formatRupiah } from '@/lib/utils'
+import type { Profile, TransactionWithItems } from '@/types'
 
 interface TransactionDetailModalProps {
   isOpen: boolean
@@ -13,7 +13,11 @@ interface TransactionDetailModalProps {
   transaction: (TransactionWithItems & { profiles?: Partial<Profile> | null }) | null
 }
 
-export function TransactionDetailModal({ isOpen, onClose, transaction }: TransactionDetailModalProps) {
+export function TransactionDetailModal({
+  isOpen,
+  onClose,
+  transaction,
+}: TransactionDetailModalProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [cachedTx, setCachedTx] = useState<TransactionDetailModalProps['transaction']>(transaction)
 
@@ -28,24 +32,25 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
   if (!txToRender) return null
 
   const isExpense = txToRender.type === 'pengeluaran'
-  
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title=""
-      variant={isDesktop ? 'center' : 'bottom'}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="" variant={isDesktop ? 'center' : 'bottom'}>
       <div className={isDesktop ? 'pb-2' : ''}>
         {/* Header / Amount Area */}
-        <div className={`p-6 border-b border-neutral-100 flex flex-col items-center justify-center text-center ${isExpense ? 'bg-danger/5' : 'bg-success/5'}`}>
-          <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center ${isExpense ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
+        <div
+          className={`p-6 border-b border-neutral-100 flex flex-col items-center justify-center text-center ${isExpense ? 'bg-danger/5' : 'bg-success/5'}`}
+        >
+          <div
+            className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center ${isExpense ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}
+          >
             {isExpense ? <TrendingDown size={24} /> : <TrendingUp size={24} />}
           </div>
           <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1">
             {isExpense ? 'Total Pengeluaran' : 'Total Penjualan'}
           </p>
-          <p className={`text-3xl font-black tabular-nums tracking-tight ${isExpense ? 'text-danger' : 'text-success'}`}>
+          <p
+            className={`text-3xl font-black tabular-nums tracking-tight ${isExpense ? 'text-danger' : 'text-success'}`}
+          >
             {formatRupiah(txToRender.total_amount)}
           </p>
         </div>
@@ -56,7 +61,9 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
             <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
               <Calendar size={13} /> Tanggal & Waktu
             </p>
-            <p className="text-sm font-medium text-neutral-900">{formatDateTime(txToRender.transaction_at)}</p>
+            <p className="text-sm font-medium text-neutral-900">
+              {formatDateTime(txToRender.transaction_at)}
+            </p>
           </div>
           {!isExpense && (
             <>
@@ -65,7 +72,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
                   <Tag size={13} /> Status
                 </p>
                 <div className="mt-0.5 flex justify-center">
-                   <StatusBadge status={txToRender.status} forceShow />
+                  <StatusBadge status={txToRender.status} forceShow />
                 </div>
               </div>
 
@@ -74,7 +81,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
                   <CreditCard size={13} /> Pembayaran
                 </p>
                 <div className="mt-0.5 flex justify-center">
-                   <PaymentMethodBadge method={txToRender.payment_method} forceShow />
+                  <PaymentMethodBadge method={txToRender.payment_method} forceShow />
                 </div>
               </div>
             </>
@@ -93,13 +100,12 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
         {/* Details Section */}
         <div className="p-5">
           <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-             <FileText size={13} /> Rincian Transaksi
+            <FileText size={13} /> Rincian Transaksi
           </p>
           <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
-             <TransactionDetails transaction={txToRender as TransactionWithItems} />
+            <TransactionDetails transaction={txToRender as TransactionWithItems} />
           </div>
         </div>
-
       </div>
     </Modal>
   )

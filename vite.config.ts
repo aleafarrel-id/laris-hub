@@ -26,7 +26,7 @@ export default defineConfig({
         name: 'Laris Hub',
         short_name: 'Laris Hub',
         description: 'Aplikasi Kasir & Pencatatan Keuangan UMKM',
-        theme_color: '#0F766E',
+        theme_color: '#285eaf',
         background_color: '#F5F5F5',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -59,7 +59,8 @@ export default defineConfig({
       workbox: {
         // Cache shell aggressively
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
-        // Exclude Supabase calls from cache
+        navigateFallback: '/index.html',
+        // Exclude API calls from fallback routing
         navigateFallbackDenylist: [/^\/api/, /^\/auth/],
         runtimeCaching: [
           {
@@ -81,6 +82,17 @@ export default defineConfig({
               expiration: {
                 maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'images',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
             },
           },

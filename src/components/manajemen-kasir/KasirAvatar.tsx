@@ -9,11 +9,17 @@ const AVATAR_COLORS = [
   'from-rose-500 to-pink-600',
 ]
 
-export function KasirAvatar({ profile, size = 'md' }: { profile: Profile; size?: 'sm' | 'md' | 'lg' }) {
+export function KasirAvatar({
+  profile,
+  size = 'md',
+}: {
+  profile: Profile
+  size?: 'sm' | 'md' | 'lg'
+}) {
   const colorClass = AVATAR_COLORS[profile.full_name.charCodeAt(0) % AVATAR_COLORS.length]
   const sizeClass =
     size === 'lg' ? 'w-16 h-16 text-xl' : size === 'md' ? 'w-11 h-11 text-sm' : 'w-8 h-8 text-xs'
-  
+
   if (profile.avatar_url) {
     return (
       <img
@@ -23,7 +29,7 @@ export function KasirAvatar({ profile, size = 'md' }: { profile: Profile; size?:
       />
     )
   }
-  
+
   return (
     <div
       className={`${sizeClass} rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white flex-shrink-0`}

@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ShoppingCart, Wallet } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ExpenseForm } from '@/components/kasir/ExpenseForm'
 import { SaleForm } from '@/components/kasir/SaleForm'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { TransactionListItem } from '@/components/kasir/TransactionListItem'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
@@ -28,11 +28,15 @@ function KasirPage() {
   const updateStatusMutation = useUpdateTransactionStatus()
 
   const todayOmzet = useMemo(() => {
-    return todayTx?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
+    return (
+      todayTx?.filter((t) => t.type === 'penjualan').reduce((s, t) => s + t.total_amount, 0) ?? 0
+    )
   }, [todayTx])
 
   const todayPengeluaran = useMemo(() => {
-    return todayTx?.filter((t) => t.type === 'pengeluaran').reduce((s, t) => s + t.total_amount, 0) ?? 0
+    return (
+      todayTx?.filter((t) => t.type === 'pengeluaran').reduce((s, t) => s + t.total_amount, 0) ?? 0
+    )
   }, [todayTx])
 
   return (

@@ -1,7 +1,7 @@
 import { CheckCircle, Minus, Package, Plus, Tag } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import type { Product } from '@/types'
+import { useEffect, useState } from 'react'
 import { formatRupiah } from '@/lib/utils'
+import type { Product } from '@/types'
 
 const PRODUCT_COLORS = [
   'from-amber-400/20 to-orange-500/20',
@@ -39,10 +39,11 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
       onClick={() => {
         if (!isInCart) onAdd()
       }}
-      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${isInCart
+      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${
+        isInCart
           ? 'border-primary ring-1 ring-primary shadow-sm shadow-primary/10 bg-primary/5'
           : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
-        }`}
+      }`}
     >
       {/* Product image / placeholder */}
       <div
@@ -77,7 +78,9 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
             <span className="truncate">{product.sku}</span>
           </div>
         )}
-        <p className="text-sm font-bold text-primary mt-auto">{formatRupiah(product.selling_price)}</p>
+        <p className="text-sm font-bold text-primary mt-auto">
+          {formatRupiah(product.selling_price)}
+        </p>
       </div>
 
       {/* Add / stepper control */}

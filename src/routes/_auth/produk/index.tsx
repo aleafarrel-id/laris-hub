@@ -49,13 +49,13 @@ export const Route = createFileRoute('/_auth/produk/')({
 function ProdukPage() {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
-  
-  const { 
-    data: paginatedData, 
+
+  const {
+    data: paginatedData,
     isLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useInfiniteProducts(debouncedSearch, 12) // Show 12 items per page for better grid
 
   const products = useMemo(() => {
@@ -79,7 +79,7 @@ function ProdukPage() {
 
   // activeCount is not possible to accurately calculate for the entire database without a dedicated query
   // We'll show the totalCount instead for the dashboard label.
-  
+
   const handleDelete = useCallback((id: string, name: string) => {
     setConfirmState({ isOpen: true, id, name })
   }, [])

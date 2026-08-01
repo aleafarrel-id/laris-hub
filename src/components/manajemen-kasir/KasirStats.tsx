@@ -41,9 +41,7 @@ export function KasirStats({ kasirList }: KasirStatsProps) {
           className={`${bg} rounded-2xl border border-neutral-200 p-3 text-center shadow-sm`}
         >
           <p className={`text-xl font-black tabular-nums ${color}`}>{value}</p>
-          <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 leading-tight">
-            {label}
-          </p>
+          <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 leading-tight">{label}</p>
         </div>
       ))}
     </motion.div>

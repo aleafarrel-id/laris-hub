@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
-/* ============================================================
-   DESIGN TOKENS - Laris Hub Design System
-   ============================================================ */
+/* Design Tokens */
 @theme {
-  /* === PRIMARY - Brand Blue === */
+  /* Primary */
   --color-primary-50:  #edf5fb;
   --color-primary-100: #c5e3f5;
   --color-primary-200: #9fd0f1;
@@ -17,10 +15,10 @@
   --color-primary-900: #14305b;
   --color-primary-950: #0a192e;
 
-  /* === PRIMARY SHORTHAND - needed for bg-primary, text-primary, etc. === */
-  --color-primary: #285eaf; /* Using 700 for good contrast with white text */
+  /* Primary Shorthand */
+  --color-primary: #285eaf;
 
-  /* === SEMANTIC COLORS === */
+  /* Semantic */
   --color-success:        #16A34A;
   --color-success-light:  #DCFCE7;
   --color-success-dark:   #15803D;
@@ -33,7 +31,7 @@
   --color-info:           #0EA5E9;
   --color-info-light:     #E0F2FE;
 
-  /* === NEUTRAL === */
+  /* Neutral */
   --color-neutral-50:  #FAFAFA;
   --color-neutral-100: #F5F5F5;
   --color-neutral-200: #E5E5E5;
@@ -46,11 +44,11 @@
   --color-neutral-900: #171717;
   --color-neutral-950: #0A0A0A;
 
-  /* === TYPOGRAPHY === */
+  /* Typography */
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 
-  /* === FONT SIZES (fluid) === */
+  /* Font Sizes */
   --text-xs:   0.75rem;
   --text-sm:   0.875rem;
   --text-base: 1rem;
@@ -60,11 +58,11 @@
   --text-3xl:  1.875rem;
   --text-4xl:  2.25rem;
 
-  /* === SPACING === */
+  /* Spacing */
   --spacing-safe-top:    env(safe-area-inset-top, 0px);
   --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* === BORDER RADIUS === */
+  /* Border Radius */
   --radius-sm:     4px;
   --radius-md:     6px;
   --radius-lg:    10px;
@@ -73,19 +71,52 @@
   --radius-action: 20px;
   --radius-full:  9999px;
 
-  /* === SHADOWS === */
+  /* Shadows */
   --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
   --shadow-lg:     0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-modal:  0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.08);
   --shadow-action: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-primary: 0 8px 20px -4px rgba(40, 94, 175, 0.4);
+  --shadow-success: 0 12px 20px -4px rgba(22, 163, 74, 0.4);
+  --shadow-danger: 0 12px 20px -4px rgba(220, 38, 38, 0.4);
+  --shadow-nav: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
 
-  /* === TRANSITIONS === */
+  /* Base Colors & Alpha */
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-white-alpha-80: rgba(255, 255, 255, 0.8);
+  --color-white-alpha-60: rgba(255, 255, 255, 0.6);
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-2-5: 0.625rem;
+  --spacing-3: 0.75rem;
+  --spacing-3-5: 0.875rem;
+  --spacing-4: 1rem;
+  --spacing-4-5: 1.125rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-14: 3.5rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+
+  /* Z-Index */
+  --z-10: 10;
+  --z-50: 50;
+  --z-max: 9999;
+
+  /* Extra Typography */
+  --text-xxs: 0.6875rem;
+  --text-sm-plus: 0.9375rem;
+
+  /* Transitions */
   --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow:   300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* === BREAKPOINTS === */
+  /* Breakpoints */
   --breakpoint-xs: 360px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
@@ -106,9 +137,7 @@
 
 
 
-/* ============================================================
-   BASE STYLES
-   ============================================================ */
+/* Base Styles */
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -117,7 +146,7 @@
   }
 
   html {
-    font-size: 16px; /* Base - never below this */
+    font-size: var(--text-base); /* Base - never below this */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
@@ -173,14 +202,14 @@
   .skip-link {
     position: absolute;
     transform: translateY(-100%);
-    left: 1rem;
-    top: 1rem;
-    padding: 0.5rem 1rem;
+    left: var(--spacing-4);
+    top: var(--spacing-4);
+    padding: var(--spacing-2) var(--spacing-4);
     background: var(--color-primary-700);
-    color: white;
+    color: var(--color-white);
     border-radius: var(--radius-md);
     font-weight: 600;
-    z-index: 9999;
+    z-index: var(--z-max);
     transition: transform var(--transition-fast);
   }
 
@@ -222,7 +251,7 @@
   }
 
   *::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--color-transparent);
   }
 
   *::-webkit-scrollbar-thumb {
@@ -235,30 +264,28 @@
   }
 }
 
-/* ============================================================
-   COMPONENT STYLES
-   ============================================================ */
+/* Component Styles */
 @layer components {
-  /* === KASIR ACTION BUTTONS === */
+  /* Kasir Action Buttons */
   .btn-kasir-primary {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--spacing-2);
     width: 100%;
-    min-height: 4rem; /* 64px minimum touch target */
-    padding: 1rem;
+    min-height: var(--spacing-16);
+    padding: var(--spacing-4);
     border-radius: var(--radius-action);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: var(--text-base);
     letter-spacing: 0.025em;
     text-transform: uppercase;
     transition: all var(--transition-fast);
     box-shadow: var(--shadow-action);
     cursor: pointer;
     border: none;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: var(--color-transparent);
   }
 
   .btn-kasir-primary:active {
@@ -267,40 +294,40 @@
 
   @media (min-width: 640px) {
     .btn-kasir-primary {
-      min-height: 5rem; /* 80px on larger screens */
-      font-size: 1.125rem;
+      min-height: var(--spacing-20);
+      font-size: var(--text-lg);
     }
   }
 
   .btn-kasir-sale {
     background: var(--color-success);
-    color: white;
+    color: var(--color-white);
   }
 
   @media (hover: hover) {
     .btn-kasir-sale:hover {
       background: var(--color-success-dark);
-      box-shadow: 0 12px 20px -4px rgb(22 163 74 / 0.4);
+      box-shadow: var(--shadow-success);
     }
   }
 
   .btn-kasir-expense {
     background: var(--color-danger);
-    color: white;
+    color: var(--color-white);
   }
 
   @media (hover: hover) {
     .btn-kasir-expense:hover {
       background: var(--color-danger-dark);
-      box-shadow: 0 12px 20px -4px rgb(220 38 38 / 0.4);
+      box-shadow: var(--shadow-danger);
     }
   }
 
   /* === KPI CARD === */
   .kpi-card {
-    background: white;
+    background: var(--color-white);
     border-radius: var(--radius-card);
-    padding: 1.25rem;
+    padding: var(--spacing-5);
     box-shadow: var(--shadow-card);
     border: 1px solid var(--color-neutral-200);
     transition: box-shadow var(--transition-normal), transform var(--transition-normal);
@@ -315,7 +342,7 @@
 
   /* === APP CARD === */
   .app-card {
-    background: white;
+    background: var(--color-white);
     border-radius: var(--radius-card);
     border: 1px solid var(--color-neutral-200);
     box-shadow: var(--shadow-card);
@@ -325,19 +352,19 @@
   .page-container {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: var(--spacing-4);
     width: 100%;
   }
 
   @media (min-width: 640px) {
     .page-container {
-      padding: 1.5rem;
+      padding: var(--spacing-6);
     }
   }
 
   @media (min-width: 1024px) {
     .page-container {
-      padding: 2rem;
+      padding: var(--spacing-8);
     }
   }
 
@@ -345,7 +372,7 @@
   .currency-input {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     text-align: right;
   }
@@ -354,42 +381,42 @@
   .badge-success {
     background: var(--color-success-light);
     color: var(--color-success-dark);
-    padding: 0.25rem 0.75rem;
+    padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
   }
 
   .badge-danger {
     background: var(--color-danger-light);
     color: var(--color-danger-dark);
-    padding: 0.25rem 0.75rem;
+    padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
   }
 
   .badge-warning {
     background: var(--color-warning-light);
     color: var(--color-warning-dark);
-    padding: 0.25rem 0.75rem;
+    padding: var(--spacing-1) var(--spacing-3);
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
   }
 
-  /* === BOTTOM NAV (Kasir Mobile) === */
+  /* Bottom Nav */
   .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--color-white);
     border-top: 1px solid var(--color-neutral-200);
     padding-bottom: env(safe-area-inset-bottom);
     display: flex;
     z-index: 50;
-    box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.05);
+    box-shadow: var(--shadow-nav);
   }
 
   .bottom-nav-item {
@@ -398,15 +425,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    padding: 0.75rem 0.5rem;
-    min-height: 3.5rem;
-    font-size: 0.6875rem;
+    gap: var(--spacing-1);
+    padding: var(--spacing-3) var(--spacing-2);
+    min-height: var(--spacing-14);
+    font-size: var(--text-xxs);
     font-weight: 500;
     color: var(--color-neutral-500);
     transition: color var(--transition-fast);
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: var(--color-transparent);
   }
 
   .bottom-nav-item.active {
@@ -433,10 +460,10 @@
 
   /* === GLASS CARD === */
   .glass-card {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--color-white-alpha-80);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--color-white-alpha-60);
     border-radius: var(--radius-card);
   }
 
@@ -444,15 +471,15 @@
   .sidebar-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.625rem 0.875rem;
+    gap: var(--spacing-3);
+    padding: var(--spacing-2-5) var(--spacing-3-5);
     border-radius: var(--radius-md);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm-plus);
     font-weight: 500;
     color: var(--color-neutral-600);
     transition: all var(--transition-fast);
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: var(--color-transparent);
   }
 
   @media (hover: hover) {
@@ -470,10 +497,10 @@
 
   /* === KPI CARD (Dashboard) === */
   .kpi-card {
-    background: white;
+    background: var(--color-white);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-card);
-    padding: 1rem 1.125rem;
+    padding: var(--spacing-4) var(--spacing-4-5);
     transition: box-shadow var(--transition-fast);
   }
 
@@ -484,9 +511,7 @@
   }
 }
 
-/* ============================================================
-   UTILITIES
-   ============================================================ */
+/* Utilities */
 @layer utilities {
   /* Scrollbar hide */
   .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -509,12 +534,12 @@
   .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-  /* Text gradient - for brand headings */
+  /* Text Gradient */
   .text-gradient-primary {
     background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
+    color: var(--color-transparent);
   }
 
   /* Fade-in + slide-up - single merged keyframe, no conflicts */

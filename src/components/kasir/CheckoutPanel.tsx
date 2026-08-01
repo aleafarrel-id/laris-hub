@@ -65,7 +65,9 @@ export function CheckoutPanel({
                 </span>
               </div>
               <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1.5 rounded-xl flex-shrink-0">
-                <span className="font-bold text-[13px]">{isPending ? 'Menyimpan...' : 'Simpan'}</span>
+                <span className="font-bold text-[13px]">
+                  {isPending ? 'Menyimpan...' : 'Simpan'}
+                </span>
                 <CheckCircle size={16} strokeWidth={2.5} />
               </div>
             </motion.button>

@@ -1,5 +1,5 @@
-import { motion } from 'motion/react'
 import { CheckCircle2, ChevronRight, Phone, ShieldOff } from 'lucide-react'
+import { motion } from 'motion/react'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types'
 import { KasirAvatar } from './KasirAvatar'

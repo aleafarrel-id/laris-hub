@@ -1,12 +1,12 @@
 import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from 'lucide-react'
+import { useState } from 'react'
 import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatRupiah, formatTime } from '@/lib/utils'
-import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
-import { useState } from 'react'
+import type { Profile, TransactionWithItems, TransactionWithProfile } from '@/types'
 
 interface RecentTransactionsTableProps {
   transactions: TransactionWithProfile[] | undefined
@@ -177,8 +177,8 @@ export function RecentTransactionsTable({
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {transactions.map((tx) => (
-              <tr 
-                key={tx.id} 
+              <tr
+                key={tx.id}
                 onClick={() => setViewingTx(tx)}
                 className="hover:bg-neutral-50/80 transition-colors cursor-pointer"
               >

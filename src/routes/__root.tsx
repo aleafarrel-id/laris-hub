@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/components/auth/AuthProvider'
+import { NetworkStatusBanner } from '@/components/ui/NetworkStatusBanner'
 
 interface RouterContext {
   queryClient: QueryClient
@@ -15,6 +16,7 @@ function RootComponent() {
   return (
     <AuthProvider>
       <Outlet />
+      <NetworkStatusBanner />
       <Toaster
         position="top-right"
         expand={false}

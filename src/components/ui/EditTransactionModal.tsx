@@ -3,6 +3,7 @@ import { ExpenseForm } from '@/components/kasir/ExpenseForm'
 import { SaleForm } from '@/components/kasir/SaleForm'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { QUERY_KEYS } from '@/lib/constants'
 import { getTransactionWithItems } from '@/services/transaction.service'
 import type { TransactionWithItems, TransactionWithProfile } from '@/types'
 
@@ -16,7 +17,7 @@ export function EditTransactionModal({
   onClose: () => void
 }) {
   const { data: fullTx, isLoading } = useQuery({
-    queryKey: ['transaction', transaction?.id],
+    queryKey: [...QUERY_KEYS.TRANSACTIONS, 'detail', transaction?.id],
     queryFn: () => getTransactionWithItems(transaction!.id),
     enabled: isOpen && !!transaction?.id,
   })

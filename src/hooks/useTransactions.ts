@@ -1,8 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { QUERY_KEYS } from '@/lib/constants'
+import { enqueueOfflineSale } from '@/lib/offline-queue'
 import { translateError } from '@/lib/utils'
+import { nowIso } from '@/services/transaction.utils'
+import { getKPISummaryForRange } from '@/services/dashboard.service'
 import {
   createExpenseTransaction,
   createSaleTransaction,
@@ -13,7 +16,6 @@ import {
   updateSaleTransaction,
   updateTransactionStatus,
 } from '@/services/transaction.service'
-import { getKPISummaryForRange } from '@/services/dashboard.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { TransactionFilters } from '@/types'
 
@@ -58,7 +60,9 @@ export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSi
   })
 }
 
-export function useTransactionSummary(filters: Pick<TransactionFilters, 'dateRange' | 'type' | 'recordedBy'> = {}) {
+export function useTransactionSummary(
+  filters: Pick<TransactionFilters, 'dateRange' | 'type' | 'recordedBy'> = {},
+) {
   const user = useAuthStore((state) => state.user)
 
   return useQuery({
@@ -67,7 +71,7 @@ export function useTransactionSummary(filters: Pick<TransactionFilters, 'dateRan
     queryFn: async () => {
       const from = filters.dateRange?.from || new Date(2000, 0, 1)
       const to = filters.dateRange?.to || new Date()
-      // getKPISummaryForRange fetches lightweight aggregate columns (type, amount, profit) 
+      // getKPISummaryForRange fetches lightweight aggregate columns (type, amount, profit)
       // instead of joining full transaction data
       const kpi = await getKPISummaryForRange(from, to, filters.recordedBy)
       return {
@@ -123,14 +127,57 @@ function createTransactionMutation<TVariables, TData>(
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 type CreateSaleArgs = { payload: Parameters<typeof createSaleTransaction>[0] }
-export const useCreateSale = createTransactionMutation<CreateSaleArgs, any>(
-  ({ payload }) => createSaleTransaction(payload),
-  {
-    successMessage: 'Transaksi penjualan berhasil disimpan!',
-    successDescription: 'Data telah tersimpan ke Buku Kas.',
-    errorAction: 'menyimpan transaksi',
-  },
-)
+export const useCreateSale = function useMutationHook() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ payload }: CreateSaleArgs) => {
+      // Ensure offline transactions record the exact time of creation, not sync time
+      payload.transaction_at = payload.transaction_at || nowIso()
+      
+      if (!navigator.onLine) {
+        try {
+          await enqueueOfflineSale(payload)
+          return { offline: true }
+        } catch (queueErr: any) {
+          toast.error('Gagal Menyimpan Offline', {
+            description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
+          })
+          throw queueErr
+        }
+      }
+      try {
+        return await createSaleTransaction(payload)
+      } catch (err) {
+        // Fallback to offline queue if it's a network error
+        if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+          try {
+            await enqueueOfflineSale(payload)
+            return { offline: true }
+          } catch (queueErr: any) {
+            toast.error('Gagal Menyimpan Offline', {
+              description: queueErr.message || 'Penyimpanan penuh atau bermasalah.',
+            })
+            throw queueErr
+          }
+        }
+        throw err
+      }
+    },
+    onSuccess: (data) => {
+      if (data && (data as any).offline) {
+        toast.success('Disimpan secara offline!', {
+          description: 'Data penjualan akan disinkronkan saat koneksi tersedia.',
+        })
+      } else {
+        invalidateTransactionQueries(queryClient)
+        toast.success('Transaksi penjualan berhasil disimpan!', {
+          description: 'Data telah tersimpan ke Buku Kas.',
+        })
+      }
+    },
+    onError: onTransactionError('menyimpan transaksi'),
+  })
+}
 
 type CreateExpenseArgs = { payload: Parameters<typeof createExpenseTransaction>[0] }
 export const useCreateExpense = createTransactionMutation<CreateExpenseArgs, any>(

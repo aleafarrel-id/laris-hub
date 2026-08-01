@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { KPISummary } from '@/types'
+
 interface DailySummaryRow {
   date: string
   total_sales_count: number

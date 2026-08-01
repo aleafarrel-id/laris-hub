@@ -1,25 +1,18 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import {
-  Plus,
-  User,
-  Users,
-} from 'lucide-react'
+import { Plus, User, Users } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
+import { CreateKasirModal } from '@/components/manajemen-kasir/CreateKasirModal'
+import { KasirCard } from '@/components/manajemen-kasir/KasirCard'
+import { KasirDetailDrawer } from '@/components/manajemen-kasir/KasirDetailDrawer'
+import { KasirStats } from '@/components/manajemen-kasir/KasirStats'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
-import {
-  useKasirList,
-  useToggleKasirStatus,
-} from '@/hooks/useKasirManagement'
+import { useKasirList, useToggleKasirStatus } from '@/hooks/useKasirManagement'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
-import { KasirCard } from '@/components/manajemen-kasir/KasirCard'
-import { CreateKasirModal } from '@/components/manajemen-kasir/CreateKasirModal'
-import { KasirDetailDrawer } from '@/components/manajemen-kasir/KasirDetailDrawer'
-import { KasirStats } from '@/components/manajemen-kasir/KasirStats'
 
 export const Route = createFileRoute('/_auth/manajemen-kasir')({
   beforeLoad: async ({ location }) => {
@@ -48,7 +41,7 @@ function ManajemenKasirPage() {
   // never a stale local snapshot that could disagree with what the server stored.
   const syncedKasir = useMemo(
     () => kasirList.find((k) => k.id === selectedKasir?.id) ?? null,
-    [kasirList, selectedKasir?.id]
+    [kasirList, selectedKasir?.id],
   )
 
   const handleToggle = useCallback(
@@ -104,9 +97,7 @@ function ManajemenKasirPage() {
       <div className="flex-1 px-4 sm:px-6 py-5">
         <div className="max-w-3xl mx-auto space-y-3">
           {/* Stats */}
-          {!isLoading && kasirList.length > 0 && (
-            <KasirStats kasirList={kasirList} />
-          )}
+          {!isLoading && kasirList.length > 0 && <KasirStats kasirList={kasirList} />}
 
           {isLoading ? (
             <div className="space-y-3">
@@ -150,11 +141,11 @@ function ManajemenKasirPage() {
           key="kasir-detail-drawer"
           isOpen={!!selectedKasir && !!syncedKasir}
           kasir={syncedKasir || selectedKasir}
-            onClose={() => setSelectedKasir(null)}
-            onToggle={handleToggle}
-            isToggling={isToggling}
-            adminId={adminProfile?.id}
-          />
+          onClose={() => setSelectedKasir(null)}
+          onToggle={handleToggle}
+          isToggling={isToggling}
+          adminId={adminProfile?.id}
+        />
       </AnimatePresence>
 
       <CreateKasirModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />

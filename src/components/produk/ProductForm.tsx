@@ -105,7 +105,11 @@ export function ProductForm({
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-full relative">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col min-h-full relative"
+    >
       <div className="flex-1 px-5 py-6 pb-24 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
           {/* Left column: image & status toggle */}

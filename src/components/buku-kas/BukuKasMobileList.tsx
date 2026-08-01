@@ -1,12 +1,12 @@
-import { Edit3, TrendingDown, TrendingUp, Trash2, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Edit3, Trash2, TrendingDown, TrendingUp } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useState } from 'react'
 import { PaymentMethodBadge, StatusBadge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { Profile, TransactionWithProfile, TransactionWithItems } from '@/types'
-import { useState } from 'react'
+import type { Profile, TransactionWithItems, TransactionWithProfile } from '@/types'
 
 interface BukuKasMobileListProps {
   transactions: TransactionWithProfile[]
@@ -69,111 +69,114 @@ export function BukuKasMobileList({
             className="app-card p-3.5 flex items-center gap-3 relative cursor-pointer hover:border-primary/30 transition-colors"
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' as const, delay: Math.min(idx * 0.03, 0.3) }}
+            transition={{
+              duration: 0.3,
+              ease: 'easeOut' as const,
+              delay: Math.min(idx * 0.03, 0.3),
+            }}
           >
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
-            }`}
-          >
-            {tx.type === 'penjualan' ? (
-              <TrendingUp size={15} className="text-success" />
-            ) : (
-              <TrendingDown size={15} className="text-danger" />
-            )}
-          </div>
-
-          {isAdmin && (
-            <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEditTransaction(tx as unknown as TransactionWithItems)
-                }}
-                className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                title="Edit Transaksi"
-              >
-                <Edit3 size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteTransaction(tx.id)
-                }}
-                className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
-                title="Hapus Transaksi"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <div className="text-sm font-medium text-neutral-900 pr-12">
-              <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                tx.type === 'penjualan' ? 'bg-success/10' : 'bg-danger/10'
+              }`}
+            >
+              {tx.type === 'penjualan' ? (
+                <TrendingUp size={15} className="text-success" />
+              ) : (
+                <TrendingDown size={15} className="text-danger" />
+              )}
             </div>
 
-
-            {tx.type === 'penjualan' && (
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <PaymentMethodBadge method={tx.payment_method} />
-                <StatusBadge status={tx.status} />
-              </div>
-            )}
-
-            {isAdmin && tx.profiles && (
-              <div className="mt-1.5">
+            {isAdmin && (
+              <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                    onEditTransaction(tx as unknown as TransactionWithItems)
                   }}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
+                  className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                  title="Edit Transaksi"
                 >
-                  <span className="truncate max-w-[120px]">{tx.profiles.full_name}</span>
+                  <Edit3 size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteTransaction(tx.id)
+                  }}
+                  className="p-1.5 rounded-md text-neutral-400 hover:text-danger hover:bg-danger/10 transition-colors"
+                  title="Hapus Transaksi"
+                >
+                  <Trash2 size={14} />
                 </button>
               </div>
             )}
 
-            <div className="flex items-end justify-between mt-1.5 gap-2">
-              <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
-                {formatDateTime(tx.transaction_at)}
-              </span>
-              <div className="flex flex-col items-end leading-tight flex-shrink-0">
-                <span
-                  className={`text-sm font-bold tabular-nums whitespace-nowrap ${
-                    tx.type === 'penjualan' ? 'text-success' : 'text-danger'
-                  }`}
-                >
-                  {tx.type === 'penjualan' ? '+' : '−'}
-                  {formatRupiah(tx.total_amount)}
-                </span>
-                {isAdmin && tx.type === 'penjualan' && (
-                  <span className="text-[10px] text-neutral-400 tabular-nums mt-0.5">
-                    profit {formatRupiah(tx.total_profit)}
-                  </span>
-                )}
-                {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="text-sm font-medium text-neutral-900 pr-12">
+                <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
+              </div>
+
+              {tx.type === 'penjualan' && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <PaymentMethodBadge method={tx.payment_method} />
+                  <StatusBadge status={tx.status} />
+                </div>
+              )}
+
+              {isAdmin && tx.profiles && (
+                <div className="mt-1.5">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onUpdateStatus(tx.id, 'sukses')
+                      onSelectKasirProfile(tx.profiles as Partial<Profile>)
                     }}
-                    className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
                   >
-                    <CheckCircle2 size={12} />
-                    Selesai
+                    <span className="truncate max-w-[120px]">{tx.profiles.full_name}</span>
                   </button>
-                )}
+                </div>
+              )}
+
+              <div className="flex items-end justify-between mt-1.5 gap-2">
+                <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5 min-w-0">
+                  {formatDateTime(tx.transaction_at)}
+                </span>
+                <div className="flex flex-col items-end leading-tight flex-shrink-0">
+                  <span
+                    className={`text-sm font-bold tabular-nums whitespace-nowrap ${
+                      tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                    }`}
+                  >
+                    {tx.type === 'penjualan' ? '+' : '−'}
+                    {formatRupiah(tx.total_amount)}
+                  </span>
+                  {isAdmin && tx.type === 'penjualan' && (
+                    <span className="text-[10px] text-neutral-400 tabular-nums mt-0.5">
+                      profit {formatRupiah(tx.total_profit)}
+                    </span>
+                  )}
+                  {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUpdateStatus(tx.id, 'sukses')
+                      }}
+                      className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <CheckCircle2 size={12} />
+                      Selesai
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        ))}
       </div>
 
       <TransactionDetailModal

@@ -2,7 +2,10 @@ import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import type { TransactionWithItems } from '@/types'
 
 interface TransactionDetailsProps {
-  transaction: Pick<TransactionWithItems, 'type' | 'description' | 'transaction_items' | 'expense_items' | 'expense_category' | 'notes'>
+  transaction: Pick<
+    TransactionWithItems,
+    'type' | 'description' | 'transaction_items' | 'expense_items' | 'expense_category' | 'notes'
+  >
   isMobile?: boolean
 }
 
@@ -16,14 +19,15 @@ interface TransactionDetailsProps {
 export function TransactionDetails({ transaction, isMobile }: TransactionDetailsProps) {
   const isExpense = transaction.type === 'pengeluaran'
   const expenseItems = transaction.expense_items as any[] | null
-  const hasExpenseItems = isExpense && expenseItems && Array.isArray(expenseItems) && expenseItems.length > 0
+  const hasExpenseItems =
+    isExpense && expenseItems && Array.isArray(expenseItems) && expenseItems.length > 0
   const saleItems = transaction.transaction_items ?? []
   const hasSaleItems = !isExpense && saleItems.length > 0
 
   return (
     <div className={`flex flex-col ${isMobile ? 'gap-1.5' : 'gap-2'} text-left w-full`}>
       {/* 1. Keterangan & Badge */}
-      {(isExpense || (!hasSaleItems)) && (
+      {(isExpense || !hasSaleItems) && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-neutral-900 text-sm">
             {isExpense ? transaction.description : 'Penjualan'}
@@ -38,14 +42,18 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
 
       {/* 2. Detail barang */}
       {hasExpenseItems && (
-        <div className={`flex flex-col gap-0.5 ${isMobile ? 'text-sm text-neutral-900' : 'text-sm text-neutral-700'}`}>
+        <div
+          className={`flex flex-col gap-0.5 ${isMobile ? 'text-sm text-neutral-900' : 'text-sm text-neutral-700'}`}
+        >
           {expenseItems.map((item, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique id here
             <div key={index} className={`flex items-start gap-1.5 ${isMobile ? 'min-w-0' : ''}`}>
               <span className="text-neutral-400 flex-shrink-0">•</span>
               <span className={isMobile ? 'truncate' : ''}>
                 {item.name}{' '}
-                <span className="text-neutral-400 font-normal tabular-nums text-xs">x{item.qty}</span>
+                <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                  x{item.qty}
+                </span>
               </span>
             </div>
           ))}
@@ -60,7 +68,9 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
               <span className="text-neutral-400 flex-shrink-0">•</span>
               <span className={isMobile ? 'truncate' : ''}>
                 {item.product_name}{' '}
-                <span className="text-neutral-400 font-normal tabular-nums text-xs">x{item.quantity}</span>
+                <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                  x{item.quantity}
+                </span>
               </span>
             </div>
           ))}
@@ -74,4 +84,3 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
     </div>
   )
 }
-

@@ -43,6 +43,7 @@ export async function getProducts(activeOnly = false): Promise<Product[]> {
       'id, name, sku, hpp, selling_price, description, image_url, is_active, created_by, created_at, updated_at',
     )
     .order('name', { ascending: true })
+    .order('id', { ascending: true })
   if (activeOnly) query = query.eq('is_active', true)
   const { data, error } = await query
   if (error) throw error
@@ -67,6 +68,7 @@ export async function getProductsPaginated(
       { count: 'exact' },
     )
     .order('name', { ascending: true })
+    .order('id', { ascending: true })
 
   if (search.trim()) {
     query = query.or(`name.ilike.%${search.trim()}%,sku.ilike.%${search.trim()}%`)

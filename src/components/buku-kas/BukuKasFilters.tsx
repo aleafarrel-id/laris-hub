@@ -75,7 +75,9 @@ export function BukuKasFilters({
 
         <div className="h-5 w-px bg-neutral-200 flex-shrink-0 hidden sm:block" />
 
-        <div className={`grid gap-2 w-full sm:w-auto ${isAdmin ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'} sm:flex sm:items-center`}>
+        <div
+          className={`grid gap-2 w-full sm:w-auto ${isAdmin ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-2'} sm:flex sm:items-center`}
+        >
           {isAdmin && (
             <CustomSelect
               value={kasirFilter}
@@ -89,7 +91,9 @@ export function BukuKasFilters({
           )}
           <CustomSelect
             value={paymentMethodFilter as string}
-            onChange={(val) => onPaymentMethodFilterChange(val as TransactionFilters['paymentMethod'])}
+            onChange={(val) =>
+              onPaymentMethodFilterChange(val as TransactionFilters['paymentMethod'])
+            }
             options={[
               { value: 'all', label: 'Semua Metode' },
               { value: 'tunai', label: 'Tunai' },
@@ -105,7 +109,11 @@ export function BukuKasFilters({
               { value: 'penjualan', label: 'Penjualan' },
               { value: 'pengeluaran', label: 'Pengeluaran' },
             ]}
-            className={isAdmin ? "col-span-2 sm:col-span-1 w-full sm:w-auto sm:min-w-[120px]" : "w-full sm:w-auto sm:min-w-[120px]"}
+            className={
+              isAdmin
+                ? 'col-span-2 sm:col-span-1 w-full sm:w-auto sm:min-w-[120px]'
+                : 'w-full sm:w-auto sm:min-w-[120px]'
+            }
           />
         </div>
       </div>

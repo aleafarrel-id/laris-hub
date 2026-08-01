@@ -1,13 +1,13 @@
 import { Search } from 'lucide-react'
-import { useCallback, useState, useDeferredValue } from 'react'
+import { useCallback, useDeferredValue, useState } from 'react'
 import { CheckoutPanel } from '@/components/kasir/CheckoutPanel'
-import { ProductCard } from '@/components/kasir/ProductCard'
 import { PaymentMethodModal } from '@/components/kasir/PaymentMethodModal'
+import { ProductCard } from '@/components/kasir/ProductCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
 import { useSaleFormState } from '@/hooks/useTransactionForm'
+import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
 import type { PaymentMethod, TransactionStatus, TransactionWithItems } from '@/types'
 
 interface SaleFormProps {
@@ -65,48 +65,54 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     setIsModalOpen(true)
   }, [cart])
 
-  const handleSubmit = useCallback((paymentMethod: PaymentMethod, status: TransactionStatus) => {
-    if (cart.size === 0) return
-    
-    // Optimistically close modal
-    setIsModalOpen(false)
+  const handleSubmit = useCallback(
+    (paymentMethod: PaymentMethod, status: TransactionStatus) => {
+      if (cart.size === 0) return
 
-    const items = cartArray.map((cartItem) => ({
-      product_id: cartItem.original_product_id !== undefined ? cartItem.original_product_id : cartItem.product.id,
-      product_name: cartItem.product.name,
-      product_hpp: cartItem.product.hpp,
-      selling_price: cartItem.product.selling_price,
-      quantity: cartItem.quantity,
-    }))
+      // Optimistically close modal
+      setIsModalOpen(false)
 
-    if (isEditing && transaction) {
-      updateSale(
-        {
-          id: transaction.id,
-          payload: {
-            items,
-            notes: notes.trim() || null,
-            transaction_at: transaction.transaction_at,
-            payment_method: paymentMethod,
-            status,
+      const items = cartArray.map((cartItem) => ({
+        product_id:
+          cartItem.original_product_id !== undefined
+            ? cartItem.original_product_id
+            : cartItem.product.id,
+        product_name: cartItem.product.name,
+        product_hpp: cartItem.product.hpp,
+        selling_price: cartItem.product.selling_price,
+        quantity: cartItem.quantity,
+      }))
+
+      if (isEditing && transaction) {
+        updateSale(
+          {
+            id: transaction.id,
+            payload: {
+              items,
+              notes: notes.trim() || null,
+              transaction_at: transaction.transaction_at,
+              payment_method: paymentMethod,
+              status,
+            },
           },
-        },
-        { onSuccess },
-      )
-    } else {
-      createSale(
-        { 
-          payload: { 
-            items, 
-            notes: notes.trim() || null,
-            payment_method: paymentMethod,
-            status,
-          } 
-        }, 
-        { onSuccess }
-      )
-    }
-  }, [cart, cartArray, notes, isEditing, transaction, createSale, updateSale, onSuccess])
+          { onSuccess },
+        )
+      } else {
+        createSale(
+          {
+            payload: {
+              items,
+              notes: notes.trim() || null,
+              payment_method: paymentMethod,
+              status,
+            },
+          },
+          { onSuccess },
+        )
+      }
+    },
+    [cart, cartArray, notes, isEditing, transaction, createSale, updateSale, onSuccess],
+  )
 
   return (
     <div className="flex flex-col min-h-[60vh] max-h-full">
@@ -165,6 +171,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         onConfirm={handleSubmit}
         totalAmount={totalAmount}
         isPending={isPending}
+        activeMethod={transaction?.payment_method as 'tunai' | 'qris' | undefined}
       />
     </div>
   )

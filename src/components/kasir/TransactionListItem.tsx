@@ -40,7 +40,7 @@ export const TransactionListItem = memo(function TransactionListItem({
           <Wallet size={14} className="text-danger" />
         )}
       </div>
-      
+
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
           <div className="text-sm font-medium text-neutral-900 pr-4">

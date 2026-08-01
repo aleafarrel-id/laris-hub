@@ -12,8 +12,7 @@ export const productSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => val || null),
-  hpp: z
-    .coerce
+  hpp: z.coerce
     .number({
       required_error: 'HPP tidak boleh kosong',
       invalid_type_error: 'HPP harus berupa angka',
@@ -21,8 +20,7 @@ export const productSchema = z.object({
     .refine((val) => !isNaN(val), { message: 'HPP tidak boleh kosong' })
     .refine((val) => val >= 0, { message: 'HPP tidak boleh negatif' })
     .refine((val) => val <= 999_999_999, { message: 'HPP terlalu besar' }),
-  selling_price: z
-    .coerce
+  selling_price: z.coerce
     .number({
       required_error: 'Harga jual tidak boleh kosong',
       invalid_type_error: 'Harga jual harus berupa angka',
