@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -38,6 +38,8 @@ export const Route = createFileRoute('/_auth')({
 
 function AuthLayout() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     document.body.style.setProperty('--sidebar-offset', 'var(--layout-sidebar-width)')
@@ -45,6 +47,17 @@ function AuthLayout() {
       document.body.style.setProperty('--sidebar-offset', '0px')
     }
   }, [])
+
+  // Synchronize cross-tab role changes dynamically
+  useEffect(() => {
+    if (profile) {
+      if (profile.role === 'admin' && location.pathname.startsWith('/kasir')) {
+        navigate({ to: '/dashboard', replace: true })
+      } else if (profile.role === 'kasir' && location.pathname.startsWith('/dashboard')) {
+        navigate({ to: '/kasir', replace: true })
+      }
+    }
+  }, [profile, location.pathname, navigate])
 
   return (
     <div className="flex min-h-dvh bg-neutral-50/50">
