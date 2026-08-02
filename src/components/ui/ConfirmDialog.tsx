@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
+import { useNativeBack } from '@/hooks/useNativeBack'
 import { Portal } from './Portal'
 
 interface ConfirmDialogProps {
@@ -28,6 +29,8 @@ export function ConfirmDialog({
   variant = 'danger',
   icon: Icon = AlertCircle,
 }: ConfirmDialogProps) {
+  useNativeBack(isOpen, onCancel)
+
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => {

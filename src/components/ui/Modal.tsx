@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
+import { useNativeBack } from '@/hooks/useNativeBack'
 import { Portal } from './Portal'
 
 interface ModalProps {
@@ -12,6 +13,8 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: ModalProps) {
+  useNativeBack(isOpen, onClose)
+
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => {
