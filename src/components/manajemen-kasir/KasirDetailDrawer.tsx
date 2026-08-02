@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Portal } from '@/components/ui/Portal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useNativeBack } from '@/hooks/useNativeBack'
 import { useDeleteKasir, useKasirAuthDetails, useUpdateKasir } from '@/hooks/useKasirManagement'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import type { Profile } from '@/types'
@@ -68,6 +69,8 @@ function DeleteConfirmModal({
   onCancel: () => void
   isPending: boolean
 }) {
+  useNativeBack(true, onCancel)
+
   return (
     <Portal className="z-[60] flex items-center justify-center p-4">
       <motion.div
@@ -140,6 +143,8 @@ export function KasirDetailDrawer({
   isToggling: boolean
   adminId?: string
 }) {
+  useNativeBack(isOpen, onClose)
+
   const [cachedKasir, setCachedKasir] = useState<Profile | null>(kasir)
 
   useEffect(() => {

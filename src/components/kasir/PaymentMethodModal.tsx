@@ -1,6 +1,7 @@
 import { Banknote, QrCode } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Portal } from '@/components/ui/Portal'
+import { useNativeBack } from '@/hooks/useNativeBack'
 import { formatRupiah } from '@/lib/utils'
 
 interface PaymentMethodModalProps {
@@ -20,6 +21,8 @@ export function PaymentMethodModal({
   isPending,
   activeMethod,
 }: PaymentMethodModalProps) {
+  useNativeBack(isOpen, onClose)
+
   return (
     <AnimatePresence>
       {isOpen && (

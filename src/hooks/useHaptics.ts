@@ -3,12 +3,12 @@ import { useCallback } from 'react'
 export type HapticPattern = 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning'
 
 const HAPTIC_PATTERNS: Record<HapticPattern, number | number[]> = {
-  light: 10,
-  medium: 30,
-  heavy: 50,
-  success: [30, 50, 30],
-  warning: [30, 50, 30, 50],
-  error: [50, 50, 50, 50, 50],
+  light: 50,
+  medium: 100,
+  heavy: 150,
+  success: [50, 50, 100],
+  warning: [50, 100, 50, 100],
+  error: [100, 50, 100, 50, 150],
 }
 
 /**
