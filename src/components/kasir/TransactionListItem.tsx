@@ -24,10 +24,10 @@ export const TransactionListItem = memo(function TransactionListItem({
   return (
     <motion.div
       onClick={() => {
-        if (!(tx as any).isOfflinePending) onClick?.(tx)
+        if (!tx.isOfflinePending) onClick?.(tx)
       }}
       className={`app-card p-3.5 flex items-stretch gap-3 hover:border-primary/30 transition-colors ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''} ${
-        (tx as any).isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer'
+        tx.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer'
       }`}
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
@@ -74,7 +74,7 @@ export const TransactionListItem = memo(function TransactionListItem({
           {formatRupiah(tx.total_amount)}
         </span>
 
-        {!(tx as any).isOfflinePending ? (
+        {!tx.isOfflinePending ? (
           isPendingQris && onUpdateStatus && (
             <button
               type="button"

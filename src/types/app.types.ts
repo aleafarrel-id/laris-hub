@@ -1,14 +1,23 @@
 import type { Database } from './database.types'
 
-export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  isOfflinePending?: boolean
+  localId?: string
+}
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
-export type Product = Database['public']['Tables']['products']['Row']
+export type Product = Database['public']['Tables']['products']['Row'] & {
+  isOfflinePending?: boolean
+  localId?: string
+}
 export type ProductInsert = Database['public']['Tables']['products']['Insert']
 export type ProductUpdate = Database['public']['Tables']['products']['Update']
 
-export type Transaction = Database['public']['Tables']['transactions']['Row']
+export type Transaction = Database['public']['Tables']['transactions']['Row'] & {
+  isOfflinePending?: boolean
+  localId?: string
+}
 export type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 export type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
 

@@ -65,9 +65,9 @@ export function RecentTransactionsTable({
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            onClick={() => !(tx as any).isOfflinePending && setViewingTx(tx)}
+            onClick={() => !tx.isOfflinePending && setViewingTx(tx)}
             className={`flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer ${
-              (tx as any).isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
+              tx.isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
             }`}
           >
             <div
@@ -77,7 +77,7 @@ export function RecentTransactionsTable({
             >
               {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
             </div>
-            {isAdmin && !(tx as any).isOfflinePending && (
+            {isAdmin && !tx.isOfflinePending && (
               <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                 <button
                   type="button"
@@ -191,9 +191,9 @@ export function RecentTransactionsTable({
             {transactions.map((tx) => (
               <tr
                 key={tx.id}
-                onClick={() => !(tx as any).isOfflinePending && setViewingTx(tx)}
+                onClick={() => !tx.isOfflinePending && setViewingTx(tx)}
                 className={`hover:bg-neutral-50/80 transition-colors cursor-pointer ${
-                  (tx as any).isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
+                  tx.isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
                 }`}
               >
                 <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
@@ -234,7 +234,7 @@ export function RecentTransactionsTable({
                   {formatRupiah(tx.total_amount)}
                 </td>
                 <td className="py-2.5 px-4 text-right align-top">
-                  {!(tx as any).isOfflinePending ? (
+                  {!tx.isOfflinePending ? (
                     <div className="flex justify-end items-center gap-1">
                       {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                         <button

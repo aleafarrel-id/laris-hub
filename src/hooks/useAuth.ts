@@ -94,8 +94,20 @@ export function useAuthListener() {
           setUser(user)
           try {
             const profile = await getProfile(user.id)
+            if (profile?.is_active === false) {
+              await signOut()
+              clearAuth()
+              queryClient.clear()
+              return
+            }
             if (mounted) setProfile(profile)
-          } catch {}
+          } catch (error: any) {
+            if (error.message === 'ACCOUNT_SUSPENDED') {
+              await signOut()
+              clearAuth()
+              queryClient.clear()
+            }
+          }
         }
 
         if (mounted) {
@@ -116,8 +128,20 @@ export function useAuthListener() {
         if (navigator.onLine) {
           try {
             const profile = await getProfile(session.user.id)
+            if (profile?.is_active === false) {
+              await signOut()
+              clearAuth()
+              queryClient.clear()
+              return
+            }
             if (mounted) setProfile(profile)
-          } catch {}
+          } catch (error: any) {
+            if (error.message === 'ACCOUNT_SUSPENDED') {
+              await signOut()
+              clearAuth()
+              queryClient.clear()
+            }
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         clearAuth()

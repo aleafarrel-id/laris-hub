@@ -333,7 +333,7 @@ export function KasirDetailDrawer({
                           setIsEditing(true)
                         }}
                         className="w-full"
-                        disabled={(kasirToRender as any).isOfflinePending}
+                        disabled={kasirToRender.isOfflinePending}
                         leftIcon={<Edit2 size={15} />}
                       >
                         Edit Profil &amp; Akun
@@ -344,7 +344,7 @@ export function KasirDetailDrawer({
                           type="button"
                           variant="outline"
                           onClick={() => onToggle(kasirToRender.id, !kasirToRender.is_active)}
-                          disabled={isToggling || (kasirToRender as any).isOfflinePending}
+                          disabled={isToggling || kasirToRender.isOfflinePending}
                           className={`w-full border ${
                             kasirToRender.is_active
                               ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'

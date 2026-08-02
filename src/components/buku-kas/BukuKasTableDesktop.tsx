@@ -169,7 +169,7 @@ export function BukuKasTableDesktop({
                     </td>
                   )}
                   <td className="py-3 px-4 text-right align-top">
-                    {!(tx as any).isOfflinePending ? (
+                    {!tx.isOfflinePending ? (
                       <div className="flex justify-end items-center gap-1">
                         {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                           <button

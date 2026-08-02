@@ -11,7 +11,12 @@ export async function getProfile(userId: string): Promise<Profile> {
     .eq('id', userId)
     .single()
 
-  if (error) throw error
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error('ACCOUNT_SUSPENDED')
+    }
+    throw error
+  }
   return data as Profile
 }
 
@@ -27,16 +32,18 @@ export async function signIn(email: string, password: string) {
   if (error) throw error
 
   // Check if account is active before granting access
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_active')
     .eq('id', data.user.id)
     .single()
 
-  if (profile?.is_active === false) {
+  if (profileError?.code === 'PGRST116' || profile?.is_active === false) {
     // Invalidate the session immediately - suspended users get no access
     await supabase.auth.signOut()
     throw new Error('ACCOUNT_SUSPENDED')
+  } else if (profileError) {
+    throw profileError
   }
 
   return data

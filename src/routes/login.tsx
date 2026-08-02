@@ -209,12 +209,12 @@ function LoginPage() {
           {/* Suspended account banner - shown when is_active = false */}
           {isSuspended && (
             <motion.div
-              className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3"
+              className="mb-5 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-              <p className="text-sm text-amber-800 font-medium text-center leading-snug">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800 font-medium leading-relaxed">
                 Akun ditangguhkan. Hubungi Admin.
               </p>
             </motion.div>
@@ -223,12 +223,12 @@ function LoginPage() {
           {/* Generic error - wrong credentials etc */}
           {serverError && !isSuspended && (
             <motion.div
-              className="mb-5 flex items-center justify-center gap-2 rounded-xl bg-danger/10 border border-danger/20 px-4 py-3"
+              className="mb-5 flex items-start gap-3 rounded-xl bg-danger/10 border border-danger/20 p-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <AlertCircle className="w-5 h-5 text-danger shrink-0" />
-              <p className="text-sm text-danger font-medium text-center leading-snug">
+              <AlertCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
+              <p className="text-sm text-danger font-medium leading-relaxed">
                 {serverError}
               </p>
             </motion.div>

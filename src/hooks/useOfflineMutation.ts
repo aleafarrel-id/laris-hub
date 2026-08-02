@@ -33,8 +33,11 @@ export function createOfflineMutation<TVariables, TData>(
 
         try {
           return await mutationFn(payload)
-        } catch (err) {
-          if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        } catch (err: any) {
+          const errMessage = (err?.message || '').toLowerCase()
+          const isNetworkError = err instanceof TypeError || errMessage.includes('fetch') || errMessage.includes('network') || errMessage.includes('failed to fetch')
+          
+          if (isNetworkError) {
             try {
               await enqueueOfflineItem(action, payload)
               return { offline: true } as any

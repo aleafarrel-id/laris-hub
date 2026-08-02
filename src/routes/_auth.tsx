@@ -20,6 +20,18 @@ export const Route = createFileRoute('/_auth')({
         search: { redirect: safeRedirect },
       })
     }
+
+    // Security: Check if user is active. Suspended users should not pass the guard.
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('id', session.user.id)
+      .single()
+
+    if (profileError?.code === 'PGRST116' || profile?.is_active === false) {
+      await supabase.auth.signOut()
+      throw redirect({ to: '/login' })
+    }
   },
   component: AuthLayout,
 })

@@ -251,7 +251,7 @@ function ProdukPage() {
                       hidden: { opacity: 0, y: 20 },
                       visible: { opacity: 1, y: 0, transition: { type: 'spring', duration: 0.5, bounce: 0 } },
                     }}
-                    className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active || (product as any).isOfflinePending ? 'opacity-60 grayscale-[0.5]' : ''} ${(product as any).isOfflinePending ? 'cursor-not-allowed border-dashed' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
+                    className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active || product.isOfflinePending ? 'opacity-60 grayscale-[0.5]' : ''} ${product.isOfflinePending ? 'cursor-not-allowed border-dashed' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
                   >
                     <div
                       className={`relative bg-neutral-50 overflow-hidden ${viewMode === 'list' ? 'w-36 h-full min-h-[160px] flex-shrink-0 border-r border-neutral-100' : 'w-full aspect-[4/3] border-b border-neutral-100'}`}
@@ -339,7 +339,7 @@ function ProdukPage() {
                       </div>
 
                       <div className="flex gap-2 pt-3 border-t border-dashed border-neutral-200 mt-1 min-w-0">
-                        {!(product as any).isOfflinePending ? (
+                        {!product.isOfflinePending ? (
                           <>
                             <button
                               type="button"

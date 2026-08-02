@@ -145,9 +145,7 @@ export async function updateTransactionStatus(
 
 /**
  * Delete a transaction. Admin only (RLS).
- * Assumes cascading delete is not guaranteed on the client side without an RPC,
- * but handles items deletion before transaction deletion.
- * TODO: Ideally moved to an RPC `delete_transaction(id)` on Postgres to ensure atomicity.
+ * Handles items deletion before transaction deletion atomically via Postgres RPC.
  */
 export async function deleteTransaction(id: string): Promise<void> {
   const { error } = await supabase.rpc('delete_transaction', { p_transaction_id: id })

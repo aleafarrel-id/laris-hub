@@ -66,11 +66,11 @@ export function BukuKasMobileList({
           <motion.div
             key={tx.id}
             onClick={() => {
-              if (!(tx as any).isOfflinePending) setViewingTx(tx as unknown as TransactionWithItems)
+              if (!tx.isOfflinePending) setViewingTx(tx as unknown as TransactionWithItems)
             }}
             className={`relative app-card p-4 flex items-stretch gap-3 ${
               tx.type === 'penjualan' && tx.status === 'pending' ? 'bg-amber-50/30 border-amber-200' : ''
-            } ${(tx as any).isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer hover:border-primary/30 transition-colors'}`}
+            } ${tx.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer hover:border-primary/30 transition-colors'}`}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{
@@ -163,7 +163,7 @@ export function BukuKasMobileList({
                       profit {formatRupiah(tx.total_profit)}
                     </span>
                   )}
-                  {!(tx as any).isOfflinePending ? (
+                  {!tx.isOfflinePending ? (
                     tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
                       <button
                         type="button"
