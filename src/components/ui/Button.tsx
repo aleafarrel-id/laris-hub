@@ -1,7 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import type React from 'react'
 import { cn } from '@/lib/utils'
-import { type HapticPattern, useHaptics } from '@/hooks/useHaptics'
 
 type ButtonVariant = 'primary' | 'danger' | 'ghost' | 'outline'
 type ButtonSize = 'sm' | 'md' | 'lg'
@@ -13,7 +12,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loadingText?: string
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
-  haptic?: HapticPattern | false
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
@@ -47,17 +45,9 @@ export function Button({
   className,
   disabled,
   children,
-  haptic = 'light',
   onClick,
   ...props
 }: ButtonProps) {
-  const { vibrate } = useHaptics()
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (haptic && !disabled && !isLoading) vibrate(haptic)
-    onClick?.(e)
-  }
-
   return (
     <button
       type="button"
@@ -70,7 +60,7 @@ export function Button({
         SIZE_CLASSES[size],
         className,
       )}
-      onClick={handleClick}
+      onClick={onClick}
       {...props}
     >
       {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
