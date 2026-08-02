@@ -1,11 +1,11 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, LogOut, Phone, Shield, User } from 'lucide-react'
+import { ArrowLeft, LogOut, Phone, Shield, User, Mail, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { LogoutDialog } from '@/components/ui/LogoutDialog'
 import { useAuth } from '@/hooks/useAuth'
-import { useUpdateProfile } from '@/hooks/useProfile'
+import { useUpdateProfile, useUpdateOwnCredentials } from '@/hooks/useProfile'
 import { getInitials } from '@/lib/utils'
 import { motion } from 'motion/react'
 
@@ -15,11 +15,22 @@ export const Route = createFileRoute('/_auth/profil')({
 
 function ProfilPage() {
   const router = useRouter()
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const { mutate: updateProfile, isPending } = useUpdateProfile()
+  const { mutate: updateCredentials, isPending: isUpdatingCredentials } = useUpdateOwnCredentials()
 
   const [isEditing, setIsEditing] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  
+  // Credentials state
+  const [isEditingCredentials, setIsEditingCredentials] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [credentialsForm, setCredentialsForm] = useState({
+    email: user?.email ?? '',
+    password: '',
+  })
+  const [credentialsError, setCredentialsError] = useState<Record<string, string>>({})
+
   const [form, setForm] = useState({
     full_name: profile?.full_name ?? '',
     phone: profile?.phone ?? '',
@@ -41,6 +52,43 @@ function ProfilPage() {
           setIsEditing(false)
         },
       },
+    )
+  }
+
+  const handleSaveCredentials = (e: React.FormEvent) => {
+    e.preventDefault()
+    const errs: Record<string, string> = {}
+    if (credentialsForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentialsForm.email)) {
+      errs.email = 'Format email tidak valid'
+    }
+    if (credentialsForm.password && credentialsForm.password.length < 8) {
+      errs.password = 'Password minimal 8 karakter'
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setCredentialsError(errs)
+      return
+    }
+
+    const newEmail = credentialsForm.email.trim() !== user?.email ? credentialsForm.email.trim() : undefined
+    const newPassword = credentialsForm.password || undefined
+
+    if (!newEmail && !newPassword) {
+      setIsEditingCredentials(false)
+      return
+    }
+
+    updateCredentials(
+      {
+        email: newEmail,
+        password: newPassword,
+      },
+      {
+        onSuccess: () => {
+          setIsEditingCredentials(false)
+          setCredentialsForm((f) => ({ ...f, password: '' }))
+        },
+      }
     )
   }
 
@@ -158,6 +206,97 @@ function ProfilPage() {
             </form>
           )}
         </motion.div>
+
+        {/* Security Section (Admin Only) */}
+        {profile?.role === 'admin' && (
+          <motion.div
+            className="app-card p-6 mb-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.15 }}
+          >
+            <h3 className="text-sm font-bold text-neutral-900 mb-4">Keamanan Akun</h3>
+            
+            {!isEditingCredentials ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail size={16} className="text-neutral-400" />
+                  <span className="text-neutral-700">{user?.email || '-'}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <KeyRound size={16} className="text-neutral-400" />
+                  <span className="text-neutral-700">••••••••</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCredentialsForm({ email: user?.email ?? '', password: '' })
+                    setCredentialsError({})
+                    setIsEditingCredentials(true)
+                  }}
+                  className="mt-4 w-full"
+                >
+                  Edit Email & Password
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveCredentials} className="space-y-4">
+                <Input
+                  id="profil-email"
+                  type="email"
+                  label="Email Baru"
+                  value={credentialsForm.email}
+                  onChange={(e) => {
+                    setCredentialsForm((f) => ({ ...f, email: e.target.value }))
+                    if (credentialsError.email) setCredentialsError((e) => ({ ...e, email: '' }))
+                  }}
+                  leftDecorator={<Mail size={15} />}
+                  error={credentialsError.email}
+                />
+                <Input
+                  id="profil-password"
+                  type={showNewPassword ? 'text' : 'password'}
+                  label="Password Baru"
+                  placeholder="Kosongkan jika tidak diubah"
+                  value={credentialsForm.password}
+                  onChange={(e) => {
+                    setCredentialsForm((f) => ({ ...f, password: e.target.value }))
+                    if (credentialsError.password) setCredentialsError((e) => ({ ...e, password: '' }))
+                  }}
+                  rightDecorator={
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="p-1 hover:text-neutral-700 transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
+                  error={credentialsError.password}
+                />
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditingCredentials(false)}
+                    className="flex-1"
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isUpdatingCredentials}
+                    isLoading={isUpdatingCredentials}
+                    className="flex-1"
+                  >
+                    Simpan
+                  </Button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}

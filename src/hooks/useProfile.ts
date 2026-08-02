@@ -55,3 +55,24 @@ export function useUpdateProfile() {
     }
   )()
 }
+
+export function useUpdateOwnCredentials() {
+  const { user } = useAuthStore()
+
+  return createOfflineMutation<{ email?: string; password?: string }, any>(
+    'UPDATE_OWN_CREDENTIALS',
+    async ({ email, password }) => {
+      if (!user) throw new Error('Tidak ada sesi pengguna')
+      const { updateAdminCredentials } = await import('@/services/auth.service')
+      return updateAdminCredentials({
+        email,
+        password
+      })
+    },
+    {
+      successMessage: 'Kredensial keamanan berhasil diperbarui!',
+      errorAction: 'memperbarui kredensial',
+      onSuccess: () => { }
+    }
+  )()
+}

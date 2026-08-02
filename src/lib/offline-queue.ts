@@ -20,6 +20,7 @@ export type OfflineQueueAction =
   | 'DELETE_PRODUCT'
   | 'TOGGLE_PRODUCT'
   | 'UPDATE_PROFILE'
+  | 'UPDATE_OWN_CREDENTIALS'
 
 export interface OfflineQueueItem<T = any> {
   localId: string

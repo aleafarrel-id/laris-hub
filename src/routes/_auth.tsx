@@ -51,9 +51,11 @@ function AuthLayout() {
   // Synchronize cross-tab role changes dynamically
   useEffect(() => {
     if (profile) {
-      if (profile.role === 'admin' && location.pathname.startsWith('/kasir')) {
-        navigate({ to: '/dashboard', replace: true })
-      } else if (profile.role === 'kasir' && location.pathname.startsWith('/dashboard')) {
+      if (
+        profile.role === 'kasir' &&
+        (location.pathname.startsWith('/dashboard') ||
+          location.pathname.startsWith('/manajemen-kasir'))
+      ) {
         navigate({ to: '/kasir', replace: true })
       }
     }

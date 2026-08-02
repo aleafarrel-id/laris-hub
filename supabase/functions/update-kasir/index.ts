@@ -106,6 +106,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           return json({ error: 'Format email tidak valid' }, 400)
         }
         authUpdates.email = email.trim().toLowerCase()
+        authUpdates.email_confirm = true
       }
       if (password) {
         if (password.length < 8) return json({ error: 'Password minimal 8 karakter' }, 400)

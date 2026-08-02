@@ -100,3 +100,24 @@ export async function updateProfile(
   if (error) throw error
   return data as Profile
 }
+
+/**
+ * Update Admin's own credentials via Edge Function.
+ * Bypasses email confirmation for fake emails.
+ */
+export async function updateAdminCredentials(payload: { email?: string; password?: string }) {
+  const { data, error } = await supabase.functions.invoke('update-admin', {
+    method: 'PATCH',
+    body: payload,
+  })
+  
+  if (error) {
+    throw error
+  }
+  
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+  
+  return data
+}

@@ -45,7 +45,7 @@ import {
   toggleProductStatus,
   uploadProductImage,
 } from '@/services/product.service'
-import { updateProfile } from '@/services/auth.service'
+import { updateProfile, updateAdminCredentials } from '@/services/auth.service'
 
 const MAX_RETRIES = 3
 
@@ -144,6 +144,9 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
             break
           case 'UPDATE_PROFILE':
             await updateProfile(item.payload.id, item.payload.updates)
+            break
+          case 'UPDATE_OWN_CREDENTIALS':
+            await updateAdminCredentials(item.payload)
             break
           default:
             console.warn('[OfflineSync] Unknown action:', item.action)
