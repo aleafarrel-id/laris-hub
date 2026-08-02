@@ -1,26 +1,30 @@
-import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createOfflineMutation } from './useOfflineMutation'
-import { useOfflinePendingItems } from './useOfflinePendingItems'
+import { useMemo } from 'react'
 import { toast } from 'sonner'
-import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
 import { QUERY_KEYS } from '@/lib/constants'
+import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
 import { translateError } from '@/lib/utils'
 import {
+  type CreateKasirPayload,
   createKasir,
   deleteKasir,
   getKasirAuthDetails,
   getKasirList,
   toggleKasirStatus,
+  type UpdateKasirPayload,
   updateKasir,
 } from '@/services/kasir-management.service'
-import { type CreateKasirPayload, type UpdateKasirPayload } from '@/services/kasir-management.service'
 import { useAuthStore } from '@/store/auth.store'
+import { createOfflineMutation } from './useOfflineMutation'
+import { useOfflinePendingItems } from './useOfflinePendingItems'
 
 export function useKasirList() {
   const user = useAuthStore((state) => state.user)
   const pendingItems = useOfflinePendingItems([
-    'CREATE_KASIR', 'UPDATE_KASIR', 'DELETE_KASIR', 'TOGGLE_KASIR'
+    'CREATE_KASIR',
+    'UPDATE_KASIR',
+    'DELETE_KASIR',
+    'TOGGLE_KASIR',
   ])
 
   const result = useQuery({
@@ -31,7 +35,7 @@ export function useKasirList() {
 
   // Transform pending offline items
   const mergedData = useMemo(() => {
-    const createCashiers = pendingItems.filter(item => item.action === 'CREATE_KASIR')
+    const createCashiers = pendingItems.filter((item) => item.action === 'CREATE_KASIR')
     const offlineCashiers = createCashiers.map((item) => {
       const payload = item.payload.payload || item.payload
       return {
@@ -52,7 +56,12 @@ export function useKasirList() {
     return currentData
   }, [result.data, pendingItems])
 
-  return { ...result, data: mergedData, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+  return {
+    ...result,
+    data: mergedData,
+    isOfflinePaused:
+      (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data),
+  }
 }
 
 export function useKasirAuthDetails(kasirId: string | null) {
@@ -61,7 +70,11 @@ export function useKasirAuthDetails(kasirId: string | null) {
   return useQuery({
     queryKey: [...QUERY_KEYS.CASHIERS, 'auth', kasirId],
     queryFn: () => getKasirAuthDetails(kasirId!),
-    enabled: !!user && !!kasirId && !kasirId.startsWith('pending-') && (typeof navigator !== 'undefined' ? navigator.onLine : true),
+    enabled:
+      !!user &&
+      !!kasirId &&
+      !kasirId.startsWith('pending-') &&
+      (typeof navigator !== 'undefined' ? navigator.onLine : true),
     retry: 1,
   })
 }
@@ -77,8 +90,8 @@ export function useCreateKasir(onSuccess?: () => void) {
       onSuccess: (_newProfile, _vars, queryClient) => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
         onSuccess?.()
-      }
-    }
+      },
+    },
   )()
 }
 
@@ -93,8 +106,8 @@ export function useUpdateKasir(onSuccess?: () => void) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
         queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.CASHIERS, 'auth', updated.id] })
         onSuccess?.()
-      }
-    }
+      },
+    },
   )()
 }
 
@@ -107,35 +120,31 @@ export function useToggleKasirStatus() {
       errorAction: 'mengubah status kasir',
       onSuccess: (_updated, _vars, queryClient) => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
-      }
-    }
+      },
+    },
   )()
 }
 
 export function useDeleteKasir(onSuccess?: () => void) {
   const queryClient = useQueryClient()
-  const baseMutation = createOfflineMutation<string, any>(
-    'DELETE_KASIR',
-    (id) => deleteKasir(id),
-    {
-      successMessage: 'Akun kasir berhasil dihapus.',
-      errorAction: 'menghapus akun kasir',
-      onSuccess: (_data, _vars, qc) => {
-        qc.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
-        onSuccess?.()
-      },
-      onError: (error: any) => {
-        if (error.has_transactions) {
-          toast.error('Tidak dapat dihapus, akun kasir ini masih memiliki riwayat transaksi', {
-            description: `Kasir ini memiliki ${error.transaction_count} transaksi. Gunakan fitur Tangguhkan untuk menonaktifkan akun tanpa menghapus data.`,
-            duration: 6000,
-          })
-        } else {
-          toast.error('Gagal menghapus akun kasir', { description: translateError(error) })
-        }
+  const baseMutation = createOfflineMutation<string, any>('DELETE_KASIR', (id) => deleteKasir(id), {
+    successMessage: 'Akun kasir berhasil dihapus.',
+    errorAction: 'menghapus akun kasir',
+    onSuccess: (_data, _vars, qc) => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.CASHIERS })
+      onSuccess?.()
+    },
+    onError: (error: any) => {
+      if (error.has_transactions) {
+        toast.error('Tidak dapat dihapus, akun kasir ini masih memiliki riwayat transaksi', {
+          description: `Kasir ini memiliki ${error.transaction_count} transaksi. Gunakan fitur Tangguhkan untuk menonaktifkan akun tanpa menghapus data.`,
+          duration: 6000,
+        })
+      } else {
+        toast.error('Gagal menghapus akun kasir', { description: translateError(error) })
       }
-    }
-  )()
+    },
+  })()
 
   return {
     ...baseMutation,
@@ -153,6 +162,6 @@ export function useDeleteKasir(onSuccess?: () => void) {
       } else {
         baseMutation.mutate(id, options)
       }
-    }
+    },
   } as typeof baseMutation
 }

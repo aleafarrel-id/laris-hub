@@ -7,11 +7,11 @@ import { supabase } from '@/lib/supabase'
  */
 export async function getAuthenticatedUserId(): Promise<string> {
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
-  if (error || !session?.user) throw new Error('Sesi tidak valid. Silakan login ulang.')
-  return session.user.id
+  } = await supabase.auth.getUser()
+  if (error || !user) throw new Error('Sesi tidak valid. Silakan login ulang.')
+  return user.id
 }
 
 /** Returns the current timestamp as an ISO string. */

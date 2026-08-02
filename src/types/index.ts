@@ -22,7 +22,6 @@ export type {
   TransactionStatus,
   TransactionUpdate,
   TransactionWithItems,
-  TransactionWithProfile,
   UserRole,
 } from './app.types'
 

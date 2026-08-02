@@ -86,18 +86,18 @@ export function ProductForm({
       } else {
         setIsUploadingImage(true)
         try {
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        }
-        const compressedFile = await imageCompression(imageFile, options)
-        finalImageUrl = await uploadProductImage(compressedFile)
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Gagal mengunggah gambar'
-        toast.error(message)
-        setIsUploadingImage(false)
-        return
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          }
+          const compressedFile = await imageCompression(imageFile, options)
+          finalImageUrl = await uploadProductImage(compressedFile)
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Gagal mengunggah gambar'
+          toast.error(message)
+          setIsUploadingImage(false)
+          return
         } finally {
           setIsUploadingImage(false)
         }

@@ -55,8 +55,8 @@ export function useAuthActions() {
       queryClient.clear()
       navigate({ to: '/login' })
       toast.success('Berhasil keluar dari akun')
-    } catch (error) {
-      toast.error(translateError(error))
+    } catch (error: unknown) {
+      toast.error('Gagal Keluar', { description: translateError(error) })
     }
   }
 

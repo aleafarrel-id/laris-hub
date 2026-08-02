@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, WifiOff } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { BukuKasFilters } from '@/components/buku-kas/BukuKasFilters'
@@ -10,7 +10,6 @@ import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { WifiOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { type BukuKasSearch, useBukuKasFilters } from '@/hooks/useBukuKasFilters'
 import { useCashiers } from '@/hooks/useProfile'
@@ -68,7 +67,11 @@ function BukuKasPage() {
     isOfflinePaused: isTransactionsOffline,
   } = useInfiniteTransactions(filters, 25)
 
-  const { data: summaryData, isLoading: isSummaryLoading, isOfflinePaused: isSummaryOffline } = useTransactionSummary({
+  const {
+    data: summaryData,
+    isLoading: isSummaryLoading,
+    isOfflinePaused: isSummaryOffline,
+  } = useTransactionSummary({
     dateRange: filters.dateRange,
     type: filters.type,
     recordedBy: filters.recordedBy,
@@ -131,16 +134,16 @@ function BukuKasPage() {
           />
         </div>
       ) : (
-      <BukuKasSummary
-        omzet={omzet}
-        omzetTunai={omzetTunai}
-        omzetQris={omzetQris}
-        pendingQris={pendingQris}
-        pengeluaran={pengeluaran}
-        profit={profit}
-        net={net}
-        isLoading={isSummaryLoading}
-      />
+        <BukuKasSummary
+          omzet={omzet}
+          omzetTunai={omzetTunai}
+          omzetQris={omzetQris}
+          pendingQris={pendingQris}
+          pengeluaran={pengeluaran}
+          profit={profit}
+          net={net}
+          isLoading={isSummaryLoading}
+        />
       )}
 
       <AnimatePresence mode="wait">

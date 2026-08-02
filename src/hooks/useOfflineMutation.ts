@@ -11,8 +11,16 @@ export function createOfflineMutation<TVariables, TData>(
     successMessage?: string | ((data: TData, variables: TVariables) => string)
     successDescription?: string | ((data: TData, variables: TVariables) => string)
     errorAction?: string
-    onSuccess?: (data: TData, variables: TVariables, queryClient: ReturnType<typeof useQueryClient>) => void
-    onError?: (error: unknown, variables: TVariables, queryClient: ReturnType<typeof useQueryClient>) => void
+    onSuccess?: (
+      data: TData,
+      variables: TVariables,
+      queryClient: ReturnType<typeof useQueryClient>,
+    ) => void
+    onError?: (
+      error: unknown,
+      variables: TVariables,
+      queryClient: ReturnType<typeof useQueryClient>,
+    ) => void
   },
 ) {
   return function useOfflineMutationHook() {
@@ -35,8 +43,12 @@ export function createOfflineMutation<TVariables, TData>(
           return await mutationFn(payload)
         } catch (err: any) {
           const errMessage = (err?.message || '').toLowerCase()
-          const isNetworkError = err instanceof TypeError || errMessage.includes('fetch') || errMessage.includes('network') || errMessage.includes('failed to fetch')
-          
+          const isNetworkError =
+            err instanceof TypeError ||
+            errMessage.includes('fetch') ||
+            errMessage.includes('network') ||
+            errMessage.includes('failed to fetch')
+
           if (isNetworkError) {
             try {
               await enqueueOfflineItem(action, payload)
@@ -66,9 +78,15 @@ export function createOfflineMutation<TVariables, TData>(
             options.onSuccess(data, variables, queryClient)
           }
           if (options.successMessage) {
-            const message = typeof options.successMessage === 'function' ? options.successMessage(data, variables) : options.successMessage;
-            const description = typeof options.successDescription === 'function' ? options.successDescription(data, variables) : options.successDescription;
-            toast.success(message, { description });
+            const message =
+              typeof options.successMessage === 'function'
+                ? options.successMessage(data, variables)
+                : options.successMessage
+            const description =
+              typeof options.successDescription === 'function'
+                ? options.successDescription(data, variables)
+                : options.successDescription
+            toast.success(message, { description })
           }
         }
       },

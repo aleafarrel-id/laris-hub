@@ -110,14 +110,14 @@ export async function updateAdminCredentials(payload: { email?: string; password
     method: 'PATCH',
     body: payload,
   })
-  
+
   if (error) {
     throw error
   }
-  
+
   if (data?.error) {
     throw new Error(data.error)
   }
-  
+
   return data
 }

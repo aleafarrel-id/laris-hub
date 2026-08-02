@@ -1,6 +1,6 @@
-import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import { Button } from './Button'
 
 export function GlobalErrorState({ error, reset }: ErrorComponentProps) {
@@ -19,8 +19,8 @@ export function GlobalErrorState({ error, reset }: ErrorComponentProps) {
         </h1>
 
         <p className="text-neutral-500 mb-6 text-sm leading-relaxed">
-          Tampaknya terjadi kesalahan sistem saat memproses halaman ini.
-          Anda dapat memuat ulang halaman atau kembali ke beranda.
+          Tampaknya terjadi kesalahan sistem saat memproses halaman ini. Anda dapat memuat ulang
+          halaman atau kembali ke beranda.
         </p>
 
         <div className="bg-neutral-50 text-neutral-600 text-xs font-mono p-4 rounded-xl border border-neutral-200/60 w-full mb-8 overflow-hidden text-left break-words">
@@ -38,7 +38,10 @@ export function GlobalErrorState({ error, reset }: ErrorComponentProps) {
           </Button>
 
           <Link to="/" className="flex-1">
-            <Button variant="primary" className="w-full rounded-xl h-12 shadow-md shadow-primary/20">
+            <Button
+              variant="primary"
+              className="w-full rounded-xl h-12 shadow-md shadow-primary/20"
+            >
               <Home size={18} className="mr-2" />
               Ke Beranda
             </Button>

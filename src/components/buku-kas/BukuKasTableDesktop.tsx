@@ -5,10 +5,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { Profile, TransactionWithItems, TransactionWithProfile } from '@/types'
+import type { Profile, TransactionWithItems } from '@/types'
 
 interface BukuKasTableDesktopProps {
-  transactions: TransactionWithProfile[]
+  transactions: TransactionWithItems[]
   isAdmin: boolean
   isLoading: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -36,6 +36,7 @@ function TableSkeleton({ isAdmin }: { isAdmin: boolean }) {
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {Array.from({ length: TABLE_SKELETON_ROWS }, (_, k) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton relies on index
               <tr key={k}>
                 <td className="py-3 px-4">
                   <Skeleton className="h-4 w-24" />
@@ -97,7 +98,7 @@ export function BukuKasTableDesktop({
   onSelectKasirProfile,
   onUpdateStatus,
 }: BukuKasTableDesktopProps) {
-  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+  const [viewingTx, setViewingTx] = useState<TransactionWithItems | null>(null)
 
   if (isLoading) return <TableSkeleton isAdmin={isAdmin} />
 
@@ -128,7 +129,7 @@ export function BukuKasTableDesktop({
                     {formatDateTime(tx.transaction_at)}
                   </td>
                   <td className="py-3 px-4 max-w-xs align-top">
-                    <TransactionDetails transaction={tx as unknown as TransactionWithItems} />
+                    <TransactionDetails transaction={tx} />
                   </td>
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col items-start gap-1">
@@ -190,7 +191,7 @@ export function BukuKasTableDesktop({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                onEditTransaction(tx as unknown as TransactionWithItems)
+                                onEditTransaction(tx)
                               }}
                               className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
                               title="Edit Transaksi"
@@ -227,7 +228,7 @@ export function BukuKasTableDesktop({
       <TransactionDetailModal
         isOpen={!!viewingTx}
         onClose={() => setViewingTx(null)}
-        transaction={viewingTx as unknown as TransactionWithItems}
+        transaction={viewingTx}
       />
     </>
   )

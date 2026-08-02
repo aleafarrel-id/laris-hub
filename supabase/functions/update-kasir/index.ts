@@ -95,7 +95,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const {
         data: { user: targetUser },
       } = await supabaseAdmin.auth.admin.getUserById(id)
-      
+
       if (targetUser && targetUser.app_metadata?.role === 'admin' && targetUser.id !== caller.id) {
         return json({ error: 'Tidak dapat mengubah akun admin lain' }, 403)
       }
@@ -155,7 +155,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const {
         data: { user: targetUser },
       } = await supabaseAdmin.auth.admin.getUserById(id)
-      
+
       if (targetUser && targetUser.app_metadata?.role === 'admin') {
         return json({ error: 'Tidak dapat menghapus akun admin' }, 403)
       }

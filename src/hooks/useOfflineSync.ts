@@ -24,6 +24,21 @@ import {
   incrementRetryCount,
 } from '@/lib/offline-queue'
 import { dataUrlToFile } from '@/lib/utils'
+import { updateAdminCredentials, updateProfile } from '@/services/auth.service'
+import {
+  createKasir,
+  deleteKasir,
+  toggleKasirStatus,
+  updateKasir,
+} from '@/services/kasir-management.service'
+import {
+  createProduct,
+  deleteProduct,
+  deleteStorageImage,
+  toggleProductStatus,
+  updateProduct,
+  uploadProductImage,
+} from '@/services/product.service'
 import {
   createExpenseTransaction,
   createSaleTransaction,
@@ -32,20 +47,6 @@ import {
   updateSaleTransaction,
   updateTransactionStatus,
 } from '@/services/transaction.service'
-import {
-  createKasir,
-  updateKasir,
-  deleteKasir,
-  toggleKasirStatus
-} from '@/services/kasir-management.service'
-import {
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  toggleProductStatus,
-  uploadProductImage,
-} from '@/services/product.service'
-import { updateProfile, updateAdminCredentials } from '@/services/auth.service'
 
 const MAX_RETRIES = 3
 
@@ -93,60 +94,114 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
       try {
         switch (item.action) {
           case 'CREATE_SALE':
-            await createSaleTransaction(item.payload.payload)
+            await createSaleTransaction(
+              (item.payload as { payload: Parameters<typeof createSaleTransaction>[0] }).payload,
+            )
             break
           case 'CREATE_EXPENSE':
-            await createExpenseTransaction(item.payload.payload)
+            await createExpenseTransaction(
+              (item.payload as { payload: Parameters<typeof createExpenseTransaction>[0] }).payload,
+            )
             break
           case 'UPDATE_SALE':
-            await updateSaleTransaction(item.payload.id, item.payload.payload)
+            await updateSaleTransaction(
+              (item.payload as { id: string; payload: Parameters<typeof updateSaleTransaction>[1] })
+                .id,
+              (item.payload as { payload: Parameters<typeof updateSaleTransaction>[1] }).payload,
+            )
             break
           case 'UPDATE_EXPENSE':
-            await updateExpenseTransaction(item.payload.id, item.payload.payload)
+            await updateExpenseTransaction(
+              (
+                item.payload as {
+                  id: string
+                  payload: Parameters<typeof updateExpenseTransaction>[1]
+                }
+              ).id,
+              (item.payload as { payload: Parameters<typeof updateExpenseTransaction>[1] }).payload,
+            )
             break
           case 'UPDATE_STATUS':
-            await updateTransactionStatus(item.payload.id, item.payload.status)
+            await updateTransactionStatus(
+              (item.payload as { id: string }).id,
+              (item.payload as { status: 'sukses' | 'pending' }).status,
+            )
             break
           case 'DELETE_TRANSACTION':
-            await deleteTransaction(item.payload.id)
+            await deleteTransaction((item.payload as { id: string }).id)
             break
           case 'CREATE_KASIR':
-            await createKasir(item.payload)
+            await createKasir(item.payload as Parameters<typeof createKasir>[0])
             break
           case 'UPDATE_KASIR':
-            await updateKasir(item.payload)
+            await updateKasir(item.payload as Parameters<typeof updateKasir>[0])
             break
           case 'DELETE_KASIR':
-            await deleteKasir(item.payload)
+            await deleteKasir(item.payload as string)
             break
           case 'TOGGLE_KASIR':
-            await toggleKasirStatus(item.payload.id, item.payload.isActive)
+            await toggleKasirStatus(
+              (item.payload as { id: string }).id,
+              (item.payload as { isActive: boolean }).isActive,
+            )
             break
-          case 'CREATE_PRODUCT':
-            if (item.payload?.image_url?.startsWith('data:image')) {
-              const file = dataUrlToFile(item.payload.image_url, `offline-sync-${Date.now()}.jpg`)
-              item.payload.image_url = await uploadProductImage(file)
+          case 'CREATE_PRODUCT': {
+            const p = item.payload as Parameters<typeof createProduct>[0]
+            let uploadedUrl: string | null = null
+            if (p?.image_url?.startsWith('data:image')) {
+              const file = dataUrlToFile(p.image_url, `offline-sync-${Date.now()}.jpg`)
+              uploadedUrl = await uploadProductImage(file)
+              p.image_url = uploadedUrl
             }
-            await createProduct(item.payload)
-            break
-          case 'UPDATE_PRODUCT':
-            if (item.payload?.data?.image_url?.startsWith('data:image')) {
-              const file = dataUrlToFile(item.payload.data.image_url, `offline-sync-${Date.now()}.jpg`)
-              item.payload.data.image_url = await uploadProductImage(file)
+            try {
+              await createProduct(p)
+            } catch (err) {
+              if (uploadedUrl) {
+                // Garbage collection: hapus image jika simpan DB gagal
+                await deleteStorageImage(uploadedUrl).catch(console.error)
+              }
+              throw err // teruskan error untuk ditangkap di luar
             }
-            await updateProduct(item.payload.id, item.payload.data)
             break
+          }
+          case 'UPDATE_PRODUCT': {
+            const p = item.payload as { id: string; data: Parameters<typeof updateProduct>[1] }
+            let uploadedUrl: string | null = null
+            if (p?.data?.image_url?.startsWith('data:image')) {
+              const file = dataUrlToFile(p.data.image_url, `offline-sync-${Date.now()}.jpg`)
+              uploadedUrl = await uploadProductImage(file)
+              p.data.image_url = uploadedUrl
+            }
+            try {
+              await updateProduct(p.id, p.data)
+            } catch (err) {
+              if (uploadedUrl) {
+                // Garbage collection: hapus image jika update DB gagal
+                await deleteStorageImage(uploadedUrl).catch(console.error)
+              }
+              throw err
+            }
+            break
+          }
           case 'DELETE_PRODUCT':
-            await deleteProduct(item.payload)
+            await deleteProduct(item.payload as string)
             break
           case 'TOGGLE_PRODUCT':
-            await toggleProductStatus(item.payload.id, item.payload.isActive)
+            await toggleProductStatus(
+              (item.payload as { id: string }).id,
+              (item.payload as { isActive: boolean }).isActive,
+            )
             break
           case 'UPDATE_PROFILE':
-            await updateProfile(item.payload.id, item.payload.updates)
+            await updateProfile(
+              (item.payload as { id: string }).id,
+              (item.payload as { updates: Parameters<typeof updateProfile>[1] }).updates,
+            )
             break
           case 'UPDATE_OWN_CREDENTIALS':
-            await updateAdminCredentials(item.payload)
+            await updateAdminCredentials(
+              item.payload as Parameters<typeof updateAdminCredentials>[0],
+            )
             break
           default:
             console.warn('[OfflineSync] Unknown action:', item.action)
@@ -157,7 +212,10 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         // Detect permanent backend errors (PostgreSQL exceptions OR explicit error messages from Edge Functions/RPCs)
         const isPgError = err?.code && err.code.startsWith('22')
         const errMessage = (err?.message || '').toLowerCase()
-        const isNetworkError = errMessage.includes('fetch') || errMessage.includes('network') || errMessage.includes('failed to fetch')
+        const isNetworkError =
+          errMessage.includes('fetch') ||
+          errMessage.includes('network') ||
+          errMessage.includes('failed to fetch')
         const isBackendRejection = errMessage && !isNetworkError
 
         if (isPgError || (isBackendRejection && err?.status >= 400 && err?.status < 500)) {
@@ -190,7 +248,8 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
 
     if ((failedItems?.length ?? 0) > 0) {
       toast.error(`${failedItems?.length ?? 0} tindakan batal disinkronkan`, {
-        description: 'Tindakan ditolak oleh server atau melebihi batas percobaan. Data tersebut telah dihapus dari antrean.',
+        description:
+          'Tindakan ditolak oleh server atau melebihi batas percobaan. Data tersebut telah dihapus dari antrean.',
       })
     }
 

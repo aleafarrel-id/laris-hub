@@ -1,6 +1,12 @@
 import { del, get, update } from 'idb-keyval'
 import type { CreateExpensePayload } from '@/services/expense.service'
 import type { CreateSalePayload } from '@/services/sale.service'
+import type { ProductFormData } from '@/lib/validations/product.schema'
+import type {
+  CreateKasirPayload,
+  UpdateKasirPayload as KasirUpdateType,
+} from '@/services/kasir-management.service'
+import type { Profile } from '@/types'
 
 const QUEUE_KEY = 'laris-hub:offline-transaction-queue'
 
@@ -22,7 +28,7 @@ export type OfflineQueueAction =
   | 'UPDATE_PROFILE'
   | 'UPDATE_OWN_CREDENTIALS'
 
-export interface OfflineQueueItem<T = any> {
+export interface OfflineQueueItem<T = unknown> {
   localId: string
   createdAt: string
   action: OfflineQueueAction
@@ -35,13 +41,13 @@ export type OfflineSalePayload = CreateSalePayload
 export type OfflineExpensePayload = CreateExpensePayload
 export type OfflineUpdateStatusPayload = { id: string; status: 'sukses' | 'pending' }
 export type OfflineDeletePayload = { id: string }
-export type OfflineCreateKasirPayload = any
-export type OfflineUpdateKasirPayload = any
+export type OfflineCreateKasirPayload = CreateKasirPayload
+export type OfflineUpdateKasirPayload = KasirUpdateType
 export type OfflineToggleKasirPayload = { id: string; isActive: boolean }
-export type OfflineCreateProductPayload = any
-export type OfflineUpdateProductPayload = { id: string; data: any }
+export type OfflineCreateProductPayload = ProductFormData
+export type OfflineUpdateProductPayload = { id: string; data: ProductFormData }
 export type OfflineToggleProductPayload = { id: string; isActive: boolean }
-export type OfflineUpdateProfilePayload = { id: string; updates: any }
+export type OfflineUpdateProfilePayload = { id: string; updates: Partial<Profile> }
 
 /** Retrieve all queued offline transactions. */
 export async function getOfflineQueue(): Promise<OfflineQueueItem[]> {
@@ -78,8 +84,8 @@ export async function enqueueOfflineItem<T>(
       return queue
     })
     dispatchUpdateEvent()
-  } catch (err: any) {
-    if (err.name === 'QuotaExceededError') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'QuotaExceededError') {
       throw new Error('Penyimpanan perangkat penuh. Tidak dapat menyimpan transaksi offline.')
     }
     throw new Error('Gagal menyimpan ke penyimpanan offline perangkat.')

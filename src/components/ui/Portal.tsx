@@ -23,7 +23,7 @@ export function Portal({
       className={`fixed inset-0 antialiased font-sans ${className}`}
       style={{ left: 'var(--sidebar-offset)' }}
       role={role}
-      aria-modal={role ? 'true' : undefined}
+      aria-modal={role === 'dialog' || role === 'alertdialog' ? 'true' : undefined}
       aria-labelledby={ariaLabelledBy}
     >
       {children}

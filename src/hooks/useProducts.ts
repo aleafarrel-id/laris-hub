@@ -1,9 +1,7 @@
-import { useCallback, useMemo } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { createOfflineMutation } from './useOfflineMutation'
-import { useOfflinePendingItems } from './useOfflinePendingItems'
-import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
+import { useCallback, useMemo } from 'react'
 import { QUERY_KEYS } from '@/lib/constants'
+import { applyOptimisticUpdates } from '@/lib/optimistic-ui'
 import type { ProductFormData } from '@/lib/validations/product.schema'
 import {
   createProduct,
@@ -14,19 +12,25 @@ import {
   updateProduct,
 } from '@/services/product.service'
 import { useAuthStore } from '@/store/auth.store'
+import { createOfflineMutation } from './useOfflineMutation'
+import { useOfflinePendingItems } from './useOfflinePendingItems'
 
 function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused: boolean } {
   const pendingItems = useOfflinePendingItems([
-    'CREATE_PRODUCT', 'UPDATE_PRODUCT', 'DELETE_PRODUCT', 'TOGGLE_PRODUCT'
+    'CREATE_PRODUCT',
+    'UPDATE_PRODUCT',
+    'DELETE_PRODUCT',
+    'TOGGLE_PRODUCT',
   ])
 
   const res = result as any
-  const isOfflinePaused = (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
+  const isOfflinePaused =
+    (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
   const data = useMemo(() => {
     if (!res.data) return res.data
 
-    const createProducts = pendingItems.filter(item => item.action === 'CREATE_PRODUCT')
+    const createProducts = pendingItems.filter((item) => item.action === 'CREATE_PRODUCT')
     const offlineProducts = createProducts.map((item: any) => {
       const payload = item.payload.payload || item.payload
       return {
@@ -57,7 +61,11 @@ function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused
         }),
       }
     } else if (Array.isArray(currentData)) {
-      currentData = applyOptimisticUpdates([...offlineProducts, ...currentData], pendingItems, 'PRODUCT')
+      currentData = applyOptimisticUpdates(
+        [...offlineProducts, ...currentData],
+        pendingItems,
+        'PRODUCT',
+      )
     }
     return currentData
   }, [res.data, pendingItems])
@@ -70,7 +78,7 @@ export function useProducts(activeOnly = false) {
 
   const selectFn = useCallback(
     (data: any[]) => (activeOnly ? data.filter((p) => p.is_active) : data),
-    [activeOnly]
+    [activeOnly],
   )
 
   const result = useQuery({
@@ -111,8 +119,8 @@ export function useCreateProduct() {
       errorAction: 'menambah produk',
       onSuccess: (_data, _vars, queryClient) => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      }
-    }
+      },
+    },
   )()
 }
 
@@ -125,23 +133,19 @@ export function useUpdateProduct() {
       errorAction: 'memperbarui produk',
       onSuccess: (_data, _vars, queryClient) => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      }
-    }
+      },
+    },
   )()
 }
 
 export function useDeleteProduct() {
-  return createOfflineMutation<string, any>(
-    'DELETE_PRODUCT',
-    (id) => deleteProduct(id),
-    {
-      successMessage: 'Produk berhasil dihapus!',
-      errorAction: 'menghapus produk',
-      onSuccess: (_data, _vars, queryClient) => {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      }
-    }
-  )()
+  return createOfflineMutation<string, any>('DELETE_PRODUCT', (id) => deleteProduct(id), {
+    successMessage: 'Produk berhasil dihapus!',
+    errorAction: 'menghapus produk',
+    onSuccess: (_data, _vars, queryClient) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
+    },
+  })()
 }
 
 export function useToggleProductStatus() {
@@ -153,7 +157,7 @@ export function useToggleProductStatus() {
       errorAction: 'mengubah status produk',
       onSuccess: (_data, _vars, queryClient) => {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS })
-      }
-    }
+      },
+    },
   )()
 }

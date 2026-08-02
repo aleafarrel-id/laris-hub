@@ -228,9 +228,7 @@ function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
             >
               <AlertCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
-              <p className="text-sm text-danger font-medium leading-relaxed">
-                {serverError}
-              </p>
+              <p className="text-sm text-danger font-medium leading-relaxed">{serverError}</p>
             </motion.div>
           )}
 

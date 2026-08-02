@@ -1,3 +1,4 @@
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   Image as ImageIcon,
@@ -13,7 +14,6 @@ import {
   WifiOff,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { useCallback, useMemo, useState } from 'react'
 import { ProductForm } from '@/components/produk/ProductForm'
 import { Button } from '@/components/ui/Button'
@@ -230,13 +230,17 @@ function ProdukPage() {
               exit="exit"
               variants={{
                 hidden: { opacity: 0, y: 10 },
-                visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+                },
                 exit: { opacity: 0, scale: 0.98, transition: { duration: 0.15 } },
               }}
               className={`grid gap-5 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}
             >
-            {products.map((product) => {
-              const margin = calcMargin(product.selling_price, product.hpp)
+              {products.map((product) => {
+                const margin = calcMargin(product.selling_price, product.hpp)
                 const marginColor =
                   margin >= MARGIN_GOOD_THRESHOLD
                     ? 'text-success bg-success/10'
@@ -249,7 +253,11 @@ function ProdukPage() {
                     key={product.id}
                     variants={{
                       hidden: { opacity: 0, y: 20 },
-                      visible: { opacity: 1, y: 0, transition: { type: 'spring', duration: 0.5, bounce: 0 } },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { type: 'spring', duration: 0.5, bounce: 0 },
+                      },
                     }}
                     className={`group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 ${!product.is_active || product.isOfflinePending ? 'opacity-60 grayscale-[0.5]' : ''} ${product.isOfflinePending ? 'cursor-not-allowed border-dashed' : ''} ${viewMode === 'list' ? 'flex flex-row' : 'flex flex-col'}`}
                   >
@@ -290,7 +298,9 @@ function ProdukPage() {
                               ? 'bg-white/80 text-success shadow-sm'
                               : 'bg-neutral-800/80 text-white shadow-sm'
                           }`}
-                          title={product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
+                          title={
+                            product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'
+                          }
                         >
                           {product.is_active ? 'AKTIF' : 'NONAKTIF'}
                         </button>

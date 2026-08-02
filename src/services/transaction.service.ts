@@ -4,7 +4,6 @@ import type {
   TransactionFilters,
   TransactionUpdate,
   TransactionWithItems,
-  TransactionWithProfile,
 } from '@/types'
 import { nowIso } from './transaction.utils'
 
@@ -19,7 +18,7 @@ export async function getTransactions(
   filters: TransactionFilters = {},
   page = 1,
   pageSize = 20,
-): Promise<{ data: TransactionWithProfile[]; nextPage: number | null }> {
+): Promise<{ data: TransactionWithItems[]; nextPage: number | null }> {
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
@@ -66,7 +65,7 @@ export async function getTransactions(
 
   const hasNext = count !== null && from + pageSize < count
   return {
-    data: (data ?? []) as unknown as TransactionWithProfile[],
+    data: (data ?? []) as unknown as TransactionWithItems[],
     nextPage: hasNext ? page + 1 : null,
   }
 }
@@ -74,7 +73,7 @@ export async function getTransactions(
 /**
  * Get today's transactions.
  */
-export async function getTodayTransactions(recordedBy?: string): Promise<TransactionWithProfile[]> {
+export async function getTodayTransactions(recordedBy?: string): Promise<TransactionWithItems[]> {
   const startOfDay = new Date()
   startOfDay.setHours(0, 0, 0, 0)
 

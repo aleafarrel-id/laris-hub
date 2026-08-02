@@ -2,10 +2,9 @@ import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/components/auth/AuthProvider'
+import { GlobalErrorState } from '@/components/ui/GlobalErrorState'
 import { NetworkStatusBanner } from '@/components/ui/NetworkStatusBanner'
 import { PWAPrompt } from '@/components/ui/PWAPrompt'
-
-import { GlobalErrorState } from '@/components/ui/GlobalErrorState'
 
 interface RouterContext {
   queryClient: QueryClient

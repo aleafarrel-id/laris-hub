@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { createOfflineMutation } from './useOfflineMutation'
 import { QUERY_KEYS } from '@/lib/constants'
 import { getProfile, updateProfile } from '@/services/auth.service'
 import { getActiveCashiers } from '@/services/kasir-management.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { Profile } from '@/types'
+import { createOfflineMutation } from './useOfflineMutation'
 
 export function useProfile() {
   const userId = useAuthStore((s) => s.user?.id)
@@ -32,7 +32,10 @@ export function useCashiers() {
 export function useUpdateProfile() {
   const { user, profile, setProfile } = useAuthStore()
 
-  return createOfflineMutation<{ id: string; updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'> }, any>(
+  return createOfflineMutation<
+    { id: string; updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'> },
+    any
+  >(
     'UPDATE_PROFILE',
     ({ id, updates }) => {
       if (!user) throw new Error('Tidak ada sesi pengguna')
@@ -51,8 +54,8 @@ export function useUpdateProfile() {
         setProfile(updatedProfile)
         // Invalidate cached profile query
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE })
-      }
-    }
+      },
+    },
   )()
 }
 
@@ -66,13 +69,13 @@ export function useUpdateOwnCredentials() {
       const { updateAdminCredentials } = await import('@/services/auth.service')
       return updateAdminCredentials({
         email,
-        password
+        password,
       })
     },
     {
       successMessage: 'Kredensial keamanan berhasil diperbarui!',
       errorAction: 'memperbarui kredensial',
-      onSuccess: () => { }
-    }
+      onSuccess: () => {},
+    },
   )()
 }

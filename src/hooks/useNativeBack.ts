@@ -8,7 +8,7 @@ import { useEffect, useId, useRef } from 'react'
 export function useNativeBack(isOpen: boolean, onClose: () => void) {
   const isClosingViaPopstate = useRef(false)
   const onCloseRef = useRef(onClose)
-  
+
   // Generate a unique ID for this specific modal instance
   const modalId = useId()
 
@@ -40,7 +40,7 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
 
     return () => {
       window.removeEventListener('popstate', handlePopState)
-      
+
       // If the modal was closed programmatically (e.g., clicking close button or backdrop)
       // and NOT by the user pressing the hardware back button, we need to revert the dummy history state.
       // We check if our state is still the active one at the top of the stack before popping.

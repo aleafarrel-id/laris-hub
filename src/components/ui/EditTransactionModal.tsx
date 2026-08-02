@@ -5,14 +5,14 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { QUERY_KEYS } from '@/lib/constants'
 import { getTransactionWithItems } from '@/services/transaction.service'
-import type { TransactionWithItems, TransactionWithProfile } from '@/types'
+import type { TransactionWithItems } from '@/types'
 
 export function EditTransactionModal({
   transaction,
   isOpen,
   onClose,
 }: {
-  transaction: TransactionWithProfile | TransactionWithItems | null
+  transaction: TransactionWithItems | null
   isOpen: boolean
   onClose: () => void
 }) {

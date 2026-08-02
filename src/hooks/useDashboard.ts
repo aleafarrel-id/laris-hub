@@ -60,8 +60,12 @@ export function useKPISummary(
         : getKPISummaryForRange(range.from, range.to)
     },
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  return {
+    ...result,
+    isOfflinePaused:
+      (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data),
+  }
 }
 
 export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
@@ -77,8 +81,12 @@ export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
       return getMonthlyTrend(days)
     },
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  return {
+    ...result,
+    isOfflinePaused:
+      (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data),
+  }
 }
 
 export function useTopProducts(
@@ -101,6 +109,10 @@ export function useTopProducts(
       return getTopProducts(range.from, range.to, limit)
     },
   })
-  
-  return { ...result, isOfflinePaused: (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data) }
+
+  return {
+    ...result,
+    isOfflinePaused:
+      (result.isPending && result.fetchStatus === 'paused') || (result.isError && !result.data),
+  }
 }

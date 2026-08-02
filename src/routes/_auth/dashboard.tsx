@@ -7,6 +7,7 @@ import {
   TrendingDown,
   TrendingUp,
   User,
+  WifiOff,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { lazy, Suspense, useMemo, useState } from 'react'
@@ -16,7 +17,6 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { WifiOff } from 'lucide-react'
 import { KPICard } from '@/components/ui/KPICard'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
@@ -117,15 +117,26 @@ function DashboardPage() {
       : undefined
   }, [period, customFrom, customTo])
 
-  const { data: kpi, isLoading: kpiLoading, isOfflinePaused: kpiOffline } = useKPISummary(period, customRange, kasirFilter)
-  const { data: trend, isLoading: trendLoading, isOfflinePaused: trendOffline } = useMonthlyTrend(30, kasirFilter)
-  const { data: topProducts, isLoading: topProductsLoading, isOfflinePaused: topProductsOffline } = useTopProducts(
-    period,
-    customRange,
-    5,
-    kasirFilter,
-  )
-  const { data: recentTransactionsResult, isLoading: recentLoading, isOfflinePaused: recentOffline } = useTransactions({
+  const {
+    data: kpi,
+    isLoading: kpiLoading,
+    isOfflinePaused: kpiOffline,
+  } = useKPISummary(period, customRange, kasirFilter)
+  const {
+    data: trend,
+    isLoading: trendLoading,
+    isOfflinePaused: trendOffline,
+  } = useMonthlyTrend(30, kasirFilter)
+  const {
+    data: topProducts,
+    isLoading: topProductsLoading,
+    isOfflinePaused: topProductsOffline,
+  } = useTopProducts(period, customRange, 5, kasirFilter)
+  const {
+    data: recentTransactionsResult,
+    isLoading: recentLoading,
+    isOfflinePaused: recentOffline,
+  } = useTransactions({
     limit: 10,
     recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
   })
@@ -197,7 +208,7 @@ function DashboardPage() {
 
         {kpiOffline ? (
           <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm col-span-full h-full min-h-[160px] flex items-center justify-center">
-             <EmptyState
+            <EmptyState
               icon={WifiOff}
               title="Data Tidak Tersedia Offline"
               description="Metrik untuk filter ini belum tersimpan. Coba lagi saat terhubung ke internet."
@@ -260,7 +271,7 @@ function DashboardPage() {
           </div>
           <div className="flex-1 flex flex-col justify-end">
             {trendOffline ? (
-               <EmptyState
+              <EmptyState
                 icon={WifiOff}
                 title="Data Tren Tidak Tersedia"
                 description="Grafik ini membutuhkan koneksi internet atau belum di-cache."

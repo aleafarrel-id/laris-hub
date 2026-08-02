@@ -25,9 +25,10 @@ import { createIndexedDBPersister } from './lib/offline-storage'
 const originalError = console.error
 console.error = (...args) => {
   if (
-    /defaultProps will be removed/.test(args[0]) ||
-    /ResizeObserver loop limit exceeded/.test(args[0]) ||
-    /ResizeObserver loop completed with undelivered notifications/.test(args[0])
+    import.meta.env.DEV &&
+    (/defaultProps will be removed/.test(args[0]) ||
+      /ResizeObserver loop limit exceeded/.test(args[0]) ||
+      /A component is changing an uncontrolled input/.test(args[0]))
   ) {
     return
   }
@@ -46,6 +47,20 @@ window.addEventListener('error', (e) => {
     if (resizeObserverErrDiv) resizeObserverErrDiv.setAttribute('style', 'display: none')
   }
 })
+
+// Prevent mouse wheel from changing values in number inputs globally
+document.addEventListener(
+  'wheel',
+  () => {
+    if (
+      document.activeElement instanceof HTMLInputElement &&
+      document.activeElement.type === 'number'
+    ) {
+      document.activeElement.blur()
+    }
+  },
+  { passive: true },
+)
 
 const queryClient = new QueryClient({
   defaultOptions: {

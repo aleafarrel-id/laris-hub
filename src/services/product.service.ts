@@ -27,7 +27,7 @@ function extractStoragePath(publicUrl: string, bucket: string): string | null {
  * Deletes a file from the product-images bucket by its public URL.
  * Errors do not throw so callers are never blocked.
  */
-async function deleteStorageImage(imageUrl: string): Promise<void> {
+export async function deleteStorageImage(imageUrl: string): Promise<void> {
   const path = extractStoragePath(imageUrl, 'product-images')
   if (!path) return
   await supabase.storage.from('product-images').remove([path])

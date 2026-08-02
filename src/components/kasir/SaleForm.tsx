@@ -74,9 +74,6 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     (paymentMethod: PaymentMethod, status: TransactionStatus) => {
       if (cart.size === 0) return
 
-      // Optimistically close modal
-      setIsModalOpen(false)
-
       const items = cartArray.map((cartItem) => ({
         product_id:
           cartItem.original_product_id !== undefined
@@ -87,6 +84,11 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         selling_price: cartItem.product.selling_price,
         quantity: cartItem.quantity,
       }))
+
+      const handleSuccess = () => {
+        setIsModalOpen(false)
+        onSuccess()
+      }
 
       if (isEditing && transaction) {
         updateSale(
@@ -100,7 +102,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
               status,
             },
           },
-          { onSuccess },
+          { onSuccess: handleSuccess },
         )
       } else {
         createSale(
@@ -112,7 +114,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
               status,
             },
           },
-          { onSuccess },
+          { onSuccess: handleSuccess },
         )
       }
     },

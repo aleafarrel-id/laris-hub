@@ -6,10 +6,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatDateTime, formatRupiah } from '@/lib/utils'
-import type { Profile, TransactionWithItems, TransactionWithProfile } from '@/types'
+import type { Profile, TransactionWithItems } from '@/types'
 
 interface BukuKasMobileListProps {
-  transactions: TransactionWithProfile[]
+  transactions: TransactionWithItems[]
   isAdmin: boolean
   isLoading: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -55,7 +55,7 @@ export function BukuKasMobileList({
   onSelectKasirProfile,
   onUpdateStatus,
 }: BukuKasMobileListProps) {
-  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+  const [viewingTx, setViewingTx] = useState<TransactionWithItems | null>(null)
 
   if (isLoading) return <MobileListSkeleton isAdmin={isAdmin} />
 
@@ -66,10 +66,12 @@ export function BukuKasMobileList({
           <motion.div
             key={tx.id}
             onClick={() => {
-              if (!tx.isOfflinePending) setViewingTx(tx as unknown as TransactionWithItems)
+              if (!tx.isOfflinePending) setViewingTx(tx)
             }}
             className={`relative app-card p-4 flex items-stretch gap-3 ${
-              tx.type === 'penjualan' && tx.status === 'pending' ? 'bg-amber-50/30 border-amber-200' : ''
+              tx.type === 'penjualan' && tx.status === 'pending'
+                ? 'bg-amber-50/30 border-amber-200'
+                : ''
             } ${tx.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer hover:border-primary/30 transition-colors'}`}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -97,7 +99,7 @@ export function BukuKasMobileList({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onEditTransaction(tx as unknown as TransactionWithItems)
+                    onEditTransaction(tx)
                   }}
                   className="p-1.5 rounded-md text-neutral-400 hover:text-primary hover:bg-primary/10 transition-colors"
                   title="Edit Transaksi"
@@ -120,7 +122,7 @@ export function BukuKasMobileList({
 
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="text-sm font-medium text-neutral-900 pr-12">
-                <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
+                <TransactionDetails transaction={tx} isMobile />
               </div>
 
               {tx.type === 'penjualan' && (
@@ -164,7 +166,9 @@ export function BukuKasMobileList({
                     </span>
                   )}
                   {!tx.isOfflinePending ? (
-                    tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                    tx.type === 'penjualan' &&
+                    tx.status === 'pending' &&
+                    onUpdateStatus && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -192,7 +196,7 @@ export function BukuKasMobileList({
       <TransactionDetailModal
         isOpen={!!viewingTx}
         onClose={() => setViewingTx(null)}
-        transaction={viewingTx as unknown as TransactionWithItems}
+        transaction={viewingTx}
       />
     </>
   )

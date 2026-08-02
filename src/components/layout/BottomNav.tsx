@@ -23,7 +23,8 @@ export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 safe-area-inset-bottom z-40"
+      className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 z-40"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navigasi utama"
     >
       <div className="flex max-w-lg mx-auto px-1">

@@ -36,11 +36,12 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
   }, [quantity])
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => {
         if (!isInCart) onAdd()
       }}
-      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer ${
+      className={`relative flex items-center bg-white rounded-2xl border transition-all p-2.5 sm:p-3 gap-3 sm:gap-4 cursor-pointer text-left w-full ${
         isInCart
           ? 'border-primary ring-1 ring-primary shadow-sm shadow-primary/10 bg-primary/5'
           : 'border-neutral-200 shadow-sm hover:border-primary/50 hover:shadow-md'
@@ -149,6 +150,6 @@ export function ProductCard({ product, quantity, onAdd, onChangeQty, onSetQty }:
           </div>
         )}
       </div>
-    </div>
+    </button>
   )
 }

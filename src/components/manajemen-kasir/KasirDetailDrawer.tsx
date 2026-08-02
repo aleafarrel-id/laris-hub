@@ -20,8 +20,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Portal } from '@/components/ui/Portal'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { useNativeBack } from '@/hooks/useNativeBack'
 import { useDeleteKasir, useKasirAuthDetails, useUpdateKasir } from '@/hooks/useKasirManagement'
+import { useNativeBack } from '@/hooks/useNativeBack'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import type { Profile } from '@/types'
 import { KasirAvatar } from './KasirAvatar'
@@ -274,11 +274,14 @@ export function KasirDetailDrawer({
                     <p className="text-lg font-bold text-neutral-900 leading-tight truncate">
                       {kasirToRender.full_name}
                     </p>
-                    {isLoadingEmail && (typeof navigator !== 'undefined' && navigator.onLine) ? (
+                    {isLoadingEmail && typeof navigator !== 'undefined' && navigator.onLine ? (
                       <Skeleton className="h-3.5 w-36 mt-1" />
                     ) : (
                       <p className="text-sm text-neutral-500 mt-0.5 truncate">
-                        {authDetails?.email || (typeof navigator !== 'undefined' && !navigator.onLine ? '(Offline)' : '-')}
+                        {authDetails?.email ||
+                          (typeof navigator !== 'undefined' && !navigator.onLine
+                            ? '(Offline)'
+                            : '-')}
                       </p>
                     )}
                     <span
@@ -509,7 +512,7 @@ export function KasirDetailDrawer({
                 },
                 onError: () => {
                   setShowDeleteConfirm(false)
-                }
+                },
               })
             }
             onCancel={() => setShowDeleteConfirm(false)}

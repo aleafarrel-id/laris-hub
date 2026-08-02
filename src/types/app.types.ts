@@ -31,11 +31,6 @@ export interface TransactionWithItems extends Transaction {
   profiles?: Pick<Profile, 'full_name'>
 }
 
-export interface TransactionWithProfile extends Transaction {
-  profiles?: Pick<Profile, 'full_name'>
-  transaction_items?: Pick<TransactionItem, 'product_name' | 'quantity'>[]
-}
-
 export interface ProductWithMargin extends Product {
   margin: number // calculated: (selling_price - hpp) / selling_price * 100
 }

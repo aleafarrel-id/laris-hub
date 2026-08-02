@@ -66,47 +66,16 @@ export async function getKPISummaryForRange(
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
 
-  let query = supabase
-    .from('transactions')
-    .select('type, total_amount, total_profit, payment_method, status')
-    .gte('transaction_at', from.toISOString())
-    .lte('transaction_at', endOfDay.toISOString())
-
-  if (kasirId && kasirId !== 'all') {
-    query = query.eq('recorded_by', kasirId)
-  }
-
-  const { data, error } = await query
+  const { data, error } = await supabase.rpc('get_kpi_summary_for_range', {
+    p_from: from.toISOString(),
+    p_to: endOfDay.toISOString(),
+    p_kasir_id: kasirId === 'all' ? undefined : kasirId,
+  })
 
   if (error) throw error
 
-  type Row = {
-    type: string
-    total_amount: number
-    total_profit: number
-    payment_method: string
-    status: string
-  }
-
-  return ((data ?? []) as Row[]).reduce(
-    (acc, tx) => {
-      if (tx.type === 'penjualan') {
-        if (tx.status === 'sukses') {
-          acc.omzet += Number(tx.total_amount)
-          acc.profit += Number(tx.total_profit)
-          acc.transactionCount += 1
-
-          if (tx.payment_method === 'tunai') acc.omzetTunai! += Number(tx.total_amount)
-          if (tx.payment_method === 'qris') acc.omzetQris! += Number(tx.total_amount)
-        } else if (tx.status === 'pending' && tx.payment_method === 'qris') {
-          acc.pendingQris! += Number(tx.total_amount)
-        }
-      } else if (tx.status === 'sukses') {
-        acc.pengeluaran += Number(tx.total_amount)
-      }
-      return acc
-    },
-    {
+  if (!data || data.length === 0) {
+    return {
       omzet: 0,
       omzetTunai: 0,
       omzetQris: 0,
@@ -114,8 +83,19 @@ export async function getKPISummaryForRange(
       pengeluaran: 0,
       profit: 0,
       transactionCount: 0,
-    },
-  )
+    }
+  }
+
+  const row = data[0]
+  return {
+    omzet: Number(row.omzet),
+    omzetTunai: Number(row.omzet_tunai),
+    omzetQris: Number(row.omzet_qris),
+    pendingQris: Number(row.pending_qris),
+    pengeluaran: Number(row.pengeluaran),
+    profit: Number(row.profit),
+    transactionCount: Number(row.transaction_count),
+  }
 }
 
 export interface DailyTrendPoint {

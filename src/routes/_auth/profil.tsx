@@ -1,13 +1,13 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, LogOut, Phone, Shield, User, Mail, KeyRound, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, KeyRound, LogOut, Mail, Phone, Shield, User } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { LogoutDialog } from '@/components/ui/LogoutDialog'
 import { useAuth } from '@/hooks/useAuth'
-import { useUpdateProfile, useUpdateOwnCredentials } from '@/hooks/useProfile'
+import { useUpdateOwnCredentials, useUpdateProfile } from '@/hooks/useProfile'
 import { getInitials } from '@/lib/utils'
-import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/_auth/profil')({
   component: ProfilPage,
@@ -21,7 +21,7 @@ function ProfilPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  
+
   // Credentials state
   const [isEditingCredentials, setIsEditingCredentials] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -45,7 +45,7 @@ function ProfilPage() {
           full_name: form.full_name.trim(),
           phone: form.phone.trim() || null,
           avatar_url: profile?.avatar_url ?? null,
-        }
+        },
       },
       {
         onSuccess: () => {
@@ -70,7 +70,8 @@ function ProfilPage() {
       return
     }
 
-    const newEmail = credentialsForm.email.trim() !== user?.email ? credentialsForm.email.trim() : undefined
+    const newEmail =
+      credentialsForm.email.trim() !== user?.email ? credentialsForm.email.trim() : undefined
     const newPassword = credentialsForm.password || undefined
 
     if (!newEmail && !newPassword) {
@@ -88,7 +89,7 @@ function ProfilPage() {
           setIsEditingCredentials(false)
           setCredentialsForm((f) => ({ ...f, password: '' }))
         },
-      }
+      },
     )
   }
 
@@ -108,7 +109,7 @@ function ProfilPage() {
       </header>
 
       <div className="page-container max-w-lg mx-auto">
-        <motion.h1 
+        <motion.h1
           className="text-2xl font-bold mb-6 hidden md:block"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,7 +118,7 @@ function ProfilPage() {
           Profil Saya
         </motion.h1>
 
-        <motion.div 
+        <motion.div
           className="app-card p-6 mb-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,7 +217,7 @@ function ProfilPage() {
             transition={{ duration: 0.4, delay: 0.15 }}
           >
             <h3 className="text-sm font-bold text-neutral-900 mb-4">Keamanan Akun</h3>
-            
+
             {!isEditingCredentials ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
@@ -262,7 +263,8 @@ function ProfilPage() {
                   value={credentialsForm.password}
                   onChange={(e) => {
                     setCredentialsForm((f) => ({ ...f, password: e.target.value }))
-                    if (credentialsError.password) setCredentialsError((e) => ({ ...e, password: '' }))
+                    if (credentialsError.password)
+                      setCredentialsError((e) => ({ ...e, password: '' }))
                   }}
                   rightDecorator={
                     <button
@@ -304,14 +306,14 @@ function ProfilPage() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setShowLogoutModal(true)}
-          className="w-full bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger mt-4"
-          leftIcon={<LogOut size={16} />}
-        >
-          Keluar dari Akun
-        </Button>
+            type="button"
+            variant="ghost"
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger mt-4"
+            leftIcon={<LogOut size={16} />}
+          >
+            Keluar dari Akun
+          </Button>
         </motion.div>
       </div>
 

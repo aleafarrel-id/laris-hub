@@ -37,8 +37,9 @@ export function NetworkStatusBanner() {
 
   return (
     <div
-      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-        }`}
+      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${
+        isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
     >
       <div className="overflow-hidden">
         <div

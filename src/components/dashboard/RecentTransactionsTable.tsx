@@ -1,16 +1,16 @@
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { CheckCircle2, Edit3, ShoppingBag, ShoppingCart, Trash2, Wallet } from 'lucide-react'
 import { useState } from 'react'
-import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { PaymentMethodBadge, StatusBadge, TransactionBadge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { TransactionDetails } from '@/components/ui/TransactionItemsDisplay'
 import { formatRupiah, formatTime } from '@/lib/utils'
-import type { Profile, TransactionWithItems, TransactionWithProfile } from '@/types'
+import type { Profile, TransactionWithItems } from '@/types'
 
 interface RecentTransactionsTableProps {
-  transactions: TransactionWithProfile[] | undefined
+  transactions: TransactionWithItems[] | undefined
   isLoading: boolean
   isAdmin: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
@@ -28,7 +28,7 @@ export function RecentTransactionsTable({
   onSelectKasirProfile,
   onUpdateStatus,
 }: RecentTransactionsTableProps) {
-  const [viewingTx, setViewingTx] = useState<TransactionWithProfile | null>(null)
+  const [viewingTx, setViewingTx] = useState<TransactionWithItems | null>(null)
   const [mobileListRef] = useAutoAnimate<HTMLDivElement>()
   const [tbodyRef] = useAutoAnimate<HTMLTableSectionElement>()
 
@@ -63,10 +63,11 @@ export function RecentTransactionsTable({
     <>
       <div ref={mobileListRef} className="flex flex-col gap-3 md:hidden">
         {transactions.map((tx) => (
-          <div
+          <button
             key={tx.id}
+            type="button"
             onClick={() => !tx.isOfflinePending && setViewingTx(tx)}
-            className={`flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer ${
+            className={`flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer text-left w-full ${
               tx.isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
             }`}
           >
@@ -105,7 +106,7 @@ export function RecentTransactionsTable({
             )}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="text-sm font-medium text-neutral-900 pr-12">
-                <TransactionDetails transaction={tx as unknown as TransactionWithItems} isMobile />
+                <TransactionDetails transaction={tx} isMobile />
               </div>
 
               {tx.type === 'penjualan' && (
@@ -161,7 +162,7 @@ export function RecentTransactionsTable({
                 </div>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -200,7 +201,7 @@ export function RecentTransactionsTable({
                   {formatTime(tx.transaction_at)}
                 </td>
                 <td className="py-2.5 px-4 max-w-[200px] align-top">
-                  <TransactionDetails transaction={tx as unknown as TransactionWithItems} />
+                  <TransactionDetails transaction={tx} />
                 </td>
                 <td className="py-2.5 px-4 align-top">
                   <div className="flex flex-col items-start gap-1">
@@ -253,7 +254,7 @@ export function RecentTransactionsTable({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          onEditTransaction(tx as unknown as TransactionWithItems)
+                          onEditTransaction(tx)
                         }}
                         className="p-1.5 rounded-lg text-neutral-300 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                         title="Edit Transaksi"
@@ -287,7 +288,7 @@ export function RecentTransactionsTable({
       <TransactionDetailModal
         isOpen={!!viewingTx}
         onClose={() => setViewingTx(null)}
-        transaction={viewingTx as unknown as TransactionWithItems}
+        transaction={viewingTx}
       />
     </>
   )

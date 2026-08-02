@@ -11,8 +11,8 @@ export function useOfflinePendingItems<T = any>(actions: OfflineQueueAction[]) {
     const fetchQueue = async () => {
       const queue = await getOfflineQueue()
       if (!mounted) return
-      
-      const filtered = queue.filter(item => actions.includes(item.action))
+
+      const filtered = queue.filter((item) => actions.includes(item.action))
       setPendingItems(filtered as OfflineQueueItem<T>[])
     }
 

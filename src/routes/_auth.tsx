@@ -6,31 +6,45 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 
 export const Route = createFileRoute('/_auth')({
-  beforeLoad: async ({ location }) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+  beforeLoad: async ({ location, context: { queryClient } }) => {
+    try {
+      // Use queryClient to cache the auth & active user check for 5 minutes.
+      // This prevents TanStack Router's hover preloading from spamming Supabase Auth API
+      await queryClient.fetchQuery({
+        queryKey: ['auth', 'router-guard-check'],
+        queryFn: async () => {
+          const {
+            data: { user },
+            error,
+          } = await supabase.auth.getUser()
+          if (error || !user) throw error
 
-    if (!session) {
-      // Security: only pass internal paths as redirect to prevent open redirect.
-      const href = location.href
-      const safeRedirect = href.startsWith('/') ? href : '/login'
-      throw redirect({
-        to: '/login',
-        search: { redirect: safeRedirect },
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_active')
+            .eq('id', user.id)
+            .single()
+
+          if (profileError?.code === 'PGRST116' || profile?.is_active === false) {
+            throw new Error('ACCOUNT_SUSPENDED')
+          }
+          return { user, profile }
+        },
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
       })
-    }
-
-    // Security: Check if user is active. Suspended users should not pass the guard.
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_active')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profileError?.code === 'PGRST116' || profile?.is_active === false) {
-      await supabase.auth.signOut()
-      throw redirect({ to: '/login' })
+    } catch (err: any) {
+      if (err.message === 'ACCOUNT_SUSPENDED') {
+        await supabase.auth.signOut()
+        throw redirect({ to: '/login' })
+      } else {
+        // Security: only pass internal paths as redirect to prevent open redirect.
+        const href = location.href
+        const safeRedirect = href.startsWith('/') ? href : '/login'
+        throw redirect({
+          to: '/login',
+          search: { redirect: safeRedirect },
+        })
+      }
     }
   },
   component: AuthLayout,

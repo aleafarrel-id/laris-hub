@@ -18,12 +18,12 @@ interface TransactionDetailsProps {
  */
 export function TransactionDetails({ transaction, isMobile }: TransactionDetailsProps) {
   const isExpense = transaction.type === 'pengeluaran'
-  
+
   // Offline pending transactions inject `items` instead of `expense_items` / `transaction_items`
   const rawExpense = transaction.expense_items ?? (transaction as any).items
   const expenseItems = Array.isArray(rawExpense) ? rawExpense : []
   const hasExpenseItems = isExpense && (expenseItems?.length ?? 0) > 0
-  
+
   const rawSale = transaction.transaction_items ?? (transaction as any).items
   const saleItems = Array.isArray(rawSale) ? rawSale : []
   const hasSaleItems = !isExpense && (saleItems?.length ?? 0) > 0

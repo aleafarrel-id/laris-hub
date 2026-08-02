@@ -14,16 +14,28 @@ type EntityType = 'PRODUCT' | 'KASIR' | 'TRANSACTION'
 export function applyOptimisticUpdates<T extends { id: string }>(
   data: T[],
   pendingItems: OfflineQueueItem[],
-  entityType: EntityType
+  entityType: EntityType,
 ): T[] {
   // 1. Identify items to be deleted
   const deletes = pendingItems.filter((i) => i.action === `DELETE_${entityType}`)
-  const deleteIds = new Set(deletes.map((i) => (i.payload?.id || i.payload) as string))
+  const deleteIds = new Set(
+    deletes.map((i) => {
+      if (typeof i.payload === 'string') return i.payload
+      return (i.payload as { id?: string })?.id || ''
+    }),
+  )
 
   // 2. Identify updates and toggles
-  const updates = pendingItems.filter(
-    (i) => i.action.startsWith('UPDATE_') || i.action.startsWith('TOGGLE_')
-  )
+  const VALID_UPDATE_ACTIONS = [
+    'UPDATE_STATUS',
+    'TOGGLE_PRODUCT',
+    'TOGGLE_KASIR',
+    'UPDATE_PRODUCT',
+    'UPDATE_KASIR',
+    'UPDATE_SALE',
+    'UPDATE_EXPENSE',
+  ]
+  const updates = pendingItems.filter((i) => VALID_UPDATE_ACTIONS.includes(i.action))
 
   // 3. Filter out deleted items
   let result = data.filter((item) => !deleteIds.has(item.id))
@@ -31,28 +43,30 @@ export function applyOptimisticUpdates<T extends { id: string }>(
   // 4. Apply updates
   result = result.map((item) => {
     // Find all updates applied to this item
-    const itemUpdates = updates.filter(
-      (u) => u.payload?.id === item.id || u.payload === item.id
-    )
+    const itemUpdates = updates.filter((u) => {
+      if (typeof u.payload === 'string') return u.payload === item.id
+      return (u.payload as { id?: string })?.id === item.id
+    })
 
     if (itemUpdates.length > 0) {
-      let mutated: any = { ...item, isOfflinePending: true }
-      
+      let mutated: Record<string, unknown> = { ...item, isOfflinePending: true }
+
       for (const update of itemUpdates) {
+        const p = update.payload as Record<string, unknown>
         if (update.action === 'UPDATE_STATUS') {
-          mutated.status = update.payload.status
+          mutated.status = p.status
         }
         if (update.action === 'TOGGLE_PRODUCT' || update.action === 'TOGGLE_KASIR') {
-          mutated.is_active = update.payload.isActive
+          mutated.is_active = p.isActive
         }
         if (update.action === 'UPDATE_PRODUCT') {
-          mutated = { ...mutated, ...update.payload.data }
+          mutated = { ...mutated, ...(p.data as object) }
         }
         if (update.action === 'UPDATE_KASIR') {
-          mutated = { ...mutated, ...update.payload }
+          mutated = { ...mutated, ...((p.data as object) || p) }
         }
         if (update.action === 'UPDATE_SALE' || update.action === 'UPDATE_EXPENSE') {
-          mutated = { ...mutated, ...update.payload.payload }
+          mutated = { ...mutated, ...(p.payload as object) }
         }
       }
       return mutated as T

@@ -27,7 +27,9 @@ export const TransactionListItem = memo(function TransactionListItem({
         if (!tx.isOfflinePending) onClick?.(tx)
       }}
       className={`app-card p-3.5 flex items-stretch gap-3 hover:border-primary/30 transition-colors ${isPendingQris ? 'border-amber-200 bg-amber-50/30' : ''} ${
-        tx.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed' : 'cursor-pointer'
+        tx.isOfflinePending
+          ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed'
+          : 'cursor-pointer'
       }`}
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
@@ -75,7 +77,8 @@ export const TransactionListItem = memo(function TransactionListItem({
         </span>
 
         {!tx.isOfflinePending ? (
-          isPendingQris && onUpdateStatus && (
+          isPendingQris &&
+          onUpdateStatus && (
             <button
               type="button"
               onClick={(e) => {
@@ -90,7 +93,9 @@ export const TransactionListItem = memo(function TransactionListItem({
           )
         ) : (
           <span className="text-[10px] font-semibold text-neutral-400 mt-2 text-right">
-            Menunggu<br/>Sinkronisasi
+            Menunggu
+            <br />
+            Sinkronisasi
           </span>
         )}
       </div>
