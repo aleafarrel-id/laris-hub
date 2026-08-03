@@ -63,12 +63,12 @@ export function NetworkStatusBanner() {
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 overflow-hidden text-[13px]">
-                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 mt-px whitespace-nowrap">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 overflow-hidden leading-tight text-[11px] sm:text-[13px]">
+                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 truncate mt-px sm:mt-0">
                   {title}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
-                <span className="font-medium opacity-95 truncate">{subtitle}</span>
+                <span className="hidden sm:block w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
+                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">{subtitle}</span>
               </div>
             )}
           </div>

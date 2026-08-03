@@ -209,13 +209,15 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         await dequeueOfflineItem(item.localId)
         successCount++
       } catch (err: any) {
-        // Detect permanent backend errors (PostgreSQL exceptions OR explicit error messages from Edge Functions/RPCs)
+        const isBrowserOffline = typeof navigator !== 'undefined' && !navigator.onLine
         const isPgError = err?.code && err.code.startsWith('22')
         const errMessage = (err?.message || '').toLowerCase()
         const isNetworkError =
+          isBrowserOffline ||
           errMessage.includes('fetch') ||
           errMessage.includes('network') ||
-          errMessage.includes('failed to fetch')
+          errMessage.includes('failed to fetch') ||
+          errMessage.includes('load failed')
         const isBackendRejection = errMessage && !isNetworkError
 
         if (isPgError || (isBackendRejection && err?.status >= 400 && err?.status < 500)) {
