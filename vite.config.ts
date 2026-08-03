@@ -69,7 +69,7 @@ export default defineConfig({
               cacheName: 'supabase-api-cache',
               networkTimeoutSeconds: 3, // Fail fast if offline/poor connection
               expiration: {
-                maxEntries: 200,
+                maxEntries: 2000,
                 maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
               },
               cacheableResponse: { statuses: [0, 200] },

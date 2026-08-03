@@ -46,6 +46,9 @@ function transformOfflineTransactions(
         (payload.total_amount as number) ||
         0,
       notes: (payload.notes as string) || '',
+      description: (payload.description as string) || '',
+      expense_category: (payload.expense_category as string) || '',
+      expense_items: (payload.expense_items as any) || [],
       recorded_by: user?.id || '',
       profiles: {
         full_name: user?.user_metadata?.full_name || 'Kasir',
@@ -58,7 +61,7 @@ function transformOfflineTransactions(
 
 function useInjectedTransactions<
   T extends { isPending?: boolean; fetchStatus?: string; isError?: boolean; data?: unknown },
->(result: T): T & { isOfflinePaused: boolean } {
+>(result: T, emptyFallback: any): T & { isOfflinePaused: boolean } {
   const user = useAuthStore((state) => state.user)
   const pendingItems = useOfflinePendingItems([
     'CREATE_SALE',
@@ -74,8 +77,6 @@ function useInjectedTransactions<
   )
 
   const data = useMemo(() => {
-    if (!result.data) return result.data
-
     const creates = pendingItems.filter(
       (i) => i.action === 'CREATE_SALE' || i.action === 'CREATE_EXPENSE',
     )
@@ -84,7 +85,7 @@ function useInjectedTransactions<
       user,
     )
 
-    let currentData = result.data as Record<string, unknown>
+    let currentData = (result.data || emptyFallback) as Record<string, unknown>
 
     if (currentData.pages && Array.isArray(currentData.pages)) {
       // Infinite Query
@@ -133,7 +134,7 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
     placeholderData: keepPreviousData,
   })
 
-  return useInjectedTransactions(result)
+  return useInjectedTransactions(result, { data: [], nextPage: null })
 }
 
 export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSize = 20) {
@@ -147,7 +148,7 @@ export function useInfiniteTransactions(filters: TransactionFilters = {}, pageSi
     initialPageParam: 1,
   })
 
-  return useInjectedTransactions(result)
+  return useInjectedTransactions(result, { pages: [{ data: [], nextPage: null }], pageParams: [1] })
 }
 
 export function useTransactionSummary(
@@ -241,7 +242,7 @@ export function useTodayTransactions(recordedBy?: string) {
     refetchInterval: 1000 * 60, // Auto-refresh every minute
   })
 
-  return useInjectedTransactions(result)
+  return useInjectedTransactions(result, [])
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────────────

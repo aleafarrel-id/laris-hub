@@ -66,7 +66,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 30, // 30 seconds default for real-time feel
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours garbage collection for offline access
+      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days garbage collection for offline access
       retry: (failureCount, error) => {
         if (!navigator.onLine) return false
         // Don't retry on auth errors

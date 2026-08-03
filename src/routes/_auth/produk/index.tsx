@@ -369,7 +369,7 @@ function ProdukPage() {
                             </button>
                           </>
                         ) : (
-                          <div className="flex-1 py-2 bg-neutral-100 text-neutral-500 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                          <div className="flex-1 py-2 px-2 bg-neutral-100 text-neutral-500 rounded-xl text-xs font-semibold flex items-center justify-center text-center leading-tight gap-1.5">
                             Menunggu Sinkronisasi
                           </div>
                         )}

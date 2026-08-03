@@ -49,7 +49,7 @@ export function useKasirList() {
       } as any
     })
 
-    let currentData = result.data ? [...offlineCashiers, ...result.data] : result.data
+    let currentData = result.data ? [...offlineCashiers, ...result.data] : [...offlineCashiers]
     if (currentData) {
       currentData = applyOptimisticUpdates(currentData, pendingItems, 'KASIR')
     }

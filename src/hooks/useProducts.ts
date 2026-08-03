@@ -15,7 +15,7 @@ import { useAuthStore } from '@/store/auth.store'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
 
-function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused: boolean } {
+function useInjectedProducts<T extends object>(result: T, emptyFallback: any): T & { isOfflinePaused: boolean } {
   const pendingItems = useOfflinePendingItems([
     'CREATE_PRODUCT',
     'UPDATE_PRODUCT',
@@ -28,7 +28,6 @@ function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused
     (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
   const data = useMemo(() => {
-    if (!res.data) return res.data
 
     const createProducts = pendingItems.filter((item) => item.action === 'CREATE_PRODUCT')
     const offlineProducts = createProducts.map((item: any) => {
@@ -48,7 +47,7 @@ function useInjectedProducts<T extends object>(result: T): T & { isOfflinePaused
       } as any
     })
 
-    let currentData = res.data
+    let currentData = res.data || emptyFallback
 
     if (currentData.pages) {
       // Infinite query structure
@@ -88,7 +87,7 @@ export function useProducts(activeOnly = false) {
     select: selectFn,
   })
 
-  return useInjectedProducts(result)
+  return useInjectedProducts(result, [])
 }
 
 export function useInfiniteProducts(search = '', pageSize = 20) {
@@ -102,7 +101,7 @@ export function useInfiniteProducts(search = '', pageSize = 20) {
     initialPageParam: 1,
   })
 
-  return useInjectedProducts(result)
+  return useInjectedProducts(result, { pages: [{ data: [], nextPage: null }], pageParams: [1] })
 }
 
 export function useCreateProduct() {
