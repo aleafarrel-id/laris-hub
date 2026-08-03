@@ -24,7 +24,11 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
       return
     }
 
-    window.history.pushState({ modalId }, '')
+    let hasPushedState = false
+    const timeout = setTimeout(() => {
+      window.history.pushState({ modalId }, '')
+      hasPushedState = true
+    }, 10)
 
     const handlePopState = (e: PopStateEvent) => {
       if (e.state?.modalId !== modalId) {
@@ -36,9 +40,10 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
     window.addEventListener('popstate', handlePopState)
 
     return () => {
+      clearTimeout(timeout)
       window.removeEventListener('popstate', handlePopState)
 
-      if (!isClosingViaPopstate.current && window.history.state?.modalId === modalId) {
+      if (hasPushedState && !isClosingViaPopstate.current && window.history.state?.modalId === modalId) {
         window.history.back()
       }
     }

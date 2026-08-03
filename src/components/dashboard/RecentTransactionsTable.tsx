@@ -63,10 +63,17 @@ export function RecentTransactionsTable({
     <>
       <div ref={mobileListRef} className="flex flex-col gap-3 md:hidden">
         {transactions.map((tx) => (
-          <button
+          <div
             key={tx.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() => !tx.isOfflinePending && setViewingTx(tx)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                if (!tx.isOfflinePending) setViewingTx(tx)
+              }
+            }}
             className={`flex items-center gap-3 p-3.5 bg-neutral-50/50 rounded-2xl border border-neutral-100 hover:bg-neutral-50 transition-colors relative cursor-pointer text-left w-full ${
               tx.isOfflinePending ? 'opacity-60 grayscale cursor-not-allowed' : ''
             }`}
@@ -162,7 +169,7 @@ export function RecentTransactionsTable({
                 </div>
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 
