@@ -15,8 +15,8 @@ interface RecentTransactionsTableProps {
   isAdmin: boolean
   onEditTransaction: (tx: TransactionWithItems) => void
   onDeleteTransaction: (id: string) => void
-  onSelectKasirProfile: (profile: Partial<Profile>) => void
-  onUpdateStatus?: (id: string, status: 'sukses' | 'pending') => void
+  onSelectCashierProfile: (profile: Partial<Profile>) => void
+  onUpdateStatus?: (id: string, status: 'success' | 'pending') => void
 }
 
 export function RecentTransactionsTable({
@@ -25,7 +25,7 @@ export function RecentTransactionsTable({
   isAdmin,
   onEditTransaction,
   onDeleteTransaction,
-  onSelectKasirProfile,
+  onSelectCashierProfile,
   onUpdateStatus,
 }: RecentTransactionsTableProps) {
   const [viewingTx, setViewingTx] = useState<TransactionWithItems | null>(null)
@@ -73,10 +73,10 @@ export function RecentTransactionsTable({
           >
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                tx.type === 'penjualan' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                tx.type === 'sale' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
               }`}
             >
-              {tx.type === 'penjualan' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
+              {tx.type === 'sale' ? <ShoppingCart size={18} /> : <Wallet size={18} />}
             </div>
             {isAdmin && !tx.isOfflinePending && (
               <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
@@ -109,7 +109,7 @@ export function RecentTransactionsTable({
                 <TransactionDetails transaction={tx} isMobile />
               </div>
 
-              {tx.type === 'penjualan' && (
+              {tx.type === 'sale' && (
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <PaymentMethodBadge method={tx.payment_method} />
                   <StatusBadge status={tx.status} />
@@ -122,7 +122,7 @@ export function RecentTransactionsTable({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                      onSelectCashierProfile(tx.profiles as Partial<Profile>)
                     }}
                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[10px] font-bold"
                   >
@@ -134,24 +134,24 @@ export function RecentTransactionsTable({
               <div className="flex items-end justify-between mt-1.5 gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-neutral-400 tabular-nums pb-0.5">
-                    {formatTime(tx.transaction_at)}
+                    {formatTime(tx.transaction_at as string)}
                   </span>
                 </div>
                 <div className="flex flex-col items-end leading-tight">
                   <span
                     className={`text-sm font-bold tabular-nums whitespace-nowrap ${
-                      tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                      tx.type === 'sale' ? 'text-success' : 'text-danger'
                     }`}
                   >
-                    {tx.type === 'penjualan' ? '+' : '−'}
+                    {tx.type === 'sale' ? '+' : '−'}
                     {formatRupiah(tx.total_amount)}
                   </span>
-                  {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                  {tx.type === 'sale' && tx.status === 'pending' && onUpdateStatus && (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onUpdateStatus(tx.id, 'sukses')
+                        onUpdateStatus(tx.id, 'success')
                       }}
                       className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-[11px] font-semibold cursor-pointer shadow-sm active:scale-95"
                     >
@@ -198,7 +198,7 @@ export function RecentTransactionsTable({
                 }`}
               >
                 <td className="py-2.5 px-4 text-neutral-500 whitespace-nowrap tabular-nums">
-                  {formatTime(tx.transaction_at)}
+                  {formatTime(tx.transaction_at as string)}
                 </td>
                 <td className="py-2.5 px-4 max-w-[200px] align-top">
                   <TransactionDetails transaction={tx} />
@@ -206,7 +206,7 @@ export function RecentTransactionsTable({
                 <td className="py-2.5 px-4 align-top">
                   <div className="flex flex-col items-start gap-1">
                     <TransactionBadge type={tx.type} />
-                    {tx.type === 'penjualan' && (
+                    {tx.type === 'sale' && (
                       <div className="flex items-center gap-1 flex-wrap">
                         <PaymentMethodBadge method={tx.payment_method} />
                         <StatusBadge status={tx.status} />
@@ -219,7 +219,7 @@ export function RecentTransactionsTable({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onSelectKasirProfile(tx.profiles as Partial<Profile>)
+                      onSelectCashierProfile(tx.profiles as Partial<Profile>)
                     }}
                     className="hover:text-primary transition-colors focus:outline-none"
                   >
@@ -228,21 +228,21 @@ export function RecentTransactionsTable({
                 </td>
                 <td
                   className={`py-2.5 px-4 text-right font-bold tabular-nums align-top ${
-                    tx.type === 'penjualan' ? 'text-success' : 'text-danger'
+                    tx.type === 'sale' ? 'text-success' : 'text-danger'
                   }`}
                 >
-                  {tx.type === 'penjualan' ? '+' : '−'}
+                  {tx.type === 'sale' ? '+' : '−'}
                   {formatRupiah(tx.total_amount)}
                 </td>
                 <td className="py-2.5 px-4 text-right align-top">
                   {!tx.isOfflinePending ? (
                     <div className="flex justify-end items-center gap-1">
-                      {tx.type === 'penjualan' && tx.status === 'pending' && onUpdateStatus && (
+                      {tx.type === 'sale' && tx.status === 'pending' && onUpdateStatus && (
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation()
-                            onUpdateStatus(tx.id, 'sukses')
+                            onUpdateStatus(tx.id, 'success')
                           }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all text-xs font-semibold cursor-pointer shadow-sm active:scale-95"
                         >

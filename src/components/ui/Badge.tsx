@@ -6,8 +6,8 @@ interface BadgeProps {
 }
 
 const BADGE_CONFIG = {
-  penjualan: { label: 'Penjualan', className: 'bg-success/10 text-success' },
-  pengeluaran: { label: 'Pengeluaran', className: 'bg-danger/10 text-danger' },
+  sale: { label: 'Penjualan', className: 'bg-success/10 text-success' },
+  expense: { label: 'Pengeluaran', className: 'bg-danger/10 text-danger' },
 } as const
 
 export function TransactionBadge({ type }: BadgeProps) {
@@ -27,10 +27,10 @@ export function TransactionBadge({ type }: BadgeProps) {
 
 export function StatusBadge({ status, forceShow }: { status: string | null; forceShow?: boolean }) {
   if (!status) return null
-  if (status === 'sukses' && !forceShow) return null
+  if (status === 'success' && !forceShow) return null
   const config = {
     pending: { label: 'Tertunda', className: 'bg-amber-50 text-amber-600 border border-amber-200' },
-    sukses: {
+    success: {
       label: 'Sukses',
       className: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
     },
@@ -44,7 +44,7 @@ export function StatusBadge({ status, forceShow }: { status: string | null; forc
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${config.className}`}
     >
       {status === 'pending' && <Clock size={12} />}
-      {status === 'sukses' && <CheckCircle2 size={12} />}
+      {status === 'success' && <CheckCircle2 size={12} />}
       {config.label}
     </span>
   )
@@ -58,9 +58,9 @@ export function PaymentMethodBadge({
   forceShow?: boolean
 }) {
   if (!method) return null
-  if (method === 'tunai' && !forceShow) return null
+  if (method === 'cash' && !forceShow) return null
   const config = {
-    tunai: {
+    cash: {
       label: 'Tunai',
       className: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
       icon: Banknote,

@@ -129,7 +129,7 @@ export function translateError(error: unknown): string {
   const message = error.message.toLowerCase()
   const rawMessage = error.message
 
-  // Suspended account - specific actionable message
+  // Suspended account
   if (rawMessage === 'ACCOUNT_SUSPENDED') {
     return 'ACCOUNT_SUSPENDED'
   }
@@ -180,8 +180,6 @@ export function translateError(error: unknown): string {
     return 'Data tidak dapat disimpan karena referensi tidak valid.'
   }
 
-  // Fallback to the original error message ONLY if explicitly marked as safe for the user.
-  // This prevents raw Postgres errors or unexpected JSON from leaking into the UI.
   if ((error as any).isUserFacing === true && typeof rawMessage === 'string') {
     return rawMessage
   }
@@ -291,30 +289,25 @@ export async function throwEdgeFunctionError(
     if (isError && Object.keys(ctx).length === 0 && (error as Error).message.startsWith('{')) {
       try {
         resolvedCtx = JSON.parse((error as Error).message)
-      } catch {
-        /* noop */
-      }
+      } catch { }
     }
 
     const message = resolvedCtx?.error ?? (isError ? (error as Error).message : 'Unknown error')
     const err = new Error(message as string)
-    ;(err as any).isUserFacing = true
+      ; (err as any).isUserFacing = true
     extra?.(err, resolvedCtx)
     throw err
   }
 
   if (data?.error) {
     const err = new Error(data.error as string)
-    ;(err as any).isUserFacing = true
+      ; (err as any).isUserFacing = true
     extra?.(err, data)
     throw err
   }
 }
 
-/**
- * Converts a Base64 Data URL to a File object.
- * Useful for converting offline cached images back to files for upload.
- */
+// Converts a Base64 Data URL to a File object
 export function dataUrlToFile(dataUrl: string, filename: string): File {
   const arr = dataUrl.split(',')
   const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg'

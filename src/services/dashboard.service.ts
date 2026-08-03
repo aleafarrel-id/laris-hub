@@ -8,7 +8,7 @@ interface DailySummaryRow {
   total_gross_profit: number
   total_expense: number
   net_cashflow: number
-  total_revenue_tunai: number
+  total_revenue_cash: number
   total_revenue_qris: number
   total_pending_qris: number
 }
@@ -23,7 +23,7 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
   const { data, error } = await supabase
     .from('daily_summary')
     .select(
-      'total_sales_count, total_revenue, total_gross_profit, total_expense, total_revenue_tunai, total_revenue_qris, total_pending_qris',
+      'total_sales_count, total_revenue, total_gross_profit, total_expense, total_revenue_cash, total_revenue_qris, total_pending_qris',
     )
     .eq('date', dateStr)
     .maybeSingle()
@@ -32,11 +32,11 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
 
   if (!data) {
     return {
-      omzet: 0,
-      omzetTunai: 0,
-      omzetQris: 0,
+      revenue: 0,
+      revenueCash: 0,
+      revenueQris: 0,
       pendingQris: 0,
-      pengeluaran: 0,
+      expense: 0,
       profit: 0,
       transactionCount: 0,
     }
@@ -44,11 +44,11 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
 
   const row = data as DailySummaryRow
   return {
-    omzet: Number(row.total_revenue),
-    omzetTunai: Number(row.total_revenue_tunai),
-    omzetQris: Number(row.total_revenue_qris),
+    revenue: Number(row.total_revenue),
+    revenueCash: Number(row.total_revenue_cash),
+    revenueQris: Number(row.total_revenue_qris),
     pendingQris: Number(row.total_pending_qris),
-    pengeluaran: Number(row.total_expense),
+    expense: Number(row.total_expense),
     profit: Number(row.total_gross_profit),
     transactionCount: Number(row.total_sales_count),
   }
@@ -61,7 +61,7 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
 export async function getKPISummaryForRange(
   from: Date,
   to: Date,
-  kasirId?: string,
+  cashierId?: string,
 ): Promise<KPISummary> {
   const endOfDay = new Date(to)
   endOfDay.setHours(23, 59, 59, 999)
@@ -69,18 +69,18 @@ export async function getKPISummaryForRange(
   const { data, error } = await supabase.rpc('get_kpi_summary_for_range', {
     p_from: from.toISOString(),
     p_to: endOfDay.toISOString(),
-    p_kasir_id: kasirId === 'all' ? undefined : kasirId,
+    p_cashier_id: cashierId === 'all' ? undefined : cashierId,
   })
 
   if (error) throw error
 
   if (!data || data.length === 0) {
     return {
-      omzet: 0,
-      omzetTunai: 0,
-      omzetQris: 0,
+      revenue: 0,
+      revenueCash: 0,
+      revenueQris: 0,
       pendingQris: 0,
-      pengeluaran: 0,
+      expense: 0,
       profit: 0,
       transactionCount: 0,
     }
@@ -88,11 +88,11 @@ export async function getKPISummaryForRange(
 
   const row = data[0]
   return {
-    omzet: Number(row.omzet),
-    omzetTunai: Number(row.omzet_tunai),
-    omzetQris: Number(row.omzet_qris),
+    revenue: Number(row.revenue),
+    revenueCash: Number(row.revenue_cash),
+    revenueQris: Number(row.revenue_qris),
     pendingQris: Number(row.pending_qris),
-    pengeluaran: Number(row.pengeluaran),
+    expense: Number(row.expense),
     profit: Number(row.profit),
     transactionCount: Number(row.transaction_count),
   }
@@ -100,9 +100,9 @@ export async function getKPISummaryForRange(
 
 export interface DailyTrendPoint {
   date: string
-  omzet: number
+  revenue: number
   profit: number
-  pengeluaran: number
+  expense: number
 }
 
 /**
@@ -129,15 +129,15 @@ export async function getMonthlyTrend(days = 30): Promise<DailyTrendPoint[]> {
   >
   return ((data ?? []) as TrendRow[]).map((row) => ({
     date: row.date,
-    omzet: Number(row.total_revenue),
+    revenue: Number(row.total_revenue),
     profit: Number(row.total_gross_profit),
-    pengeluaran: Number(row.total_expense),
+    expense: Number(row.total_expense),
   }))
 }
 
-export async function getMonthlyTrendByKasir(
+export async function getMonthlyTrendByCashier(
   days = 30,
-  kasirId: string,
+  cashierId: string,
 ): Promise<DailyTrendPoint[]> {
   const from = new Date()
   from.setDate(from.getDate() - days + 1)
@@ -147,7 +147,7 @@ export async function getMonthlyTrendByKasir(
     .from('transactions')
     .select('transaction_at, type, total_amount, total_profit')
     .gte('transaction_at', from.toISOString())
-    .eq('recorded_by', kasirId)
+    .eq('recorded_by', cashierId)
 
   if (error) throw error
 
@@ -157,22 +157,21 @@ export async function getMonthlyTrendByKasir(
     const d = new Date(from)
     d.setDate(d.getDate() + i)
     const dateStr = d.toISOString().split('T')[0]
-    trendMap.set(dateStr, { date: dateStr, omzet: 0, profit: 0, pengeluaran: 0 })
+    trendMap.set(dateStr, { date: dateStr, revenue: 0, profit: 0, expense: 0 })
   }
 
   // Aggregate
   for (const tx of data ?? []) {
-    const d = new Date(tx.transaction_at)
-    // shift to local date string equivalent
+    const d = new Date(tx.transaction_at as string)
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
     const point = trendMap.get(dateStr)
     if (point) {
-      if (tx.type === 'penjualan') {
-        point.omzet += Number(tx.total_amount)
+      if (tx.type === 'sale') {
+        point.revenue += Number(tx.total_amount)
         point.profit += Number(tx.total_profit)
       } else {
-        point.pengeluaran += Number(tx.total_amount)
+        point.expense += Number(tx.total_amount)
       }
     }
   }
@@ -206,10 +205,10 @@ export async function getTopProducts(from: Date, to: Date, limit = 5): Promise<T
   return (data ?? []) as TopProduct[]
 }
 
-export async function getTopProductsByKasir(
+export async function getTopProductsByCashier(
   from: Date,
   to: Date,
-  kasirId: string,
+  cashierId: string,
   limit = 5,
 ): Promise<TopProduct[]> {
   const endOfDay = new Date(to)
@@ -221,8 +220,8 @@ export async function getTopProductsByKasir(
       quantity, selling_price, product_hpp, product_name, product_id,
       transactions!inner ( transaction_at, recorded_by, type )
     `)
-    .eq('transactions.type', 'penjualan')
-    .eq('transactions.recorded_by', kasirId)
+    .eq('transactions.type', 'sale')
+    .eq('transactions.recorded_by', cashierId)
     .gte('transactions.transaction_at', from.toISOString())
     .lte('transactions.transaction_at', endOfDay.toISOString())
 

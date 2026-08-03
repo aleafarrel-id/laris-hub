@@ -59,22 +59,21 @@ function AuthLayout() {
     }
   }, [])
 
-  // Synchronize cross-tab role changes dynamically
   useEffect(() => {
     if (profile) {
       if (
-        profile.role === 'kasir' &&
+        profile.role === 'cashier' &&
         (location.pathname.startsWith('/dashboard') ||
-          location.pathname.startsWith('/manajemen-kasir'))
+          location.pathname.startsWith('/cashier-management'))
       ) {
-        navigate({ to: '/kasir', replace: true })
+        navigate({ to: '/cashier', replace: true })
       }
     }
   }, [profile, location.pathname, navigate])
 
   return (
     <div className="flex min-h-dvh bg-neutral-50/50">
-      <Sidebar role={profile?.role} userName={profile?.full_name} />
+      <Sidebar role={profile?.role as 'admin' | 'cashier'} userName={profile?.full_name} />
 
       <div className="flex-1 min-w-0 md:ml-64 pb-[72px] md:pb-0 flex flex-col">
         <main className="min-h-dvh flex-1 flex flex-col">
@@ -82,7 +81,7 @@ function AuthLayout() {
         </main>
       </div>
 
-      <BottomNav role={profile?.role} />
+      <BottomNav role={profile?.role as 'admin' | 'cashier'} />
     </div>
   )
 }

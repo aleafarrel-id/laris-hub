@@ -17,13 +17,13 @@ export const Route = createFileRoute('/')({
       .eq('id', session.user.id)
       .single()
 
-    const profile = data as { role: 'admin' | 'kasir' } | null
+    const profile = data as { role: 'admin' | 'cashier' } | null
 
     if (profile?.role === 'admin') {
       throw redirect({ to: '/dashboard' })
     }
 
-    throw redirect({ to: '/kasir' })
+    throw redirect({ to: '/cashier' })
   },
   component: () => null,
 })

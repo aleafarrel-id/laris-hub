@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import type { Product, TransactionWithItems } from '@/types'
 
-// ─── Sale Cart Logic ─────────────────────────────────────────────────────────
+// Sale Cart
 
 export interface CartItem {
   product: Product
@@ -95,7 +95,6 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
     transaction.transaction_items.forEach((item) => {
       let product = products.find((p) => p.id === item.product_id)
 
-      // Backward compatibility for old cache that only had product_name
       if (!product && !item.product_id && item.product_name) {
         product = products.find((p) => p.name === item.product_name)
       }
@@ -132,7 +131,7 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
   }
 }
 
-// ─── Expense Items Logic ──────────────────────────────────────────────────────
+// Expense Items
 
 export interface ExpenseLineItem {
   id: string

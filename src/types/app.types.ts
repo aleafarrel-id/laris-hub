@@ -21,8 +21,8 @@ export type Transaction = Database['public']['Tables']['transactions']['Row'] & 
 export type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 export type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
 
-export type PaymentMethod = 'tunai' | 'qris'
-export type TransactionStatus = 'sukses' | 'pending'
+export type PaymentMethod = 'cash' | 'qris'
+export type TransactionStatus = 'success' | 'pending'
 export type TransactionItem = Database['public']['Tables']['transaction_items']['Row']
 export type TransactionItemInsert = Database['public']['Tables']['transaction_items']['Insert']
 
@@ -32,7 +32,7 @@ export interface TransactionWithItems extends Transaction {
 }
 
 export interface ProductWithMargin extends Product {
-  margin: number // calculated: (selling_price - hpp) / selling_price * 100
+  margin: number
 }
 
 export interface DateRange {
@@ -48,7 +48,7 @@ export interface PaginationState {
 }
 
 export interface TransactionFilters {
-  type?: 'penjualan' | 'pengeluaran' | 'all'
+  type?: 'sale' | 'expense' | 'all'
   dateRange?: DateRange
   recordedBy?: string
   search?: string
@@ -59,23 +59,23 @@ export interface TransactionFilters {
 
 export interface DailySummary {
   date: string
-  total_omzet: number
-  total_pengeluaran: number
+  total_revenue: number
+  total_expense: number
   total_profit: number
   transaction_count: number
 }
 
 export interface KPISummary {
-  omzet: number
-  omzetTunai?: number
-  omzetQris?: number
+  revenue: number
+  revenueCash?: number
+  revenueQris?: number
   pendingQris?: number
-  pengeluaran: number
+  expense: number
   profit: number
   transactionCount: number
 }
 
-export type UserRole = 'admin' | 'kasir'
+export type UserRole = 'admin' | 'cashier'
 
 export interface AuthUser {
   id: string

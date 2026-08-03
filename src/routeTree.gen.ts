@@ -12,12 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AuthBukuKasRouteImport } from './routes/_auth/buku-kas'
+import { Route as AuthCashbookRouteImport } from './routes/_auth/cashbook'
+import { Route as AuthCashierRouteImport } from './routes/_auth/cashier'
+import { Route as AuthCashierManagementRouteImport } from './routes/_auth/cashier-management'
 import { Route as AuthDashboardRouteImport } from './routes/_auth/dashboard'
-import { Route as AuthKasirRouteImport } from './routes/_auth/kasir'
-import { Route as AuthManajemenKasirRouteImport } from './routes/_auth/manajemen-kasir'
-import { Route as AuthProfilRouteImport } from './routes/_auth/profil'
-import { Route as AuthProdukIndexRouteImport } from './routes/_auth/produk/index'
+import { Route as AuthProfileRouteImport } from './routes/_auth/profile'
+import { Route as AuthProductIndexRouteImport } from './routes/_auth/product/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,9 +33,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthBukuKasRoute = AuthBukuKasRouteImport.update({
-  id: '/buku-kas',
-  path: '/buku-kas',
+const AuthCashbookRoute = AuthCashbookRouteImport.update({
+  id: '/cashbook',
+  path: '/cashbook',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCashierRoute = AuthCashierRouteImport.update({
+  id: '/cashier',
+  path: '/cashier',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCashierManagementRoute = AuthCashierManagementRouteImport.update({
+  id: '/cashier-management',
+  path: '/cashier-management',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthDashboardRoute = AuthDashboardRouteImport.update({
@@ -43,91 +53,81 @@ const AuthDashboardRoute = AuthDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthKasirRoute = AuthKasirRouteImport.update({
-  id: '/kasir',
-  path: '/kasir',
+const AuthProfileRoute = AuthProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthManajemenKasirRoute = AuthManajemenKasirRouteImport.update({
-  id: '/manajemen-kasir',
-  path: '/manajemen-kasir',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthProfilRoute = AuthProfilRouteImport.update({
-  id: '/profil',
-  path: '/profil',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthProdukIndexRoute = AuthProdukIndexRouteImport.update({
-  id: '/produk/',
-  path: '/produk/',
+const AuthProductIndexRoute = AuthProductIndexRouteImport.update({
+  id: '/product/',
+  path: '/product/',
   getParentRoute: () => AuthRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/buku-kas': typeof AuthBukuKasRoute
+  '/cashbook': typeof AuthCashbookRoute
+  '/cashier': typeof AuthCashierRoute
+  '/cashier-management': typeof AuthCashierManagementRoute
   '/dashboard': typeof AuthDashboardRoute
-  '/kasir': typeof AuthKasirRoute
-  '/manajemen-kasir': typeof AuthManajemenKasirRoute
-  '/profil': typeof AuthProfilRoute
-  '/produk/': typeof AuthProdukIndexRoute
+  '/profile': typeof AuthProfileRoute
+  '/product/': typeof AuthProductIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/buku-kas': typeof AuthBukuKasRoute
+  '/cashbook': typeof AuthCashbookRoute
+  '/cashier': typeof AuthCashierRoute
+  '/cashier-management': typeof AuthCashierManagementRoute
   '/dashboard': typeof AuthDashboardRoute
-  '/kasir': typeof AuthKasirRoute
-  '/manajemen-kasir': typeof AuthManajemenKasirRoute
-  '/profil': typeof AuthProfilRoute
-  '/produk': typeof AuthProdukIndexRoute
+  '/profile': typeof AuthProfileRoute
+  '/product': typeof AuthProductIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/_auth/buku-kas': typeof AuthBukuKasRoute
+  '/_auth/cashbook': typeof AuthCashbookRoute
+  '/_auth/cashier': typeof AuthCashierRoute
+  '/_auth/cashier-management': typeof AuthCashierManagementRoute
   '/_auth/dashboard': typeof AuthDashboardRoute
-  '/_auth/kasir': typeof AuthKasirRoute
-  '/_auth/manajemen-kasir': typeof AuthManajemenKasirRoute
-  '/_auth/profil': typeof AuthProfilRoute
-  '/_auth/produk/': typeof AuthProdukIndexRoute
+  '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/product/': typeof AuthProductIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/buku-kas'
+    | '/cashbook'
+    | '/cashier'
+    | '/cashier-management'
     | '/dashboard'
-    | '/kasir'
-    | '/manajemen-kasir'
-    | '/profil'
-    | '/produk/'
+    | '/profile'
+    | '/product/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/buku-kas'
+    | '/cashbook'
+    | '/cashier'
+    | '/cashier-management'
     | '/dashboard'
-    | '/kasir'
-    | '/manajemen-kasir'
-    | '/profil'
-    | '/produk'
+    | '/profile'
+    | '/product'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/login'
-    | '/_auth/buku-kas'
+    | '/_auth/cashbook'
+    | '/_auth/cashier'
+    | '/_auth/cashier-management'
     | '/_auth/dashboard'
-    | '/_auth/kasir'
-    | '/_auth/manajemen-kasir'
-    | '/_auth/profil'
-    | '/_auth/produk/'
+    | '/_auth/profile'
+    | '/_auth/product/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,11 +159,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/buku-kas': {
-      id: '/_auth/buku-kas'
-      path: '/buku-kas'
-      fullPath: '/buku-kas'
-      preLoaderRoute: typeof AuthBukuKasRouteImport
+    '/_auth/cashbook': {
+      id: '/_auth/cashbook'
+      path: '/cashbook'
+      fullPath: '/cashbook'
+      preLoaderRoute: typeof AuthCashbookRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/cashier': {
+      id: '/_auth/cashier'
+      path: '/cashier'
+      fullPath: '/cashier'
+      preLoaderRoute: typeof AuthCashierRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/cashier-management': {
+      id: '/_auth/cashier-management'
+      path: '/cashier-management'
+      fullPath: '/cashier-management'
+      preLoaderRoute: typeof AuthCashierManagementRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/dashboard': {
@@ -173,53 +187,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/kasir': {
-      id: '/_auth/kasir'
-      path: '/kasir'
-      fullPath: '/kasir'
-      preLoaderRoute: typeof AuthKasirRouteImport
+    '/_auth/profile': {
+      id: '/_auth/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthProfileRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/manajemen-kasir': {
-      id: '/_auth/manajemen-kasir'
-      path: '/manajemen-kasir'
-      fullPath: '/manajemen-kasir'
-      preLoaderRoute: typeof AuthManajemenKasirRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/profil': {
-      id: '/_auth/profil'
-      path: '/profil'
-      fullPath: '/profil'
-      preLoaderRoute: typeof AuthProfilRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/produk/': {
-      id: '/_auth/produk/'
-      path: '/produk'
-      fullPath: '/produk/'
-      preLoaderRoute: typeof AuthProdukIndexRouteImport
+    '/_auth/product/': {
+      id: '/_auth/product/'
+      path: '/product'
+      fullPath: '/product/'
+      preLoaderRoute: typeof AuthProductIndexRouteImport
       parentRoute: typeof AuthRoute
     }
   }
 }
 
 interface AuthRouteChildren {
-  AuthBukuKasRoute: typeof AuthBukuKasRoute
+  AuthCashbookRoute: typeof AuthCashbookRoute
+  AuthCashierRoute: typeof AuthCashierRoute
+  AuthCashierManagementRoute: typeof AuthCashierManagementRoute
   AuthDashboardRoute: typeof AuthDashboardRoute
-  AuthKasirRoute: typeof AuthKasirRoute
-  AuthManajemenKasirRoute: typeof AuthManajemenKasirRoute
-  AuthProfilRoute: typeof AuthProfilRoute
-  AuthProdukIndexRoute: typeof AuthProdukIndexRoute
+  AuthProfileRoute: typeof AuthProfileRoute
+  AuthProductIndexRoute: typeof AuthProductIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthBukuKasRoute: AuthBukuKasRoute,
+  AuthCashbookRoute: AuthCashbookRoute,
+  AuthCashierRoute: AuthCashierRoute,
+  AuthCashierManagementRoute: AuthCashierManagementRoute,
   AuthDashboardRoute: AuthDashboardRoute,
-  AuthKasirRoute: AuthKasirRoute,
-  AuthManajemenKasirRoute: AuthManajemenKasirRoute,
-  AuthProfilRoute: AuthProfilRoute,
-  AuthProdukIndexRoute: AuthProdukIndexRoute,
+  AuthProfileRoute: AuthProfileRoute,
+  AuthProductIndexRoute: AuthProductIndexRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

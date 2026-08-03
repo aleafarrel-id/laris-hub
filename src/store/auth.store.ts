@@ -43,6 +43,6 @@ export const useAuthStore = create<AuthState>()(
 export const selectUser = (state: AuthState) => state.user
 export const selectProfile = (state: AuthState) => state.profile
 export const selectIsAdmin = (state: AuthState) => state.profile?.role === 'admin'
-export const selectIsKasir = (state: AuthState) => state.profile?.role === 'kasir'
+export const selectIsCashier = (state: AuthState) => state.profile?.role === 'cashier'
 export const selectIsInitialized = (state: AuthState) => state.isInitialized
 export const selectIsLoading = (state: AuthState) => state.isLoading

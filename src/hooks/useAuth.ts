@@ -11,7 +11,7 @@ export function useAuth() {
   const { user, profile, isLoading, isInitialized } = useAuthStore()
 
   const isAdmin = profile?.role === 'admin'
-  const isKasir = profile?.role === 'kasir'
+  const isCashier = profile?.role === 'cashier'
 
   return {
     user,
@@ -19,7 +19,7 @@ export function useAuth() {
     isLoading,
     isInitialized,
     isAdmin,
-    isKasir,
+    isCashier,
     role: profile?.role ?? null,
   }
 }
@@ -80,7 +80,6 @@ export function useAuthListener() {
       }
 
       if (!navigator.onLine) {
-        // If offline, just rely on the stored session state from Zustand
         if (session.user) setUser(session.user)
         setInitialized(true)
         setLoading(false)
@@ -117,7 +116,6 @@ export function useAuthListener() {
       })
     })
 
-    // Subscribe to future auth events
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {

@@ -8,7 +8,6 @@ import type {
 import { nowIso } from './transaction.utils'
 
 export * from './expense.service'
-// Re-export specific services to maintain compatibility with existing imports
 export * from './sale.service'
 
 /**
@@ -132,7 +131,7 @@ export async function updateTransaction(
  */
 export async function updateTransactionStatus(
   id: string,
-  status: 'sukses' | 'pending',
+  status: 'success' | 'pending',
 ): Promise<void> {
   const { error } = await supabase
     .from('transactions')

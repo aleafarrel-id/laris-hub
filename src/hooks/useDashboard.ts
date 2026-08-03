@@ -4,9 +4,9 @@ import {
   getKPISummaryForDate,
   getKPISummaryForRange,
   getMonthlyTrend,
-  getMonthlyTrendByKasir,
+  getMonthlyTrendByCashier,
   getTopProducts,
-  getTopProductsByKasir,
+  getTopProductsByCashier,
 } from '@/services/dashboard.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { DateRange } from '@/types'
@@ -28,7 +28,7 @@ function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from:
     }
     case 'month': {
       const monthAgo = new Date(today)
-      monthAgo.setDate(1) // First day of current month
+      monthAgo.setDate(1)
       return { from: monthAgo, to: now }
     }
     case 'custom':
@@ -41,7 +41,7 @@ function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from:
 export function useKPISummary(
   period: DashboardPeriod = 'today',
   customRange?: DateRange,
-  kasirId: string = 'all',
+  cashierId: string = 'all',
 ) {
   const range = getDateRange(period, customRange)
   const isToday = period === 'today'
@@ -50,10 +50,10 @@ export function useKPISummary(
 
   const result = useQuery({
     enabled: !!user,
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange, kasirId],
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'kpi', period, customRange, cashierId],
     queryFn: () => {
-      if (kasirId !== 'all') {
-        return getKPISummaryForRange(range.from, range.to, kasirId)
+      if (cashierId !== 'all') {
+        return getKPISummaryForRange(range.from, range.to, cashierId)
       }
       return isToday
         ? getKPISummaryForDate(new Date())
@@ -68,15 +68,15 @@ export function useKPISummary(
   }
 }
 
-export function useMonthlyTrend(days = 30, kasirId: string = 'all') {
+export function useMonthlyTrend(days = 30, cashierId: string = 'all') {
   const user = useAuthStore((state) => state.user)
 
   const result = useQuery({
     enabled: !!user,
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days, kasirId],
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'trend', days, cashierId],
     queryFn: () => {
-      if (kasirId !== 'all') {
-        return getMonthlyTrendByKasir(days, kasirId)
+      if (cashierId !== 'all') {
+        return getMonthlyTrendByCashier(days, cashierId)
       }
       return getMonthlyTrend(days)
     },
@@ -93,7 +93,7 @@ export function useTopProducts(
   period: DashboardPeriod = 'month',
   customRange?: DateRange,
   limit = 5,
-  kasirId = 'all',
+  cashierId = 'all',
 ) {
   const range = getDateRange(period, customRange)
 
@@ -101,10 +101,10 @@ export function useTopProducts(
 
   const result = useQuery({
     enabled: !!user,
-    queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit, kasirId],
+    queryKey: [...QUERY_KEYS.DASHBOARD, 'top-products', period, customRange, limit, cashierId],
     queryFn: () => {
-      if (kasirId !== 'all') {
-        return getTopProductsByKasir(range.from, range.to, kasirId, limit)
+      if (cashierId !== 'all') {
+        return getTopProductsByCashier(range.from, range.to, cashierId, limit)
       }
       return getTopProducts(range.from, range.to, limit)
     },

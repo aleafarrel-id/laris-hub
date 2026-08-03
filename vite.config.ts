@@ -8,7 +8,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    // TanStack Router MUST be before React plugin
     TanStackRouterVite({
       routesDirectory: './src/routes',
       generatedRouteTree: './src/routeTree.gen.ts',
@@ -52,16 +51,13 @@ export default defineConfig({
       },
       workbox: {
         inlineWorkboxRuntime: true,
-        // Cache shell aggressively
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: '/index.html',
-        // Exclude API calls from fallback routing
         navigateFallbackDenylist: [/^\/api/, /^\/auth/],
         runtimeCaching: [
-          // Cache Supabase REST API for true Offline-First support
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
             handler: 'NetworkFirst',
@@ -75,7 +71,6 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // Cache Supabase Storage Images (Product photos, etc)
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
             handler: 'CacheFirst',
@@ -88,7 +83,6 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // General image fallback
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'StaleWhileRevalidate',
@@ -110,14 +104,11 @@ export default defineConfig({
     },
   },
   build: {
-    // Target modern browsers for smaller bundles
     target: 'es2022',
-    // Increase chunk size warning to 600kb
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
-          // Split vendor into logical groups
           'react-vendor': ['react', 'react-dom'],
           'tanstack-query': ['@tanstack/react-query'],
           'tanstack-router': ['@tanstack/react-router'],

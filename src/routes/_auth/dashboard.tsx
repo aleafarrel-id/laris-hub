@@ -46,7 +46,7 @@ const DashboardTrendChart = lazy(() =>
 
 type DashboardSearch = {
   period?: DashboardPeriod
-  kasir?: string
+  cashier?: string
   customFrom?: string
   customTo?: string
 }
@@ -55,7 +55,7 @@ export const Route = createFileRoute('/_auth/dashboard')({
   validateSearch: (search: Record<string, unknown>): DashboardSearch => {
     return {
       period: (search.period as DashboardPeriod) || 'today',
-      kasir: (search.kasir as string) || 'all',
+      cashier: (search.cashier as string) || 'all',
       customFrom: search.customFrom as string | undefined,
       customTo: search.customTo as string | undefined,
     }
@@ -66,9 +66,9 @@ export const Route = createFileRoute('/_auth/dashboard')({
     } = await supabase.auth.getSession()
     if (!session) throw redirect({ to: '/login' })
 
-    const profile = useAuthStore.getState().profile
+    const profile = useAuthStore.getState().profile as any
     if (profile?.role !== 'admin') {
-      throw redirect({ to: '/kasir' })
+      throw redirect({ to: '/cashier' })
     }
   },
   component: DashboardPage,
@@ -89,7 +89,7 @@ function DashboardPage() {
   const search = Route.useSearch()
 
   const period = search.period || 'today'
-  const kasirFilter = search.kasir || 'all'
+  const cashierFilter = search.cashier || 'all'
 
   const getLocalDateString = (d: Date) => {
     const year = d.getFullYear()
@@ -102,14 +102,16 @@ function DashboardPage() {
   const customTo = search.customTo || getLocalDateString(new Date())
 
   const setPeriod = (p: DashboardPeriod) => navigate({ search: (prev) => ({ ...prev, period: p }) })
-  const setKasirFilter = (k: string) => navigate({ search: (prev) => ({ ...prev, kasir: k }) })
+  const setCashierFilter = (k: string) => navigate({ search: (prev) => ({ ...prev, cashier: k }) })
   const setCustomFrom = (date: string) =>
     navigate({ search: (prev) => ({ ...prev, customFrom: date }) })
   const setCustomTo = (date: string) =>
     navigate({ search: (prev) => ({ ...prev, customTo: date }) })
 
   const { data: cashiers } = useCashiers()
-  const [selectedKasirProfile, setSelectedKasirProfile] = useState<Partial<Profile> | null>(null)
+  const [selectedCashierProfile, setSelectedCashierProfile] = useState<Partial<Profile> | null>(
+    null,
+  )
 
   const customRange = useMemo(() => {
     return period === 'custom'
@@ -121,24 +123,24 @@ function DashboardPage() {
     data: kpi,
     isLoading: kpiLoading,
     isOfflinePaused: kpiOffline,
-  } = useKPISummary(period, customRange, kasirFilter)
+  } = useKPISummary(period, customRange, cashierFilter)
   const {
     data: trend,
     isLoading: trendLoading,
     isOfflinePaused: trendOffline,
-  } = useMonthlyTrend(30, kasirFilter)
+  } = useMonthlyTrend(30, cashierFilter)
   const {
     data: topProducts,
     isLoading: topProductsLoading,
     isOfflinePaused: topProductsOffline,
-  } = useTopProducts(period, customRange, 5, kasirFilter)
+  } = useTopProducts(period, customRange, 5, cashierFilter)
   const {
     data: recentTransactionsResult,
     isLoading: recentLoading,
     isOfflinePaused: recentOffline,
   } = useTransactions({
     limit: 10,
-    recordedBy: kasirFilter !== 'all' ? kasirFilter : undefined,
+    recordedBy: cashierFilter !== 'all' ? cashierFilter : undefined,
   })
 
   const recentTransactions = recentTransactionsResult?.data
@@ -149,7 +151,7 @@ function DashboardPage() {
   const [editingTx, setEditingTx] = useState<TransactionWithItems | null>(null)
 
   const isAdmin = profile?.role === 'admin'
-  const netProfit = (kpi?.profit ?? 0) - (kpi?.pengeluaran ?? 0)
+  const netProfit = (kpi?.profit ?? 0) - (kpi?.expense ?? 0)
 
   return (
     <div className="page-container">
@@ -163,7 +165,7 @@ function DashboardPage() {
               </p>
             </div>
             <Link
-              to="/profil"
+              to="/profile"
               className="md:hidden flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-[0.96] transition-all"
               aria-label="Profil Admin"
             >
@@ -173,8 +175,8 @@ function DashboardPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <CustomSelect
-              value={kasirFilter}
-              onChange={setKasirFilter}
+              value={cashierFilter}
+              onChange={setCashierFilter}
               options={[
                 { value: 'all', label: 'Semua Kasir' },
                 ...(cashiers?.map((c) => ({ value: c.id, label: c.full_name })) ?? []),
@@ -223,7 +225,7 @@ function DashboardPage() {
           >
             <KPICard
               label="Total Omzet"
-              value={kpi ? formatRupiah(kpi.omzet) : null}
+              value={kpi ? formatRupiah(kpi.revenue) : null}
               isLoading={kpiLoading}
               icon={TrendingUp}
               iconColor="text-primary"
@@ -231,7 +233,7 @@ function DashboardPage() {
             />
             <KPICard
               label="Total Pengeluaran"
-              value={kpi ? formatRupiah(kpi.pengeluaran) : null}
+              value={kpi ? formatRupiah(kpi.expense) : null}
               isLoading={kpiLoading}
               icon={TrendingDown}
               iconColor="text-danger"
@@ -407,16 +409,16 @@ function DashboardPage() {
             isAdmin={isAdmin}
             onEditTransaction={setEditingTx}
             onDeleteTransaction={setDeletingTxId}
-            onSelectKasirProfile={setSelectedKasirProfile}
+            onSelectCashierProfile={setSelectedCashierProfile}
             onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
           />
         )}
       </motion.div>
 
       <CashierProfileModal
-        isOpen={!!selectedKasirProfile}
-        onClose={() => setSelectedKasirProfile(null)}
-        profile={selectedKasirProfile}
+        isOpen={!!selectedCashierProfile}
+        onClose={() => setSelectedCashierProfile(null)}
+        profile={selectedCashierProfile}
       />
 
       <ConfirmDialog

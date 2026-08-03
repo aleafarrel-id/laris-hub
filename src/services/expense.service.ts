@@ -5,8 +5,7 @@ import { getAuthenticatedUserId, nowIso } from './transaction.utils'
 export interface CreateExpensePayload {
   description: string
   total_amount: number
-  expense_category: 'operasional' | 'bahan_baku' | 'lainnya'
-  /** Optional breakdown items stored as JSONB - e.g. [{name:"Gas LPG",qty:2,unit_price:22000}] */
+  expense_category: 'operational' | 'raw_material' | 'other'
   expense_items?: Array<{ name: string; qty?: number; unit_price: number }>
   notes?: string | null
   transaction_at?: string
@@ -25,7 +24,7 @@ export async function createExpenseTransaction(
     .from('transactions')
     .insert([
       {
-        type: 'pengeluaran',
+        type: 'expense',
         description: payload.description,
         total_amount: payload.total_amount,
         total_profit: 0,
@@ -46,7 +45,7 @@ export async function createExpenseTransaction(
 }
 
 /**
- * Update an expense transaction. Admin only.
+ * Update an expense transaction (admin only).
  */
 export async function updateExpenseTransaction(
   id: string,

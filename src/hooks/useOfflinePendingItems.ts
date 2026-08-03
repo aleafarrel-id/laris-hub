@@ -27,7 +27,7 @@ export function useOfflinePendingItems<T = any>(actions: OfflineQueueAction[]) {
       mounted = false
       window.removeEventListener('offline-queue-updated', handleUpdate)
     }
-  }, [actions.join(',')]) // safe because we typically pass static arrays
+  }, [actions.join(',')])
 
   return pendingItems
 }

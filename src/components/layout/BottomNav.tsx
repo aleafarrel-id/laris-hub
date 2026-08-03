@@ -3,23 +3,23 @@ import { BarChart2, BookOpen, Package, ShoppingCart, User, Users } from 'lucide-
 
 const ADMIN_NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
-  { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
-  { to: '/buku-kas', label: 'Buku Kas', icon: BookOpen },
-  { to: '/produk', label: 'Produk', icon: Package },
-  { to: '/manajemen-kasir', label: 'Tim Kasir', icon: Users },
+  { to: '/cashier', label: 'Kasir', icon: ShoppingCart },
+  { to: '/cashbook', label: 'Buku Kas', icon: BookOpen },
+  { to: '/product', label: 'Produk', icon: Package },
+  { to: '/cashier-management', label: 'Tim Kasir', icon: Users },
 ] as const
 
-const KASIR_NAV_ITEMS = [
-  { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
-  { to: '/buku-kas', label: 'Riwayat', icon: BookOpen },
-  { to: '/profil', label: 'Profil', icon: User },
+const CASHIER_NAV_ITEMS = [
+  { to: '/cashier', label: 'Kasir', icon: ShoppingCart },
+  { to: '/cashbook', label: 'Riwayat', icon: BookOpen },
+  { to: '/profile', label: 'Profil', icon: User },
 ] as const
 
-export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
+export function BottomNav({ role }: { role?: 'admin' | 'cashier' | null }) {
   const { location } = useRouterState()
   const pathname = location.pathname
 
-  const navItems = role === 'admin' ? ADMIN_NAV_ITEMS : KASIR_NAV_ITEMS
+  const navItems = role === 'admin' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS
 
   return (
     <nav
@@ -29,7 +29,7 @@ export function BottomNav({ role }: { role?: 'admin' | 'kasir' | null }) {
     >
       <div className="flex max-w-lg mx-auto px-1">
         {navItems.map(({ to, label, icon: Icon }) => {
-          const isActive = pathname === to || (to !== '/kasir' && pathname.startsWith(to))
+          const isActive = pathname === to || (to !== '/cashier' && pathname.startsWith(to))
           return (
             <Link
               key={to}

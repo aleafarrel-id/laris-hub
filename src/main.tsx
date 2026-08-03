@@ -69,12 +69,11 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days garbage collection for offline access
       retry: (failureCount, error) => {
         if (!navigator.onLine) return false
-        // Don't retry on auth errors
         if (error instanceof Error && error.message.includes('403')) return false
         return failureCount < 2
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true, // Auto-refetch when user focuses tab (if online)
+      refetchOnWindowFocus: true,
       refetchOnReconnect: true,
     },
     mutations: {
@@ -89,12 +88,11 @@ const router = createRouter({
   context: {
     queryClient,
   },
-  defaultPreload: 'intent', // Prefetch on hover/focus
+  defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
 })
 
-// Register router for type safety
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
@@ -134,7 +132,7 @@ ReactDOM.createRoot(rootElement).render(
     >
       <RouterProvider router={router} />
 
-      {/* DevTools - only in development */}
+      {/* DevTools */}
       {import.meta.env.DEV && (
         <>
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />

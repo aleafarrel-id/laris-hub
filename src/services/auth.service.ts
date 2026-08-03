@@ -39,7 +39,6 @@ export async function signIn(email: string, password: string) {
     .single()
 
   if (profileError?.code === 'PGRST116' || profile?.is_active === false) {
-    // Invalidate the session immediately - suspended users get no access
     await supabase.auth.signOut()
     throw new Error('ACCOUNT_SUSPENDED')
   } else if (profileError) {
@@ -58,7 +57,7 @@ export async function signOut() {
 }
 
 /**
- * Get the current session (non-reactive, one-shot check).
+ * Get the current session.
  */
 export async function getSession() {
   const { data, error } = await supabase.auth.getSession()
@@ -77,7 +76,6 @@ export async function updateProfile(
   userId: string,
   updates: Pick<Profile, 'full_name' | 'phone' | 'avatar_url'>,
 ): Promise<Profile> {
-  // Authoritative check: ensure the caller owns this profile
   const {
     data: { user },
   } = await supabase.auth.getUser()

@@ -6,11 +6,9 @@ export function NetworkStatusBanner() {
   const { isOnline, justCameOnline, justWentOffline } = useNetworkStatus()
   const { pendingCount, isSyncing, triggerSync } = useOfflineSync(isOnline)
 
-  // Banner is visible if offline, transitioning, syncing, or has pending transactions
   const isVisible = !isOnline || justCameOnline || justWentOffline || isSyncing || pendingCount > 0
   const state = !isOnline ? 'offline' : 'online'
 
-  // Determine styles and content based on state
   let bgColor = 'bg-neutral-900'
   let Icon = WifiOff
   let title = 'Koneksi Terputus'
@@ -37,9 +35,8 @@ export function NetworkStatusBanner() {
 
   return (
     <div
-      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${
-        isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-      }`}
+      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
     >
       <div className="overflow-hidden">
         <div
@@ -68,7 +65,9 @@ export function NetworkStatusBanner() {
                   {title}
                 </span>
                 <span className="hidden sm:block w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
-                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">{subtitle}</span>
+                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">
+                  {subtitle}
+                </span>
               </div>
             )}
           </div>

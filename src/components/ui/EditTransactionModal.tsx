@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExpenseForm } from '@/components/kasir/ExpenseForm'
-import { SaleForm } from '@/components/kasir/SaleForm'
+import { ExpenseForm } from '@/components/cashier/ExpenseForm'
+import { SaleForm } from '@/components/cashier/SaleForm'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { QUERY_KEYS } from '@/lib/constants'
@@ -29,7 +29,7 @@ export function EditTransactionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={cachedTx?.type === 'penjualan' ? 'Edit Penjualan' : 'Edit Pengeluaran'}
+      title={cachedTx?.type === 'sale' ? 'Edit Penjualan' : 'Edit Pengeluaran'}
     >
       {isLoading ? (
         <div className="p-4 flex flex-col gap-4">
@@ -37,9 +37,9 @@ export function EditTransactionModal({
           <Skeleton className="h-24 w-full rounded-xl" />
           <Skeleton className="h-10 w-full rounded-xl" />
         </div>
-      ) : cachedTx?.type === 'penjualan' ? (
+      ) : cachedTx?.type === 'sale' ? (
         <SaleForm transaction={cachedTx} onSuccess={onClose} />
-      ) : cachedTx?.type === 'pengeluaran' ? (
+      ) : cachedTx?.type === 'expense' ? (
         <ExpenseForm transaction={cachedTx} onSuccess={onClose} />
       ) : null}
     </Modal>

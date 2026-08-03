@@ -65,8 +65,6 @@ export function createOfflineMutation<TVariables, TData>(
       },
       onSuccess: (data, variables) => {
         if (data && (data as any).offline) {
-          // Additional onSuccess logic (like invalidating queries) is usually skipped for offline,
-          // but we can let the caller handle it if they need to optimistically update the UI.
           if (options.onSuccess) {
             options.onSuccess(data, variables, queryClient)
           }

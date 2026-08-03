@@ -24,12 +24,9 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
       return
     }
 
-    // Push a dummy state with our unique modalId when opened.
     window.history.pushState({ modalId }, '')
 
     const handlePopState = (e: PopStateEvent) => {
-      // If the current history state is NO LONGER our modalId,
-      // it means our dummy state was popped by the user pressing the hardware back button.
       if (e.state?.modalId !== modalId) {
         isClosingViaPopstate.current = true
         onCloseRef.current()
@@ -41,9 +38,6 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
     return () => {
       window.removeEventListener('popstate', handlePopState)
 
-      // If the modal was closed programmatically (e.g., clicking close button or backdrop)
-      // and NOT by the user pressing the hardware back button, we need to revert the dummy history state.
-      // We check if our state is still the active one at the top of the stack before popping.
       if (!isClosingViaPopstate.current && window.history.state?.modalId === modalId) {
         window.history.back()
       }

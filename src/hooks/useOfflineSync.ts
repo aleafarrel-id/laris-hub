@@ -4,10 +4,10 @@
  * Handles syncing of the offline transaction queue to Supabase.
  *
  * Workflow:
- * 1. Checks the `offline-queue` when connectivity is restored.
- * 2. Attempts to sync each item to Supabase based on its action type.
- * 3. On success, removes the item from the queue.
- * 4. On failure, increments the retry count and retries on the next connection.
+ * - Checks the `offline-queue` when connectivity is restored.
+ * - Attempts to sync each item to Supabase based on its action type.
+ * - On success, removes the item from the queue.
+ * - On failure, increments the retry count and retries on the next connection.
  *
  * Note: Acts as a safety net alongside React Query's built-in pause/resume mutations.
  */
@@ -26,11 +26,11 @@ import {
 import { dataUrlToFile } from '@/lib/utils'
 import { updateAdminCredentials, updateProfile } from '@/services/auth.service'
 import {
-  createKasir,
-  deleteKasir,
-  toggleKasirStatus,
-  updateKasir,
-} from '@/services/kasir-management.service'
+  createCashier,
+  deleteCashier,
+  toggleCashierStatus,
+  updateCashier,
+} from '@/services/cashier-management.service'
 import {
   createProduct,
   deleteProduct,
@@ -51,11 +51,8 @@ import {
 const MAX_RETRIES = 3
 
 export interface OfflineSyncStatus {
-  /** Jumlah item yang sedang menunggu sinkronisasi */
   pendingCount: number
-  /** Apakah sedang dalam proses sinkronisasi */
   isSyncing: boolean
-  /** Fungsi untuk memicu sync secara manual */
   triggerSync: () => void
 }
 
@@ -65,7 +62,6 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
   const [isSyncing, setIsSyncing] = useState(false)
   const isSyncingRef = useRef(false)
 
-  // Update pendingCount from IndexedDB
   const refreshPendingCount = useCallback(async () => {
     const queue = await getOfflineQueue()
     setPendingCount(queue?.length ?? 0)
@@ -84,7 +80,6 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
 
     for (const item of queue) {
       if (item.retryCount >= MAX_RETRIES) {
-        // Exceeded max retries, dequeue permanently
         console.error('[OfflineSync] Max retries reached for item:', item)
         await dequeueOfflineItem(item.localId)
         failedItems.push(item)
@@ -124,23 +119,23 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
           case 'UPDATE_STATUS':
             await updateTransactionStatus(
               (item.payload as { id: string }).id,
-              (item.payload as { status: 'sukses' | 'pending' }).status,
+              (item.payload as { status: 'success' | 'pending' }).status,
             )
             break
           case 'DELETE_TRANSACTION':
             await deleteTransaction((item.payload as { id: string }).id)
             break
-          case 'CREATE_KASIR':
-            await createKasir(item.payload as Parameters<typeof createKasir>[0])
+          case 'CREATE_CASHIER':
+            await createCashier(item.payload as Parameters<typeof createCashier>[0])
             break
-          case 'UPDATE_KASIR':
-            await updateKasir(item.payload as Parameters<typeof updateKasir>[0])
+          case 'UPDATE_CASHIER':
+            await updateCashier(item.payload as Parameters<typeof updateCashier>[0])
             break
-          case 'DELETE_KASIR':
-            await deleteKasir(item.payload as string)
+          case 'DELETE_CASHIER':
+            await deleteCashier(item.payload as string)
             break
-          case 'TOGGLE_KASIR':
-            await toggleKasirStatus(
+          case 'TOGGLE_CASHIER':
+            await toggleCashierStatus(
               (item.payload as { id: string }).id,
               (item.payload as { isActive: boolean }).isActive,
             )
@@ -157,10 +152,9 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
               await createProduct(p)
             } catch (err) {
               if (uploadedUrl) {
-                // Garbage collection: hapus image jika simpan DB gagal
                 await deleteStorageImage(uploadedUrl).catch(console.error)
               }
-              throw err // teruskan error untuk ditangkap di luar
+              throw err
             }
             break
           }
@@ -176,7 +170,6 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
               await updateProduct(p.id, p.data)
             } catch (err) {
               if (uploadedUrl) {
-                // Garbage collection: hapus image jika update DB gagal
                 await deleteStorageImage(uploadedUrl).catch(console.error)
               }
               throw err
@@ -223,13 +216,10 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         if (isPgError || (isBackendRejection && err?.status >= 400 && err?.status < 500)) {
           console.error('[OfflineSync] Permanent error for item:', item, err)
           await dequeueOfflineItem(item.localId)
-          failedItems.push(item) // Track it so we can notify the user that it was dropped
+          failedItems.push(item)
         } else if (!isNetworkError) {
-          // Only increment retry count for 5xx server errors or unknown non-network errors.
-          // Never penalize network failures (Lie-Fi) to prevent data loss!
           await incrementRetryCount(item.localId)
         } else {
-          // It's a network error. Do nothing, just leave it in the queue.
           console.log('[OfflineSync] Network error, keeping in queue:', item.localId)
         }
       }
@@ -280,7 +270,6 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
   }
 }
 
-/** Clear all queues (used on logout) */
 export async function clearSyncQueue(): Promise<void> {
   await clearOfflineQueue()
 }

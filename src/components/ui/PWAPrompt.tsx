@@ -21,10 +21,6 @@ export function PWAPrompt() {
     },
   })
 
-  // We can optionally show a toast when offlineReady is true or needRefresh is true,
-  // but since we are using 'autoUpdate', it usually updates transparently.
-  // For now, this component is headless.
-
   useEffect(() => {
     if (offlineReady) {
       console.log('[PWA] App is ready to work offline.')

@@ -12,14 +12,13 @@ interface TransactionDetailsProps {
 /**
  * Unified component for displaying transaction details.
  * Renders:
- * 1. Description (if any) and Category Badge side-by-side
- * 2. List of items purchased (sale items or expense items)
- * 3. Notes (if any)
+ * - Description (if any) and Category Badge side-by-side
+ * - List of items purchased (sale items or expense items)
+ * - Notes (if any)
  */
 export function TransactionDetails({ transaction, isMobile }: TransactionDetailsProps) {
-  const isExpense = transaction.type === 'pengeluaran'
+  const isExpense = transaction.type === 'expense'
 
-  // Offline pending transactions inject `items` instead of `expense_items` / `transaction_items`
   const rawExpense = transaction.expense_items ?? (transaction as any).items
   const expenseItems = Array.isArray(rawExpense) ? rawExpense : []
   const hasExpenseItems = isExpense && (expenseItems?.length ?? 0) > 0
@@ -30,7 +29,6 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
 
   return (
     <div className={`flex flex-col ${isMobile ? 'gap-1.5' : 'gap-2'} text-left w-full`}>
-      {/* 1. Keterangan & Badge */}
       {(isExpense || !hasSaleItems) && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-neutral-900 text-sm">
@@ -44,7 +42,6 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
         </div>
       )}
 
-      {/* 2. Detail barang */}
       {hasExpenseItems && (
         <div
           className={`flex flex-col gap-0.5 ${isMobile ? 'text-sm text-neutral-900' : 'text-sm text-neutral-700'}`}
@@ -81,7 +78,6 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
         </div>
       )}
 
-      {/* 3. Catatan */}
       {transaction.notes && (
         <p className="text-xs text-neutral-500 truncate italic">"{transaction.notes}"</p>
       )}

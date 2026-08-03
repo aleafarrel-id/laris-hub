@@ -6,15 +6,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
   throw new Error(
-    '[Supabase] VITE_SUPABASE_URL belum dikonfigurasi. ' +
-      'Salin .env.example ke .env.local dan isi dengan kredensial Supabase Anda.',
+    '[Supabase] VITE_SUPABASE_URL belum dikonfigurasi.',
   )
 }
 
 if (!supabaseAnonKey || supabaseAnonKey === 'your-anon-key-here') {
   throw new Error(
-    '[Supabase] VITE_SUPABASE_ANON_KEY belum dikonfigurasi. ' +
-      'Salin .env.example ke .env.local dan isi dengan kredensial Supabase Anda.',
+    '[Supabase] VITE_SUPABASE_ANON_KEY belum dikonfigurasi.',
   )
 }
 
@@ -23,7 +21,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce', // More secure than implicit flow
+    flowType: 'pkce',
     storage: localStorage,
   },
   global: {

@@ -31,12 +31,12 @@ export function TransactionDetailModal({
 
   if (!txToRender) return null
 
-  const isExpense = txToRender.type === 'pengeluaran'
+  const isExpense = txToRender.type === 'expense'
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="" variant={isDesktop ? 'center' : 'bottom'}>
       <div className={isDesktop ? 'pb-2' : ''}>
-        {/* Header / Amount Area */}
+        {/* Header or Amount Area */}
         <div
           className={`p-6 border-b border-neutral-100 flex flex-col items-center justify-center text-center ${isExpense ? 'bg-danger/5' : 'bg-success/5'}`}
         >
@@ -62,7 +62,7 @@ export function TransactionDetailModal({
               <Calendar size={13} /> Tanggal & Waktu
             </p>
             <p className="text-sm font-medium text-neutral-900">
-              {formatDateTime(txToRender.transaction_at)}
+              {formatDateTime(txToRender.transaction_at as string)}
             </p>
           </div>
           {!isExpense && (

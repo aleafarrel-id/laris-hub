@@ -4,7 +4,6 @@ import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import { Button } from './Button'
 
 export function GlobalErrorState({ error, reset }: ErrorComponentProps) {
-  // Try to extract a meaningful error message
   const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tidak terduga.'
 
   return (

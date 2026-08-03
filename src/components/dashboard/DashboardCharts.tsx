@@ -13,7 +13,7 @@ import {
 import { formatRupiah } from '@/lib/utils'
 import type { TopProduct } from '@/services/dashboard.service'
 
-// ─── Donut Chart: Top Products ────────────────────────────────────────────────
+// Donut Chart: Top Products
 
 /** Harmonious 5-color palette aligned to the Laris Hub brand */
 const CHART_COLORS = ['#0F766E', '#285EAF', '#6366F1', '#10B981', '#F59E0B']
@@ -124,13 +124,13 @@ export function TopProductsDonutChart({ products }: { products: TopProduct[] }) 
   )
 }
 
-// ─── Bar Chart: 30-Day Trend ──────────────────────────────────────────────────
+// Bar Chart: 30-Day Trend
 
 interface TrendDataPoint {
   date: string
-  omzet: number
+  revenue: number
   profit: number
-  pengeluaran: number
+  expense: number
 }
 
 export function TrendBarsChart({ data }: { data: TrendDataPoint[] }) {
@@ -193,7 +193,12 @@ export function TrendBarsChart({ data }: { data: TrendDataPoint[] }) {
               }}
             />
             <ReferenceLine y={0} stroke="#E5E5E5" />
-            <Bar dataKey="omzet" name="Omzet" fill="rgba(40, 94, 175, 0.2)" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="revenue"
+              name="Omzet"
+              fill="rgba(40, 94, 175, 0.2)"
+              radius={[4, 4, 0, 0]}
+            />
             <Bar dataKey="profit" name="Profit" fill="#285EAF" radius={[4, 4, 4, 4]} />
           </BarChart>
         </ResponsiveContainer>

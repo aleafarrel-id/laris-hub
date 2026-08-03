@@ -1,4 +1,3 @@
-// Re-export all types for convenient imports
 export type {
   AuthUser,
   DailySummary,

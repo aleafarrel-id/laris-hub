@@ -1,11 +1,11 @@
 import { del, get, update } from 'idb-keyval'
-import type { CreateExpensePayload } from '@/services/expense.service'
-import type { CreateSalePayload } from '@/services/sale.service'
 import type { ProductFormData } from '@/lib/validations/product.schema'
 import type {
-  CreateKasirPayload,
-  UpdateKasirPayload as KasirUpdateType,
-} from '@/services/kasir-management.service'
+  CreateCashierPayload,
+  UpdateCashierPayload,
+} from '@/services/cashier-management.service'
+import type { CreateExpensePayload } from '@/services/expense.service'
+import type { CreateSalePayload } from '@/services/sale.service'
 import type { Profile } from '@/types'
 
 const QUEUE_KEY = 'laris-hub:offline-transaction-queue'
@@ -17,10 +17,10 @@ export type OfflineQueueAction =
   | 'UPDATE_EXPENSE'
   | 'UPDATE_STATUS'
   | 'DELETE_TRANSACTION'
-  | 'CREATE_KASIR'
-  | 'UPDATE_KASIR'
-  | 'DELETE_KASIR'
-  | 'TOGGLE_KASIR'
+  | 'CREATE_CASHIER'
+  | 'UPDATE_CASHIER'
+  | 'DELETE_CASHIER'
+  | 'TOGGLE_CASHIER'
   | 'CREATE_PRODUCT'
   | 'UPDATE_PRODUCT'
   | 'DELETE_PRODUCT'
@@ -39,11 +39,11 @@ export interface OfflineQueueItem<T = unknown> {
 // Payload types
 export type OfflineSalePayload = CreateSalePayload
 export type OfflineExpensePayload = CreateExpensePayload
-export type OfflineUpdateStatusPayload = { id: string; status: 'sukses' | 'pending' }
+export type OfflineUpdateStatusPayload = { id: string; status: 'success' | 'pending' }
 export type OfflineDeletePayload = { id: string }
-export type OfflineCreateKasirPayload = CreateKasirPayload
-export type OfflineUpdateKasirPayload = KasirUpdateType
-export type OfflineToggleKasirPayload = { id: string; isActive: boolean }
+export type OfflineCreateCashierPayload = CreateCashierPayload
+export type OfflineUpdateCashierPayload = UpdateCashierPayload
+export type OfflineToggleCashierPayload = { id: string; isActive: boolean }
 export type OfflineCreateProductPayload = ProductFormData
 export type OfflineUpdateProductPayload = { id: string; data: ProductFormData }
 export type OfflineToggleProductPayload = { id: string; isActive: boolean }

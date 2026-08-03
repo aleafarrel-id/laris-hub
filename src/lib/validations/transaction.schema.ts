@@ -23,7 +23,7 @@ export const expenseItemSchema = z.object({
 
 // Sale transaction schema
 export const saleTransactionSchema = z.object({
-  type: z.literal('penjualan'),
+  type: z.literal('sale'),
   items: z.array(saleItemSchema).min(1, 'Pilih minimal 1 produk untuk transaksi penjualan'),
   notes: z
     .string()
@@ -34,9 +34,9 @@ export const saleTransactionSchema = z.object({
   transaction_at: z.string().optional(),
 })
 
-// Expense transaction schema - with optional detail items
+// Expense transaction schema with optional detail items
 export const expenseTransactionSchema = z.object({
-  type: z.literal('pengeluaran'),
+  type: z.literal('expense'),
   description: z
     .string()
     .min(1, 'Deskripsi pengeluaran tidak boleh kosong')
@@ -50,7 +50,7 @@ export const expenseTransactionSchema = z.object({
     .min(1, 'Jumlah pengeluaran minimal Rp 1')
     .max(999_999_999, 'Jumlah terlalu besar'),
   expense_category: z.enum(
-    [EXPENSE_CATEGORIES.OPERASIONAL, EXPENSE_CATEGORIES.BAHAN_BAKU, EXPENSE_CATEGORIES.LAINNYA],
+    [EXPENSE_CATEGORIES.OPERATIONAL, EXPENSE_CATEGORIES.RAW_MATERIAL, EXPENSE_CATEGORIES.OTHER],
     {
       errorMap: () => ({ message: 'Pilih kategori pengeluaran yang valid' }),
     },

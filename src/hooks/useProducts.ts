@@ -15,7 +15,10 @@ import { useAuthStore } from '@/store/auth.store'
 import { createOfflineMutation } from './useOfflineMutation'
 import { useOfflinePendingItems } from './useOfflinePendingItems'
 
-function useInjectedProducts<T extends object>(result: T, emptyFallback: any): T & { isOfflinePaused: boolean } {
+function useInjectedProducts<T extends object>(
+  result: T,
+  emptyFallback: any,
+): T & { isOfflinePaused: boolean } {
   const pendingItems = useOfflinePendingItems([
     'CREATE_PRODUCT',
     'UPDATE_PRODUCT',
@@ -28,7 +31,6 @@ function useInjectedProducts<T extends object>(result: T, emptyFallback: any): T
     (res.isPending && res.fetchStatus === 'paused') || (res.isError && !res.data)
 
   const data = useMemo(() => {
-
     const createProducts = pendingItems.filter((item) => item.action === 'CREATE_PRODUCT')
     const offlineProducts = createProducts.map((item: any) => {
       const payload = item.payload.payload || item.payload
@@ -50,7 +52,6 @@ function useInjectedProducts<T extends object>(result: T, emptyFallback: any): T
     let currentData = res.data || emptyFallback
 
     if (currentData.pages) {
-      // Infinite query structure
       currentData = {
         ...currentData,
         pages: currentData.pages.map((page: any, index: number) => {
@@ -83,7 +84,7 @@ export function useProducts(activeOnly = false) {
   const result = useQuery({
     enabled: !!user,
     queryKey: QUERY_KEYS.PRODUCTS,
-    queryFn: () => getProducts(false), // Always fetch all to populate cache for both views
+    queryFn: () => getProducts(false),
     select: selectFn,
   })
 

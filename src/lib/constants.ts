@@ -7,38 +7,38 @@ export const APP_VERSION = pkg.version
 // User roles
 export const ROLES = {
   ADMIN: 'admin',
-  KASIR: 'kasir',
+  CASHIER: 'cashier',
 } as const
 
 export type UserRole = (typeof ROLES)[keyof typeof ROLES]
 
 // Transaction types
 export const TRANSACTION_TYPES = {
-  PENJUALAN: 'penjualan',
-  PENGELUARAN: 'pengeluaran',
+  SALE: 'sale',
+  EXPENSE: 'expense',
 } as const
 
 export type TransactionType = (typeof TRANSACTION_TYPES)[keyof typeof TRANSACTION_TYPES]
 
 // Expense categories
 export const EXPENSE_CATEGORIES = {
-  OPERASIONAL: 'operasional',
-  BAHAN_BAKU: 'bahan_baku',
-  LAINNYA: 'lainnya',
+  OPERATIONAL: 'operational',
+  RAW_MATERIAL: 'raw_material',
+  OTHER: 'other',
 } as const
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[keyof typeof EXPENSE_CATEGORIES]
 
-// Labels untuk display
+// Labels for display
 export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  operasional: 'Operasional',
-  bahan_baku: 'Bahan Baku',
-  lainnya: 'Lainnya',
+  operational: 'Operasional',
+  raw_material: 'Bahan Baku',
+  other: 'Lainnya',
 }
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
-  penjualan: 'Penjualan',
-  pengeluaran: 'Pengeluaran',
+  sale: 'Penjualan',
+  expense: 'Pengeluaran',
 }
 
 // Pagination
@@ -65,7 +65,7 @@ export const QUERY_KEYS = {
 // Local storage keys
 export const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: 'laris-hub:sidebar-collapsed',
-  LAST_KASIR_TAB: 'laris-hub:last-kasir-tab',
+  LAST_CASHIER_TAB: 'laris-hub:last-cashier-tab',
   THEME: 'laris-hub:theme',
 } as const
 

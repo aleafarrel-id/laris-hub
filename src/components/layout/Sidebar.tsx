@@ -6,15 +6,15 @@ import { APP_VERSION } from '@/lib/constants'
 
 const ADMIN_NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart2 },
-  { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
-  { to: '/buku-kas', label: 'Buku Kas', icon: BookOpen },
-  { to: '/produk', label: 'Produk', icon: Package },
-  { to: '/manajemen-kasir', label: 'Tim Kasir', icon: Users },
+  { to: '/cashier', label: 'Kasir', icon: ShoppingCart },
+  { to: '/cashbook', label: 'Buku Kas', icon: BookOpen },
+  { to: '/product', label: 'Produk', icon: Package },
+  { to: '/cashier-management', label: 'Tim Kasir', icon: Users },
 ] as const
 
-const KASIR_NAV_ITEMS = [
-  { to: '/kasir', label: 'Kasir', icon: ShoppingCart },
-  { to: '/buku-kas', label: 'Riwayat', icon: BookOpen },
+const CASHIER_NAV_ITEMS = [
+  { to: '/cashier', label: 'Kasir', icon: ShoppingCart },
+  { to: '/cashbook', label: 'Riwayat', icon: BookOpen },
 ] as const
 
 export function Sidebar({
@@ -22,13 +22,13 @@ export function Sidebar({
   role,
 }: {
   userName?: string
-  role?: 'admin' | 'kasir' | null
+  role?: 'admin' | 'cashier' | null
 }) {
   const { location } = useRouterState()
   const pathname = location.pathname
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
-  const navItems = role === 'admin' ? ADMIN_NAV_ITEMS : KASIR_NAV_ITEMS
+  const navItems = role === 'admin' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS
 
   return (
     <>
@@ -47,7 +47,7 @@ export function Sidebar({
 
         <nav className="flex-1 px-4 py-6 space-y-1" aria-label="Navigasi Desktop">
           {navItems.map(({ to, label, icon: Icon }) => {
-            const isActive = pathname === to || (pathname.startsWith(to) && to !== '/kasir')
+            const isActive = pathname === to || (pathname.startsWith(to) && to !== '/cashier')
             return (
               <Link
                 key={to}
@@ -68,16 +68,16 @@ export function Sidebar({
 
         <div className="px-4 pb-6 border-t border-neutral-100 pt-4">
           <Link
-            to="/profil"
+            to="/profile"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 mb-1 ${
-              pathname === '/profil'
+              pathname === '/profile'
                 ? 'bg-primary text-white shadow-md shadow-primary/20'
                 : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 active:scale-[0.96]'
             }`}
           >
             <User
               size={20}
-              strokeWidth={pathname === '/profil' ? 2.5 : 2}
+              strokeWidth={pathname === '/profile' ? 2.5 : 2}
               className="flex-shrink-0"
             />
             <span className="truncate">{userName ?? 'Profil'}</span>

@@ -28,10 +28,10 @@ export const Route = createFileRoute('/login')({
       .eq('id', session.user.id)
       .single()
 
-    const profileData = profile as { role: 'admin' | 'kasir' } | null
+    const profileData = profile as { role: 'admin' | 'cashier' } | null
     let dest = (search as { redirect?: string }).redirect
     if (!dest || !dest.startsWith('/') || dest.startsWith('//')) {
-      dest = profileData?.role === 'admin' ? '/dashboard' : '/kasir'
+      dest = profileData?.role === 'admin' ? '/dashboard' : '/cashier'
     }
     throw redirect({ to: dest })
   },
@@ -46,7 +46,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (isInitialized && user && profile) {
-      const fallback = profile.role === 'admin' ? '/dashboard' : '/kasir'
+      const fallback = profile.role === 'admin' ? '/dashboard' : '/cashier'
       let dest = (search as { redirect?: string }).redirect
       if (!dest || !dest.startsWith('/') || dest.startsWith('//')) {
         dest = fallback
@@ -63,7 +63,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotModal, setShowForgotModal] = useState(false)
 
-  // Brute force protection state (persisted to prevent refresh bypass)
+  // Brute force protection state
   const [failedAttempts, setFailedAttempts] = useState(() => {
     if (typeof window === 'undefined') return 0
     const saved = localStorage.getItem('laris_hub_failed_attempts')
@@ -76,7 +76,6 @@ function LoginPage() {
   })
   const [lockoutSeconds, setLockoutSeconds] = useState(0)
 
-  // Save to localStorage when changed
   useEffect(() => {
     localStorage.setItem('laris_hub_failed_attempts', failedAttempts.toString())
   }, [failedAttempts])
@@ -89,7 +88,6 @@ function LoginPage() {
     }
   }, [lockoutUntil])
 
-  // Countdown timer for lockout
   useEffect(() => {
     if (!lockoutUntil) return
     const interval = setInterval(() => {
@@ -107,7 +105,6 @@ function LoginPage() {
 
   const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil
 
-  // Auto-hide errors and warnings after 5 seconds
   useEffect(() => {
     if (!serverError && !isSuspended) return
     const timer = setTimeout(() => {
@@ -117,7 +114,6 @@ function LoginPage() {
     return () => clearTimeout(timer)
   }, [serverError, isSuspended])
 
-  // Security: only allow internal paths as post-login redirect destination
   const safeRedirectDest = (redirectParam: string | undefined, fallback: string): string => {
     if (!redirectParam) return fallback
     return redirectParam.startsWith('/') ? redirectParam : fallback
@@ -148,13 +144,12 @@ function LoginPage() {
       setFailedAttempts(0)
       setLockoutUntil(null)
 
-      const fallback = profile.role === 'admin' ? '/dashboard' : '/kasir'
+      const fallback = profile.role === 'admin' ? '/dashboard' : '/cashier'
       const dest = safeRedirectDest((search as { redirect?: string }).redirect, fallback)
       navigate({ to: dest })
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : ''
 
-      // Suspended account: don't count as brute-force attempt
       if (errMsg === 'ACCOUNT_SUSPENDED') {
         setIsSuspended(true)
         return
@@ -206,7 +201,6 @@ function LoginPage() {
           className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-xl shadow-neutral-200/40"
           {...fadeUp(0.08)}
         >
-          {/* Suspended account banner - shown when is_active = false */}
           {isSuspended && (
             <motion.div
               className="mb-5 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4"
@@ -220,7 +214,6 @@ function LoginPage() {
             </motion.div>
           )}
 
-          {/* Generic error - wrong credentials etc */}
           {serverError && !isSuspended && (
             <motion.div
               className="mb-5 flex items-start gap-3 rounded-xl bg-danger/10 border border-danger/20 p-4"

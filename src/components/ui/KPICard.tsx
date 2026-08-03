@@ -9,7 +9,7 @@ interface KPICardProps {
   icon: LucideIcon
   iconColor?: string
   iconBg?: string
-  trend?: { value: number; label: string } // positive = up, negative = down
+  trend?: { value: number; label: string }
 }
 
 export function KPICard({
@@ -37,9 +37,8 @@ export function KPICard({
           </p>
           {trend !== undefined && !isLoading && (
             <span
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md tabular-nums flex-shrink-0 ${
-                trend.value >= 0 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'
-              }`}
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md tabular-nums flex-shrink-0 ${trend.value >= 0 ? 'text-success bg-success/10' : 'text-danger bg-danger/10'
+                }`}
             >
               {trend.value >= 0 ? '+' : ''}
               {trend.value}%

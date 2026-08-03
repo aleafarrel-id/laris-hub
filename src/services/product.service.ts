@@ -34,7 +34,7 @@ export async function deleteStorageImage(imageUrl: string): Promise<void> {
 }
 
 /**
- * Get all products. Admin sees all; kasir sees only active (RLS).
+ * Get all products. Admin sees all; cashier sees only active (RLS).
  */
 export async function getProducts(activeOnly = false): Promise<Product[]> {
   let query = supabase
@@ -128,7 +128,6 @@ export async function createProduct(payload: ProductFormData): Promise<Product> 
  * If the image was replaced or removed, the old image is deleted from storage.
  */
 export async function updateProduct(id: string, payload: ProductFormData): Promise<Product> {
-  // Fetch old image URL before updating so we can clean it up if needed
   const { data: oldProduct } = await supabase
     .from('products')
     .select('image_url')
@@ -152,7 +151,6 @@ export async function updateProduct(id: string, payload: ProductFormData): Promi
     .single()
   if (error) throw error
 
-  // Delete old image from storage if it was replaced or removed
   const oldUrl = oldProduct?.image_url
   const newUrl = payload.image_url ?? null
   if (oldUrl && oldUrl !== newUrl) {
@@ -167,7 +165,6 @@ export async function updateProduct(id: string, payload: ProductFormData): Promi
  * Only admin can do this (enforced by RLS).
  */
 export async function deleteProduct(id: string): Promise<void> {
-  // Fetch image URL before deleting the record so we can clean up storage
   const { data: product } = await supabase
     .from('products')
     .select('image_url')
@@ -177,7 +174,6 @@ export async function deleteProduct(id: string): Promise<void> {
   const { error } = await supabase.from('products').delete().eq('id', id)
   if (error) throw error
 
-  // Delete image from storage after the DB record is successfully removed
   if (product?.image_url) {
     await deleteStorageImage(product.image_url)
   }
