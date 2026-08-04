@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { translateError } from '@/lib/utils'
+import { clearOfflineCache } from '@/lib/offline-storage'
 import { getProfile, signIn, signOut } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
 
@@ -53,6 +54,7 @@ export function useAuthActions() {
       await signOut()
       clearAuth()
       queryClient.clear()
+      await clearOfflineCache()
       navigate({ to: '/login' })
       toast.success('Berhasil keluar dari akun')
     } catch (error: unknown) {
@@ -97,6 +99,7 @@ export function useAuthListener() {
               await signOut()
               clearAuth()
               queryClient.clear()
+              await clearOfflineCache()
               return
             }
             if (mounted) setProfile(profile)
@@ -105,6 +108,7 @@ export function useAuthListener() {
               await signOut()
               clearAuth()
               queryClient.clear()
+              await clearOfflineCache()
             }
           }
         }
@@ -130,6 +134,7 @@ export function useAuthListener() {
               await signOut()
               clearAuth()
               queryClient.clear()
+              await clearOfflineCache()
               return
             }
             if (mounted) setProfile(profile)
@@ -138,12 +143,14 @@ export function useAuthListener() {
               await signOut()
               clearAuth()
               queryClient.clear()
+              await clearOfflineCache()
             }
           }
         }
       } else if (event === 'SIGNED_OUT') {
         clearAuth()
         queryClient.clear()
+        clearOfflineCache()
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         setUser(session.user)
       } else if (event === 'PASSWORD_RECOVERY' && session?.user) {

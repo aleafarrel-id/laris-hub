@@ -41,3 +41,14 @@ export function createIndexedDBPersister(): Persister {
     },
   }
 }
+
+/**
+ * Clears the IndexedDB offline cache explicitly.
+ */
+export async function clearOfflineCache() {
+  try {
+    await del(IDB_KEY)
+  } catch (err) {
+    console.warn('[offline-storage] Failed to remove cache explicitly:', err)
+  }
+}

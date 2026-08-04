@@ -65,7 +65,7 @@ export async function getProductsPaginated(
     .from('products')
     .select(
       'id, name, sku, hpp, selling_price, description, image_url, is_active, created_by, created_at, updated_at',
-      { count: 'exact' },
+      { count: 'estimated' },
     )
     .order('name', { ascending: true })
     .order('id', { ascending: true })

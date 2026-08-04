@@ -29,7 +29,7 @@ export async function getTransactions(
       transaction_items(id, transaction_id, product_id, product_name, product_hpp, selling_price, quantity, subtotal, profit, created_at),
       profiles!recorded_by(id, full_name, avatar_url, phone)
     `,
-      { count: 'exact' },
+      { count: 'estimated' },
     )
     .order('transaction_at', { ascending: false })
     .order('id', { ascending: false })

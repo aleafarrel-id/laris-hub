@@ -330,7 +330,7 @@ function ProfilePage() {
                   layout
                 >
                   <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-neutral-50/80 transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
                       <Mail size={18} strokeWidth={2.5} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -343,7 +343,7 @@ function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-neutral-50/80 transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
                       <KeyRound size={18} strokeWidth={2.5} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -431,9 +431,9 @@ function ProfilePage() {
           <button
             type="button"
             onClick={() => setShowLogoutModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-danger/10 hover:bg-danger text-danger hover:text-white rounded-xl transition-all duration-300 font-bold active:scale-[0.98]"
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-danger/10 hover:bg-danger text-danger hover:text-white rounded-lg transition-all duration-300 font-semibold active:scale-[0.98]"
           >
-            <LogOut size={18} strokeWidth={2.5} />
+            <LogOut size={16} strokeWidth={2.5} />
             Keluar dari Akun
           </button>
         </motion.div>

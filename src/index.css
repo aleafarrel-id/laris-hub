@@ -221,6 +221,11 @@
     outline: none;
   }
 
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+
   /* Typography defaults */
   h1,
   h2,
