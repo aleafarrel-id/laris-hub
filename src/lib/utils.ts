@@ -289,19 +289,19 @@ export async function throwEdgeFunctionError(
     if (isError && Object.keys(ctx).length === 0 && (error as Error).message.startsWith('{')) {
       try {
         resolvedCtx = JSON.parse((error as Error).message)
-      } catch { }
+      } catch {}
     }
 
     const message = resolvedCtx?.error ?? (isError ? (error as Error).message : 'Unknown error')
     const err = new Error(message as string)
-      ; (err as any).isUserFacing = true
+    ;(err as any).isUserFacing = true
     extra?.(err, resolvedCtx)
     throw err
   }
 
   if (data?.error) {
     const err = new Error(data.error as string)
-      ; (err as any).isUserFacing = true
+    ;(err as any).isUserFacing = true
     extra?.(err, data)
     throw err
   }

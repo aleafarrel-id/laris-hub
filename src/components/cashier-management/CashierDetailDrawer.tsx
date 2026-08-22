@@ -357,10 +357,11 @@ export function CashierDetailDrawer({
                           variant="outline"
                           onClick={() => onToggle(cashierToRender.id, !cashierToRender.is_active)}
                           disabled={isToggling || cashierToRender.isOfflinePending}
-                          className={`w-full border ${cashierToRender.is_active
-                            ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'
-                            : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
-                            }`}
+                          className={`w-full border ${
+                            cashierToRender.is_active
+                              ? 'text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300'
+                              : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300'
+                          }`}
                           leftIcon={
                             cashierToRender.is_active ? (
                               <ShieldOff size={15} />

@@ -289,10 +289,11 @@ function ProductPage() {
                             e.preventDefault()
                             toggleStatus({ id: product.id, isActive: !product.is_active })
                           }}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${product.is_active
-                            ? 'bg-white/80 text-success shadow-sm'
-                            : 'bg-neutral-800/80 text-white shadow-sm'
-                            }`}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all ${
+                            product.is_active
+                              ? 'bg-white/80 text-success shadow-sm'
+                              : 'bg-neutral-800/80 text-white shadow-sm'
+                          }`}
                           title={
                             product.is_active ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'
                           }

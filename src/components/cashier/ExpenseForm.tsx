@@ -137,10 +137,11 @@ export function ExpenseForm({ transaction, onSuccess }: ExpenseFormProps) {
                 key={val}
                 type="button"
                 onClick={() => setCategory(val)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all active:scale-[0.96] ${isSelected
+                className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all active:scale-[0.96] ${
+                  isSelected
                     ? 'border-primary bg-primary text-white shadow-md shadow-primary/20'
                     : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50'
-                  }`}
+                }`}
               >
                 {EXPENSE_CATEGORY_LABELS[val]}
               </button>

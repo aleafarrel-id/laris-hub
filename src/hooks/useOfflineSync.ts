@@ -49,6 +49,8 @@ import {
 } from '@/services/transaction.service'
 
 const MAX_RETRIES = 3
+const SYNC_LOCK_KEY = 'laris-hub:sync-lock'
+const SYNC_LOCK_TTL_MS = 30_000 // 30s timeout prevents stale locks
 
 export interface OfflineSyncStatus {
   pendingCount: number
@@ -69,8 +71,16 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
 
   const syncQueue = useCallback(async () => {
     if (isSyncingRef.current) return
+
+    const existingLock = localStorage.getItem(SYNC_LOCK_KEY)
+    if (existingLock && Date.now() - parseInt(existingLock, 10) < SYNC_LOCK_TTL_MS) return
+    localStorage.setItem(SYNC_LOCK_KEY, Date.now().toString())
+
     const queue = await getOfflineQueue()
-    if ((queue?.length ?? 0) === 0) return
+    if ((queue?.length ?? 0) === 0) {
+      localStorage.removeItem(SYNC_LOCK_KEY)
+      return
+    }
 
     isSyncingRef.current = true
     setIsSyncing(true)
@@ -211,16 +221,20 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
           errMessage.includes('network') ||
           errMessage.includes('failed to fetch') ||
           errMessage.includes('load failed')
-        const isBackendRejection = errMessage && !isNetworkError
 
-        if (isPgError || (isBackendRejection && err?.status >= 400 && err?.status < 500)) {
+        const isDefinitiveRejection =
+          isPgError || (errMessage && !isNetworkError && err?.status >= 400 && err?.status < 500)
+
+        if (isDefinitiveRejection) {
           console.error('[OfflineSync] Permanent error for item:', item, err)
           await dequeueOfflineItem(item.localId)
           failedItems.push(item)
-        } else if (!isNetworkError) {
-          await incrementRetryCount(item.localId)
-        } else {
+        } else if (isNetworkError) {
           console.log('[OfflineSync] Network error, keeping in queue:', item.localId)
+        } else {
+          // Unknown server error (5xx, no status, etc.) — increment retry count
+          console.warn('[OfflineSync] Transient error for item, will retry:', item.localId, err)
+          await incrementRetryCount(item.localId)
         }
       }
     }
@@ -247,21 +261,16 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
 
     isSyncingRef.current = false
     setIsSyncing(false)
+    localStorage.removeItem(SYNC_LOCK_KEY)
     await refreshPendingCount()
   }, [queryClient, refreshPendingCount])
 
-  // Auto-sync when coming back online
   useEffect(() => {
+    refreshPendingCount()
     if (isOnline) {
       syncQueue()
     }
-    refreshPendingCount()
   }, [isOnline, syncQueue, refreshPendingCount])
-
-  // Check pending count on initial mount
-  useEffect(() => {
-    refreshPendingCount()
-  }, [refreshPendingCount])
 
   return {
     pendingCount,

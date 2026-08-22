@@ -43,7 +43,11 @@ export function useNativeBack(isOpen: boolean, onClose: () => void) {
       clearTimeout(timeout)
       window.removeEventListener('popstate', handlePopState)
 
-      if (hasPushedState && !isClosingViaPopstate.current && window.history.state?.modalId === modalId) {
+      if (
+        hasPushedState &&
+        !isClosingViaPopstate.current &&
+        window.history.state?.modalId === modalId
+      ) {
         window.history.back()
       }
     }

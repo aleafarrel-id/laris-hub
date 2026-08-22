@@ -17,10 +17,11 @@ export const CashierCard = forwardRef<HTMLButtonElement, { cashier: Profile; onC
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${cashier.is_active
-          ? 'border-neutral-200 hover:border-primary/25'
-          : 'border-neutral-100 opacity-70'
-          } ${cashier.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed hover:border-neutral-200' : ''}`}
+        className={`w-full group bg-white rounded-2xl border transition-all duration-200 p-4 flex items-center gap-3 shadow-sm hover:shadow-md text-left cursor-pointer active:scale-[0.96] ${
+          cashier.is_active
+            ? 'border-neutral-200 hover:border-primary/25'
+            : 'border-neutral-100 opacity-70'
+        } ${cashier.isOfflinePending ? 'opacity-60 grayscale-[0.5] border-dashed cursor-not-allowed hover:border-neutral-200' : ''}`}
       >
         {/* Avatar */}
         <div className="relative flex-shrink-0">
@@ -49,8 +50,9 @@ export const CashierCard = forwardRef<HTMLButtonElement, { cashier: Profile; onC
 
         <div className="flex-shrink-0 flex flex-col items-end gap-2">
           <span
-            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${cashier.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-              }`}
+            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
+              cashier.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+            }`}
           >
             {cashier.is_active ? <CheckCircle2 size={10} /> : <ShieldOff size={10} />}
             {cashier.is_active ? 'Aktif' : 'Tangguhkan'}

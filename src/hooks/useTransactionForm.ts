@@ -4,10 +4,19 @@ import type { Product, TransactionWithItems } from '@/types'
 
 // Sale Cart
 
+/** Retail (partial) mode: quantity = 1 with proportionally scaled price and HPP. */
 export interface CartItem {
   product: Product
   quantity: number
   original_product_id?: string | null
+  retail?: {
+    custom_selling_price: number
+    custom_hpp: number
+  }
+}
+
+function buildRetailKey(productId: string) {
+  return `${productId}:retail:${crypto.randomUUID()}`
 }
 
 export function useSaleCart(initialCart?: Map<string, CartItem>) {
@@ -26,30 +35,46 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
     })
   }, [])
 
-  const changeQty = useCallback((productId: string, delta: number) => {
+  /** Adds a retail (partial) entry with proportionally scaled HPP. */
+  const addRetailToCart = useCallback((product: Product, customSellingPrice: number) => {
+    const ratio = product.selling_price > 0 ? customSellingPrice / product.selling_price : 0
+    const scaledHpp = Math.round(product.hpp * ratio)
+
     setCart((prev) => {
-      const existing = prev.get(productId)
+      const next = new Map(prev)
+      next.set(buildRetailKey(product.id), {
+        product,
+        quantity: 1,
+        retail: { custom_selling_price: customSellingPrice, custom_hpp: scaledHpp },
+      })
+      return next
+    })
+  }, [])
+
+  const changeQty = useCallback((cartKey: string, delta: number) => {
+    setCart((prev) => {
+      const existing = prev.get(cartKey)
       if (!existing) return prev
       const next = new Map(prev)
       const newQty = existing.quantity + delta
       if (newQty <= 0) {
-        next.delete(productId)
+        next.delete(cartKey)
       } else {
-        next.set(productId, { ...existing, quantity: newQty })
+        next.set(cartKey, { ...existing, quantity: newQty })
       }
       return next
     })
   }, [])
 
-  const setQty = useCallback((productId: string, qty: number) => {
+  const setQty = useCallback((cartKey: string, qty: number) => {
     setCart((prev) => {
-      const existing = prev.get(productId)
+      const existing = prev.get(cartKey)
       if (!existing) return prev
       const next = new Map(prev)
       if (qty <= 0) {
-        next.delete(productId)
+        next.delete(cartKey)
       } else {
-        next.set(productId, { ...existing, quantity: qty })
+        next.set(cartKey, { ...existing, quantity: qty })
       }
       return next
     })
@@ -60,20 +85,40 @@ export function useSaleCart(initialCart?: Map<string, CartItem>) {
     let items = 0
     const arr: CartItem[] = []
     for (const item of cart.values()) {
-      amount += item.product.selling_price * item.quantity
+      const price = item.retail ? item.retail.custom_selling_price : item.product.selling_price
+      amount += price * item.quantity
       items += item.quantity
       arr.push(item)
     }
     return { totalAmount: amount, totalItems: items, cartArray: arr }
   }, [cart])
 
-  return { cart, setCart, addToCart, changeQty, setQty, totalAmount, totalItems, cartArray }
+  return {
+    cart,
+    setCart,
+    addToCart,
+    addRetailToCart,
+    changeQty,
+    setQty,
+    totalAmount,
+    totalItems,
+    cartArray,
+  }
 }
 
-/**
- * Deep module that coordinates data fetching and cart initialization.
- * Abstracts the complexity away from SaleForm.tsx.
- */
+// Sale Form State
+
+/** Detects whether a transaction item was sold as retail (custom nominal). */
+function isRetailItem(
+  item: { selling_price: number; quantity: number },
+  product: Product | undefined,
+) {
+  return (
+    product !== undefined && item.selling_price !== product.selling_price && item.quantity === 1
+  )
+}
+
+/** Coordinates product fetching and cart initialization. */
 export function useSaleFormState(transaction?: TransactionWithItems) {
   const isEditing = !!transaction
   const { data: products = [], isLoading: productsLoading, isOfflinePaused } = useProducts(true)
@@ -81,15 +126,11 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
   const { setCart } = cartState
   const initializedForTx = useRef<string | null>(null)
 
-  // Pre-populate cart when editing an existing transaction
   useEffect(() => {
     if (!isEditing || productsLoading || !products?.length || !transaction.transaction_items) {
       return
     }
-
-    if (initializedForTx.current === transaction.id) {
-      return
-    }
+    if (initializedForTx.current === transaction.id) return
 
     const initialCart = new Map<string, CartItem>()
     transaction.transaction_items.forEach((item) => {
@@ -109,26 +150,26 @@ export function useSaleFormState(transaction?: TransactionWithItems) {
           selling_price: item.selling_price ?? 0,
           image_url: null,
           sku: null,
-          stock: 0,
         } as unknown as Product)
 
-      initialCart.set(fallbackId, {
+      const retail = isRetailItem(item, product)
+      const cartKey = retail ? buildRetailKey(fallbackId) : fallbackId
+
+      initialCart.set(cartKey, {
         product: productData,
         quantity: item.quantity,
         original_product_id: item.product_id,
+        ...(retail && {
+          retail: { custom_selling_price: item.selling_price, custom_hpp: item.product_hpp },
+        }),
       })
     })
+
     setCart(initialCart)
     initializedForTx.current = transaction.id
   }, [isEditing, transaction, products, productsLoading, setCart])
 
-  return {
-    isEditing,
-    products,
-    productsLoading,
-    isOfflinePaused,
-    ...cartState,
-  }
+  return { isEditing, products, productsLoading, isOfflinePaused, ...cartState }
 }
 
 // Expense Items

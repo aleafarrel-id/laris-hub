@@ -4,15 +4,15 @@ import { useCallback, useDeferredValue, useState } from 'react'
 import { CheckoutPanel } from '@/components/cashier/CheckoutPanel'
 import { PaymentMethodModal } from '@/components/cashier/PaymentMethodModal'
 import { ProductCard } from '@/components/cashier/ProductCard'
+import { RetailModal } from '@/components/cashier/RetailModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSaleFormState } from '@/hooks/useTransactionForm'
 import { useCreateSale, useUpdateSale } from '@/hooks/useTransactions'
-import type { PaymentMethod, TransactionStatus, TransactionWithItems } from '@/types'
+import type { PaymentMethod, Product, TransactionStatus, TransactionWithItems } from '@/types'
 
 interface SaleFormProps {
-  /** When provided, the form operates in "edit" mode. */
   transaction?: TransactionWithItems
   onSuccess: () => void
 }
@@ -20,7 +20,6 @@ interface SaleFormProps {
 /**
  * Unified sale form for both creating and editing.
  * Pass `transaction` to enter edit mode; omit for create mode.
- * Delegates rendering to ProductCard and CheckoutPanel sub-components.
  */
 export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
   const {
@@ -29,6 +28,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     productsLoading,
     cart,
     addToCart,
+    addRetailToCart,
     changeQty,
     setQty,
     totalAmount,
@@ -37,7 +37,6 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
     isOfflinePaused,
   } = useSaleFormState(transaction)
 
-  // Avoid skeleton trap if offline without data
   const isLoading = productsLoading && !isOfflinePaused
 
   const { mutate: createSale, isPending: isCreating } = useCreateSale()
@@ -46,14 +45,13 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
 
   const [search, setSearch] = useState('')
   const [notes, setNotes] = useState(transaction?.notes ?? '')
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [retailProduct, setRetailProduct] = useState<Product | null>(null)
   const deferredSearch = useDeferredValue(search)
 
-  // Simple derivations — no useMemo needed for cheap operations (Vercel guideline)
   const query = deferredSearch.trim().toLowerCase()
   const filtered = query ? products.filter((p) => p.name.toLowerCase().includes(query)) : products
 
-  // In edit mode, also show cart products that don't match the current filter
   let displayProducts = filtered
   if (isEditing) {
     const all = [...filtered]
@@ -67,7 +65,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
 
   const handlePreSubmit = useCallback(() => {
     if (cart.size === 0) return
-    setIsModalOpen(true)
+    setIsPaymentOpen(true)
   }, [cart])
 
   const handleSubmit = useCallback(
@@ -79,14 +77,16 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
           cartItem.original_product_id !== undefined
             ? cartItem.original_product_id
             : cartItem.product.id,
-        product_name: cartItem.product.name,
-        product_hpp: cartItem.product.hpp,
-        selling_price: cartItem.product.selling_price,
+        product_name: cartItem.retail ? `${cartItem.product.name} (Sebagian)` : cartItem.product.name,
+        product_hpp: cartItem.retail ? cartItem.retail.custom_hpp : cartItem.product.hpp,
+        selling_price: cartItem.retail
+          ? cartItem.retail.custom_selling_price
+          : cartItem.product.selling_price,
         quantity: cartItem.quantity,
       }))
 
       const handleSuccess = () => {
-        setIsModalOpen(false)
+        setIsPaymentOpen(false)
         onSuccess()
       }
 
@@ -123,7 +123,6 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
 
   return (
     <div className="flex flex-col min-h-[60vh] max-h-full">
-      {/* Search bar */}
       <div className="sticky top-0 z-10 px-4 py-3 bg-white border-b border-neutral-100">
         <Input
           type="search"
@@ -135,7 +134,6 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         />
       </div>
 
-      {/* Product list */}
       <div className="p-4 bg-neutral-50/50 flex-1">
         {isLoading ? (
           <ProductListSkeleton />
@@ -166,6 +164,7 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
                     onAdd={() => addToCart(product)}
                     onChangeQty={(delta) => changeQty(product.id, delta)}
                     onSetQty={(qty) => setQty(product.id, qty)}
+                    onAddRetail={() => setRetailProduct(product)}
                   />
                 </motion.div>
               ))}
@@ -182,7 +181,6 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         )}
       </div>
 
-      {/* Checkout panel */}
       <CheckoutPanel
         cartSize={cart.size}
         totalItems={totalItems}
@@ -191,23 +189,33 @@ export function SaleForm({ transaction, onSuccess }: SaleFormProps) {
         isPending={isPending}
         onNotesChange={setNotes}
         onSubmit={handlePreSubmit}
+        cartArray={cartArray}
+        cart={cart}
+        onRemoveItem={(cartKey) => setQty(cartKey, 0)}
       />
 
       <PaymentMethodModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
         onConfirm={handleSubmit}
         totalAmount={totalAmount}
         isPending={isPending}
         activeMethod={transaction?.payment_method as 'cash' | 'qris' | undefined}
       />
+
+      <RetailModal
+        product={retailProduct}
+        isOpen={retailProduct !== null}
+        onClose={() => setRetailProduct(null)}
+        onConfirm={(product, customPrice) => {
+          addRetailToCart(product, customPrice)
+          setRetailProduct(null)
+        }}
+      />
     </div>
   )
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-/** Skeleton loader shown while the product list is fetching. */
 function ProductListSkeleton() {
   return (
     <div className="flex flex-col gap-3">

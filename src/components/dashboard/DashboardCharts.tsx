@@ -54,8 +54,8 @@ export function TopProductsDonutChart({ products }: { products: TopProduct[] }) 
               animationBegin={0}
               animationDuration={700}
             >
-              {chartData.map((entry) => (
-                <Cell key={entry.product_id} fill={entry.color} style={{ outline: 'none' }} />
+              {chartData.map((entry, index) => (
+                <Cell key={`${entry.product_id}-${index}`} fill={entry.color} style={{ outline: 'none' }} />
               ))}
             </Pie>
             <Tooltip
@@ -102,8 +102,8 @@ export function TopProductsDonutChart({ products }: { products: TopProduct[] }) 
 
       {/* Legend */}
       <div className="space-y-2">
-        {chartData.map((product) => (
-          <div key={product.product_id} className="flex items-center gap-2.5">
+        {chartData.map((product, index) => (
+          <div key={`${product.product_id}-${index}`} className="flex items-center gap-2.5">
             <span
               className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
               style={{ backgroundColor: product.color }}

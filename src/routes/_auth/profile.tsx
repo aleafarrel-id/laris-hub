@@ -159,10 +159,11 @@ function ProfilePage() {
               className="mt-3"
             >
               <span
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${profile?.role === 'admin'
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'bg-neutral-100 text-neutral-600 border border-neutral-200'
-                  }`}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                  profile?.role === 'admin'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'bg-neutral-100 text-neutral-600 border border-neutral-200'
+                }`}
               >
                 <Shield size={12} strokeWidth={2.5} />
                 {profile?.role === 'admin' ? 'Administrator' : 'Kasir'}

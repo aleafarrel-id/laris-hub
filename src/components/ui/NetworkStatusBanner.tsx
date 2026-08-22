@@ -35,47 +35,40 @@ export function NetworkStatusBanner() {
 
   return (
     <div
-      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-        }`}
+      className={`sticky top-0 w-full z-40 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] grid ${
+        isVisible ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
     >
       <div className="overflow-hidden">
         <div
-          className={`w-full flex items-center justify-between px-4 py-2.5 ${bgColor} text-white shadow-sm transition-colors duration-500`}
+          className={`w-full flex items-center justify-between px-3 py-1.5 sm:px-4 sm:py-2 ${bgColor} text-white shadow-sm transition-colors duration-500 min-h-[36px]`}
         >
           <div
-            className={`flex items-center gap-3 overflow-hidden flex-1 ${!(state === 'online' && pendingCount > 0 && !isSyncing) ? 'justify-center pr-6' : ''}`}
+            className={`flex items-center gap-2 overflow-hidden flex-1 ${
+              !(state === 'online' && pendingCount > 0 && !isSyncing) ? 'justify-center' : ''
+            }`}
           >
             <Icon
-              className={`w-4 h-4 flex-shrink-0 ${Icon === Loader2 ? 'animate-spin' : ''} ${state === 'offline' ? 'opacity-80' : ''}`}
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${
+                Icon === Loader2 ? 'animate-spin' : ''
+              } ${state === 'offline' ? 'opacity-80' : ''}`}
             />
-
-            {state === 'online' && pendingCount > 0 && !isSyncing ? (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 overflow-hidden leading-tight">
-                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 truncate">
-                  {title}
-                </span>
-                <span className="hidden sm:block w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
-                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">
-                  {subtitle}
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 overflow-hidden leading-tight text-[11px] sm:text-[13px]">
-                <span className="font-semibold tracking-widest uppercase text-[10px] opacity-90 truncate mt-px sm:mt-0">
-                  {title}
-                </span>
-                <span className="hidden sm:block w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
-                <span className="font-medium opacity-95 truncate text-[11px] sm:text-[13px] mt-0.5 sm:mt-0">
-                  {subtitle}
-                </span>
-              </div>
-            )}
+            
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden text-[10px] sm:text-[11px] leading-none">
+              <span className="font-bold tracking-wider uppercase opacity-90 whitespace-nowrap flex-shrink-0">
+                {title}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-white/40 flex-shrink-0" />
+              <span className="font-medium opacity-95 truncate">
+                {subtitle}
+              </span>
+            </div>
           </div>
 
           {state === 'online' && pendingCount > 0 && !isSyncing && (
             <button
               onClick={triggerSync}
-              className="flex-shrink-0 ml-3 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-shrink-0 ml-2 px-2.5 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-md text-[9px] sm:text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer whitespace-nowrap"
             >
               Coba Lagi
             </button>

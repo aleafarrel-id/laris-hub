@@ -56,9 +56,9 @@ export function useCashbookFilters() {
     const dateRange =
       quickRange === 'custom'
         ? {
-          from: new Date(customFrom),
-          to: new Date(`${customTo}T23:59:59.999`),
-        }
+            from: new Date(customFrom),
+            to: new Date(`${customTo}T23:59:59.999`),
+          }
         : getDateRange(quickRange)
 
     return {

@@ -1,3 +1,4 @@
+import { PieChart } from 'lucide-react'
 import { EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/constants'
 import type { TransactionWithItems } from '@/types'
 
@@ -63,18 +64,31 @@ export function TransactionDetails({ transaction, isMobile }: TransactionDetails
 
       {hasSaleItems && (
         <div className="flex flex-col gap-0.5 text-sm text-neutral-900">
-          {saleItems.map((item, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique id here
-            <div key={index} className={`flex items-start gap-1.5 ${isMobile ? 'min-w-0' : ''}`}>
-              <span className="text-neutral-400 flex-shrink-0">•</span>
-              <span className={isMobile ? 'truncate' : ''}>
-                {item.product_name}{' '}
-                <span className="text-neutral-400 font-normal tabular-nums text-xs">
-                  x{item.quantity}
+          {saleItems.map((item, index) => {
+            const isRetail = item.product_name?.endsWith('(Sebagian)') ?? false
+            const displayName = isRetail
+              ? item.product_name?.replace(' (Sebagian)', '')
+              : item.product_name
+
+            return (
+              // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique id here
+              <div key={index} className={`flex items-start gap-1.5 ${isMobile ? 'min-w-0' : ''}`}>
+                <span className="text-neutral-400 flex-shrink-0 mt-0.5">•</span>
+                <span className={`flex flex-wrap items-center gap-1.5 ${isMobile ? 'truncate' : ''}`}>
+                  <span className={isMobile ? 'truncate' : ''}>{displayName}</span>
+                  {isRetail ? (
+                    <div className="flex items-center justify-center bg-indigo-50 text-indigo-600 rounded px-1 py-0.5" title="Penjualan Sebagian">
+                      <PieChart size={12} strokeWidth={2.5} />
+                    </div>
+                  ) : (
+                    <span className="text-neutral-400 font-normal tabular-nums text-xs">
+                      x{item.quantity}
+                    </span>
+                  )}
                 </span>
-              </span>
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </div>
       )}
 

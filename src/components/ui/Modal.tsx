@@ -38,33 +38,33 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
 
   const contentVariants = isBottom
     ? {
-      hidden: { y: '100%', opacity: 0.8 },
-      visible: {
-        y: 0,
-        opacity: 1,
-        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-      },
-      exit: {
-        y: '100%',
-        opacity: 0.8,
-        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-      },
-    }
+        hidden: { y: '100%', opacity: 0.8 },
+        visible: {
+          y: 0,
+          opacity: 1,
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+        },
+        exit: {
+          y: '100%',
+          opacity: 0.8,
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+        },
+      }
     : {
-      hidden: { scale: 0.94, opacity: 0, y: 8 },
-      visible: {
-        scale: 1,
-        opacity: 1,
-        y: 0,
-        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-      },
-      exit: {
-        scale: 0.96,
-        opacity: 0,
-        y: 4,
-        transition: { duration: 0.15, ease: 'easeIn' as const },
-      },
-    }
+        hidden: { scale: 0.94, opacity: 0, y: 8 },
+        visible: {
+          scale: 1,
+          opacity: 1,
+          y: 0,
+          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+        },
+        exit: {
+          scale: 0.96,
+          opacity: 0,
+          y: 4,
+          transition: { duration: 0.15, ease: 'easeIn' as const },
+        },
+      }
 
   const contentClass = isBottom
     ? 'absolute bottom-0 inset-x-0 bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col'
@@ -86,10 +86,11 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           {/* biome-ignore lint/a11y/useKeyWithClickEvents: purely mouse shortcut for escape */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: purely mouse shortcut for escape */}
           <div
-            className={`absolute inset-0 flex ${isBottom
+            className={`absolute inset-0 flex ${
+              isBottom
                 ? 'flex-col justify-end sm:justify-center p-0 sm:p-4'
                 : 'items-center justify-center p-4 sm:p-6'
-              }`}
+            }`}
             onClick={onClose}
           >
             <motion.div

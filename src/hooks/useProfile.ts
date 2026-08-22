@@ -72,7 +72,7 @@ export function useUpdateOwnCredentials() {
     {
       successMessage: 'Kredensial keamanan berhasil diperbarui!',
       errorAction: 'memperbarui kredensial',
-      onSuccess: () => { },
+      onSuccess: () => {},
     },
   )()
 }
