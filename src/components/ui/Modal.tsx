@@ -67,15 +67,15 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
       }
 
   const contentClass = isBottom
-    ? 'absolute bottom-0 inset-x-0 bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col'
-    : 'relative bg-white rounded-2xl shadow-modal w-full max-w-md max-h-[90dvh] flex flex-col mx-auto'
+    ? 'relative w-full mt-auto bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col sm:max-w-md sm:m-auto sm:rounded-2xl'
+    : 'relative w-full max-w-md mx-auto bg-white rounded-2xl shadow-modal max-h-[90dvh] flex flex-col'
 
   return (
     <AnimatePresence>
       {isOpen && (
         <Portal className="z-50" role="dialog" aria-labelledby="modal-title">
           <motion.div
-            className="absolute inset-0 bg-neutral-900/60"
+            className="fixed inset-0 bg-neutral-900/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -86,21 +86,24 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           {/* biome-ignore lint/a11y/useKeyWithClickEvents: purely mouse shortcut for escape */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: purely mouse shortcut for escape */}
           <div
-            className={`absolute inset-0 flex ${
-              isBottom
-                ? 'flex-col justify-end sm:justify-center p-0 sm:p-4'
-                : 'items-center justify-center p-4 sm:p-6'
-            }`}
+            className="fixed inset-0 z-[60] overflow-y-auto overscroll-none"
             onClick={onClose}
           >
-            <motion.div
-              className={`${contentClass} will-change-transform`}
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              onClick={(e) => e.stopPropagation()}
+            <div
+              className={`flex min-h-full ${
+                isBottom
+                  ? 'flex-col justify-end p-0 sm:justify-center sm:p-4'
+                  : 'items-center justify-center p-4 sm:p-6'
+              }`}
             >
+              <motion.div
+                className={`${contentClass} will-change-transform`}
+                variants={contentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+              >
               {isBottom && (
                 <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
                   <div className="w-10 h-1 rounded-full bg-neutral-200" />
@@ -120,6 +123,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
 
               <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
             </motion.div>
+            </div>
           </div>
         </Portal>
       )}
