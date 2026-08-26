@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => set({ user: null, profile: null, isInitialized: true, isLoading: false }),
     }),
     {
-      name: `${STORAGE_KEYS.THEME}-auth`,
+      name: STORAGE_KEYS.AUTH,
       storage: createJSONStorage(() => localStorage),
     },
   ),

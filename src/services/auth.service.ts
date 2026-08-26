@@ -1,8 +1,12 @@
+import type { QueryClient } from '@tanstack/react-query'
+import { clearOfflineCache } from '@/lib/offline-storage'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
 
 /**
  * Fetch profile by user ID.
+ * Throws 'PROFILE_NOT_FOUND' when no row exists (PGRST116) and
+ * 'ACCOUNT_SUSPENDED' explicitly when the row exists but is_active is false.
  */
 export async function getProfile(userId: string): Promise<Profile> {
   const { data, error } = await supabase
@@ -13,11 +17,31 @@ export async function getProfile(userId: string): Promise<Profile> {
 
   if (error) {
     if (error.code === 'PGRST116') {
-      throw new Error('ACCOUNT_SUSPENDED')
+      throw new Error('PROFILE_NOT_FOUND')
     }
     throw error
   }
+
+  if (data.is_active === false) {
+    throw new Error('ACCOUNT_SUSPENDED')
+  }
+
   return data as Profile
+}
+
+/**
+ * Sign out and clear all local state in one atomic operation.
+ * Accepts the queryClient and clearAuth action from Zustand so this
+ * utility remains framework-agnostic and testable.
+ */
+export async function performSignOut(
+  queryClient: QueryClient,
+  clearAuth: () => void,
+): Promise<void> {
+  await signOut().catch(() => {})
+  clearAuth()
+  queryClient.clear()
+  await clearOfflineCache()
 }
 
 /**

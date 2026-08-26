@@ -3,8 +3,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const ALLOWED_ORIGIN = Deno.env.get('APP_URL') ?? 'https://larishub.pages.dev'
+
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-app-name, x-app-version',
   'Access-Control-Allow-Methods': 'PATCH, OPTIONS',

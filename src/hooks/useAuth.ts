@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { clearOfflineCache } from '@/lib/offline-storage'
 import { supabase } from '@/lib/supabase'
 import { translateError } from '@/lib/utils'
-import { getProfile, signIn, signOut } from '@/services/auth.service'
+import { getProfile, performSignOut, signIn } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
 
 export function useAuth() {
@@ -51,10 +51,7 @@ export function useAuthActions() {
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      clearAuth()
-      queryClient.clear()
-      await clearOfflineCache()
+      await performSignOut(queryClient, clearAuth)
       navigate({ to: '/login' })
       toast.success('Berhasil keluar dari akun')
     } catch (error: unknown) {
@@ -96,19 +93,13 @@ export function useAuthListener() {
           try {
             const profile = await getProfile(user.id)
             if (profile?.is_active === false) {
-              await signOut()
-              clearAuth()
-              queryClient.clear()
-              await clearOfflineCache()
+              await performSignOut(queryClient, clearAuth)
               return
             }
             if (mounted) setProfile(profile)
-          } catch (error: any) {
-            if (error.message === 'ACCOUNT_SUSPENDED') {
-              await signOut()
-              clearAuth()
-              queryClient.clear()
-              await clearOfflineCache()
+          } catch (err: any) {
+            if (err.message === 'ACCOUNT_SUSPENDED' || err.message === 'PROFILE_NOT_FOUND') {
+              await performSignOut(queryClient, clearAuth)
             }
           }
         }
@@ -131,19 +122,13 @@ export function useAuthListener() {
           try {
             const profile = await getProfile(session.user.id)
             if (profile?.is_active === false) {
-              await signOut()
-              clearAuth()
-              queryClient.clear()
-              await clearOfflineCache()
+              await performSignOut(queryClient, clearAuth)
               return
             }
             if (mounted) setProfile(profile)
-          } catch (error: any) {
-            if (error.message === 'ACCOUNT_SUSPENDED') {
-              await signOut()
-              clearAuth()
-              queryClient.clear()
-              await clearOfflineCache()
+          } catch (err: any) {
+            if (err.message === 'ACCOUNT_SUSPENDED' || err.message === 'PROFILE_NOT_FOUND') {
+              await performSignOut(queryClient, clearAuth)
             }
           }
         }

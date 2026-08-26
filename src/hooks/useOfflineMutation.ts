@@ -45,9 +45,12 @@ export function createOfflineMutation<TVariables, TData>(
           const errMessage = (err?.message || '').toLowerCase()
           const isNetworkError =
             err instanceof TypeError ||
+            err?.name === 'AbortError' ||
+            err?.name === 'TimeoutError' ||
             errMessage.includes('fetch') ||
             errMessage.includes('network') ||
-            errMessage.includes('failed to fetch')
+            errMessage.includes('failed to fetch') ||
+            errMessage.includes('timeout')
 
           if (isNetworkError) {
             try {

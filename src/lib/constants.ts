@@ -64,6 +64,7 @@ export const QUERY_KEYS = {
 
 // Local storage keys
 export const STORAGE_KEYS = {
+  AUTH: 'laris-hub:auth',
   SIDEBAR_COLLAPSED: 'laris-hub:sidebar-collapsed',
   LAST_CASHIER_TAB: 'laris-hub:last-cashier-tab',
   THEME: 'laris-hub:theme',
