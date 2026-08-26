@@ -52,25 +52,21 @@ export function RetailModal({ product, isOpen, onClose, onConfirm }: RetailModal
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Jual Sebagian" variant="center">
       <div className="flex flex-col gap-5 p-5">
-        <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-2xl border border-neutral-100">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600">
-            <Package size={20} strokeWidth={2} />
+        <div className="flex items-center gap-3 p-3.5 bg-neutral-50/60 rounded-2xl border border-neutral-100/80">
+          <div className="w-10 h-10 rounded-xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-neutral-200/60 flex items-center justify-center flex-shrink-0 text-indigo-500">
+            <Package size={18} strokeWidth={2.5} />
           </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-[11px] text-neutral-500 font-semibold tracking-wide uppercase">
-              Harga 1 Paket
+          <div className="flex flex-col min-w-0 flex-1 justify-center gap-0.5">
+            <span className="text-[13px] font-semibold text-neutral-800 truncate">
+              {product.name}
             </span>
-            <span className="text-sm font-bold text-neutral-900 tabular-nums">
-              {formatRupiah(product.selling_price)}
-            </span>
-          </div>
-          <div className="text-right flex flex-col min-w-0">
-             <span className="text-[11px] text-neutral-500 font-semibold tracking-wide uppercase truncate">
-               Produk
-             </span>
-             <span className="text-xs font-semibold text-neutral-700 truncate max-w-[100px]">
-               {product.name}
-             </span>
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className="text-neutral-500">Harga paket</span>
+              <span className="text-neutral-300 text-[10px]">•</span>
+              <span className="font-semibold text-neutral-700 tabular-nums">
+                {formatRupiah(product.selling_price)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -180,7 +176,7 @@ export function RetailModal({ product, isOpen, onClose, onConfirm }: RetailModal
             onClick={handleConfirm}
             leftIcon={<PieChart size={18} strokeWidth={2} />}
           >
-            {isValid ? `Tambah ${formatRupiah(customPrice)}` : 'Masukkan Nominal'}
+            {isValid ? `Tambah ${formatRupiah(customPrice)}` : 'Nominal'}
           </Button>
         </div>
       </div>
