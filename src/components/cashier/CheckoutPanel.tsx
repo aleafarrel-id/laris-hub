@@ -137,7 +137,6 @@ export function CheckoutPanel({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <div className="w-12 h-1 bg-neutral-200 rounded-full mb-2"></div>
             Pilih produk untuk mulai transaksi
           </motion.div>
         )}
