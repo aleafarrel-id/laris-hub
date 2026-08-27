@@ -38,36 +38,36 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
 
   const contentVariants = isBottom
     ? {
-        hidden: { y: '100%', opacity: 0.8 },
-        visible: {
-          y: 0,
-          opacity: 1,
-          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-        },
-        exit: {
-          y: '100%',
-          opacity: 0.8,
-          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-        },
-      }
+      hidden: { y: '100%', opacity: 0.8 },
+      visible: {
+        y: 0,
+        opacity: 1,
+        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+      },
+      exit: {
+        y: '100%',
+        opacity: 0.8,
+        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+      },
+    }
     : {
-        hidden: { scale: 0.94, opacity: 0, y: 8 },
-        visible: {
-          scale: 1,
-          opacity: 1,
-          y: 0,
-          transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
-        },
-        exit: {
-          scale: 0.96,
-          opacity: 0,
-          y: 4,
-          transition: { duration: 0.15, ease: 'easeIn' as const },
-        },
-      }
+      hidden: { scale: 0.94, opacity: 0, y: 8 },
+      visible: {
+        scale: 1,
+        opacity: 1,
+        y: 0,
+        transition: { type: 'spring' as const, duration: 0.3, bounce: 0 },
+      },
+      exit: {
+        scale: 0.96,
+        opacity: 0,
+        y: 4,
+        transition: { duration: 0.15, ease: 'easeIn' as const },
+      },
+    }
 
   const contentClass = isBottom
-    ? 'relative w-full mt-auto bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col sm:max-w-md sm:m-auto sm:rounded-2xl'
+    ? 'relative w-full mt-auto bg-white rounded-t-2xl shadow-modal max-h-[90dvh] flex flex-col'
     : 'relative w-full max-w-md mx-auto bg-white rounded-2xl shadow-modal max-h-[90dvh] flex flex-col'
 
   return (
@@ -75,7 +75,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
       {isOpen && (
         <Portal className="z-50" role="dialog" aria-labelledby="modal-title">
           <motion.div
-            className="fixed inset-0 bg-neutral-900/60"
+            className="absolute inset-0 bg-neutral-900/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -86,15 +86,14 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
           {/* biome-ignore lint/a11y/useKeyWithClickEvents: purely mouse shortcut for escape */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: purely mouse shortcut for escape */}
           <div
-            className="fixed inset-0 z-[60] overflow-y-auto overscroll-none"
+            className="absolute inset-0 z-[60] overflow-hidden overscroll-none"
             onClick={onClose}
           >
             <div
-              className={`flex min-h-full ${
-                isBottom
-                  ? 'flex-col justify-end p-0 sm:justify-center sm:p-4'
+              className={`flex min-h-full ${isBottom
+                  ? 'flex-col justify-end p-0'
                   : 'items-center justify-center p-4 sm:p-6'
-              }`}
+                }`}
             >
               <motion.div
                 className={`${contentClass} will-change-transform`}
@@ -104,25 +103,25 @@ export function Modal({ isOpen, onClose, title, children, variant = 'bottom' }: 
                 exit="exit"
                 onClick={(e) => e.stopPropagation()}
               >
-              {isBottom && (
-                <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                  <div className="w-10 h-1 rounded-full bg-neutral-200" />
-                </div>
-              )}
+                {isBottom && (
+                  <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                    <div className="w-10 h-1 rounded-full bg-neutral-200" />
+                  </div>
+                )}
 
-              {title && (
-                <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
-                  <h2
-                    id="modal-title"
-                    className="text-base font-semibold text-neutral-900 text-balance tracking-tight"
-                  >
-                    {title}
-                  </h2>
-                </div>
-              )}
+                {title && (
+                  <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-neutral-100 flex-shrink-0">
+                    <h2
+                      id="modal-title"
+                      className="text-base font-semibold text-neutral-900 text-balance tracking-tight"
+                    >
+                      {title}
+                    </h2>
+                  </div>
+                )}
 
-              <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
-            </motion.div>
+                <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
+              </motion.div>
             </div>
           </div>
         </Portal>
