@@ -51,9 +51,10 @@ export function RetailModal({ product, isOpen, onClose, onConfirm }: RetailModal
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Jual Sebagian" variant="center">
-      <div className="flex flex-col gap-5 p-5">
-        <div className="flex items-center gap-3 p-3.5 bg-neutral-50/60 rounded-2xl border border-neutral-100/80">
-          <div className="w-10 h-10 rounded-xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-neutral-200/60 flex items-center justify-center flex-shrink-0 text-indigo-500">
+      <div className="flex flex-col min-h-full relative">
+        <div className="flex flex-col gap-5 p-5 pb-6 flex-1">
+          <div className="flex items-center gap-3 p-3.5 bg-neutral-50/60 rounded-2xl border border-neutral-100/80">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-neutral-200/60 flex items-center justify-center flex-shrink-0 text-indigo-500">
             <Package size={18} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col min-w-0 flex-1 justify-center gap-0.5">
@@ -165,7 +166,9 @@ export function RetailModal({ product, isOpen, onClose, onConfirm }: RetailModal
           )}
         </AnimatePresence>
         
-        <div className="flex gap-3 pt-2 mt-2 border-t border-neutral-100">
+        </div>
+        
+        <div className="sticky bottom-0 z-10 bg-white/90 backdrop-blur-md border-t border-neutral-100 p-4 sm:p-5 flex gap-3 shrink-0 mt-auto rounded-b-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
           <Button variant="outline" className="flex-1" onClick={handleClose}>
             Batal
           </Button>

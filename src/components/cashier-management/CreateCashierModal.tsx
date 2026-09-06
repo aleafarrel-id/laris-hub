@@ -82,23 +82,27 @@ export function CreateCashierModal({ isOpen, onClose }: { isOpen: boolean; onClo
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Tambah Kasir Baru">
-      <form onSubmit={handleSubmit} noValidate className="px-5 py-5 space-y-4">
-        <p className="text-xs text-primary/80 bg-primary/5 border border-primary/20 rounded-xl p-3 leading-relaxed">
-          Kasir akan langsung bisa login menggunakan akun yang Anda buat.
-        </p>
-        {field('full_name', 'Nama Lengkap', 'Contoh: Budi Santoso')}
-        {field('email', 'Email', 'contoh@email.com', 'email')}
-        {field('password', 'Password Sementara', 'Min. 8 karakter')}
-        {field('phone', 'No. HP', '08xxxxxxxxxx', 'tel', false)}
-        <Button
-          type="submit"
-          disabled={isPending}
-          isLoading={isPending}
-          className="w-full mt-2 py-3.5"
-          leftIcon={<UserCheck size={16} />}
-        >
-          Simpan
-        </Button>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col min-h-full relative">
+        <div className="px-5 py-5 space-y-4 flex-1">
+          <p className="text-xs text-primary/80 bg-primary/5 border border-primary/20 rounded-xl p-3 leading-relaxed">
+            Kasir akan langsung bisa login menggunakan akun yang Anda buat.
+          </p>
+          {field('full_name', 'Nama Lengkap', 'Contoh: Budi Santoso')}
+          {field('email', 'Email', 'contoh@email.com', 'email')}
+          {field('password', 'Password Sementara', 'Min. 8 karakter')}
+          {field('phone', 'No. HP', '08xxxxxxxxxx', 'tel', false)}
+        </div>
+        <div className="sticky bottom-0 z-10 bg-white/90 backdrop-blur-md border-t border-neutral-100 p-4 sm:p-5 flex shrink-0 mt-auto rounded-b-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+          <Button
+            type="submit"
+            disabled={isPending}
+            isLoading={isPending}
+            className="w-full py-3.5"
+            leftIcon={<UserCheck size={16} />}
+          >
+            Simpan
+          </Button>
+        </div>
       </form>
     </Modal>
   )
