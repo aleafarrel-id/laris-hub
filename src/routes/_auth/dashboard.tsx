@@ -79,10 +79,11 @@ const PERIOD_LABELS: Record<DashboardPeriod, string> = {
   today: 'Hari Ini',
   week: 'Minggu Ini',
   month: 'Bulan Ini',
+  all: 'Semua Waktu',
   custom: 'Custom',
 }
 
-const DISPLAY_PERIODS: DashboardPeriod[] = ['today', 'week', 'month', 'custom']
+const DISPLAY_PERIODS: DashboardPeriod[] = ['today', 'week', 'month', 'all', 'custom']
 
 function DashboardPage() {
   const { profile } = useAuth()

@@ -59,18 +59,20 @@ export async function getKPISummaryForDate(date: Date = new Date()): Promise<KPI
  * Aggregates directly from transactions table.
  */
 export async function getKPISummaryForRange(
-  from: Date,
-  to: Date,
+  from?: Date,
+  to?: Date,
   cashierId?: string,
 ): Promise<KPISummary> {
-  const endOfDay = new Date(to)
-  endOfDay.setHours(23, 59, 59, 999)
+  const endOfDay = to ? new Date(to) : undefined
+  endOfDay?.setHours(23, 59, 59, 999)
 
-  const { data, error } = await supabase.rpc('get_kpi_summary_for_range', {
-    p_from: from.toISOString(),
-    p_to: endOfDay.toISOString(),
+  const rpcArgs: { p_from?: string; p_to?: string; p_cashier_id?: string } = {
+    p_from: from?.toISOString(),
+    p_to: endOfDay?.toISOString(),
     p_cashier_id: cashierId === 'all' ? undefined : cashierId,
-  })
+  }
+
+  const { data, error } = await supabase.rpc('get_kpi_summary_for_range', rpcArgs as any)
 
   if (error) throw error
 
@@ -191,30 +193,30 @@ export interface TopProduct {
  * Get top N selling products for a date range.
  * Calls the `get_top_products` Postgres function via RPC.
  */
-export async function getTopProducts(from: Date, to: Date, limit = 5): Promise<TopProduct[]> {
-  const startDate = from.toISOString().split('T')[0]
-  const endDate = to.toISOString().split('T')[0]
+export async function getTopProducts(from?: Date, to?: Date, limit = 5): Promise<TopProduct[]> {
+  const startDate = from?.toISOString().split('T')[0]
+  const endDate = to?.toISOString().split('T')[0]
 
-  const { data, error } = await supabase.rpc('get_top_products', {
+  // Typed explicitly to support optional start/end dates for 'all time' use-case
+  const rpcArgs: { start_date?: string; end_date?: string; limit_n: number } = {
     start_date: startDate,
     end_date: endDate,
     limit_n: limit,
-  })
+  }
+
+  const { data, error } = await supabase.rpc('get_top_products', rpcArgs as any)
 
   if (error) throw error
   return (data ?? []) as TopProduct[]
 }
 
 export async function getTopProductsByCashier(
-  from: Date,
-  to: Date,
+  from: Date | undefined,
+  to: Date | undefined,
   cashierId: string,
   limit = 5,
 ): Promise<TopProduct[]> {
-  const endOfDay = new Date(to)
-  endOfDay.setHours(23, 59, 59, 999)
-
-  const { data, error } = await supabase
+  let query = supabase
     .from('transaction_items')
     .select(`
       quantity, selling_price, product_hpp, product_name, product_id,
@@ -222,8 +224,17 @@ export async function getTopProductsByCashier(
     `)
     .eq('transactions.type', 'sale')
     .eq('transactions.recorded_by', cashierId)
-    .gte('transactions.transaction_at', from.toISOString())
-    .lte('transactions.transaction_at', endOfDay.toISOString())
+
+  if (from) {
+    query = query.gte('transactions.transaction_at', from.toISOString())
+  }
+  if (to) {
+    const endOfDay = new Date(to)
+    endOfDay.setHours(23, 59, 59, 999)
+    query = query.lte('transactions.transaction_at', endOfDay.toISOString())
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
 

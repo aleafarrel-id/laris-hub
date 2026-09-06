@@ -2,12 +2,13 @@ import { Filter } from 'lucide-react'
 import { CustomSelect } from '@/components/ui/CustomSelect'
 import type { TransactionFilters } from '@/types'
 
-export type QuickRange = 'today' | 'week' | 'month' | 'custom'
+export type QuickRange = 'today' | 'week' | 'month' | 'custom' | 'all'
 
 export const QUICK_RANGES: { key: QuickRange; label: string }[] = [
   { key: 'today', label: 'Hari Ini' },
   { key: 'week', label: '7 Hari' },
   { key: 'month', label: '30 Hari' },
+  { key: 'all', label: 'Semua' },
   { key: 'custom', label: 'Custom' },
 ]
 

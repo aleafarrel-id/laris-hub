@@ -163,8 +163,8 @@ export function useTransactionSummary(
     enabled: !!user,
     queryKey: [...QUERY_KEYS.TRANSACTIONS, 'summary', filters],
     queryFn: async () => {
-      const from = filters.dateRange?.from || new Date(2000, 0, 1)
-      const to = filters.dateRange?.to || new Date()
+      const from = filters.dateRange?.from
+      const to = filters.dateRange?.to
       const kpi = await getKPISummaryForRange(from, to, filters.recordedBy)
       return {
         totalSales: filters.type === 'expense' ? 0 : kpi.revenue,

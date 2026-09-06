@@ -18,7 +18,10 @@ export const todayStart = () => {
   return d
 }
 
-function getDateRange(range: QuickRange): { from: Date; to: Date } {
+/** Ranges that map to a concrete, bounded date window. */
+type BoundedRange = Exclude<QuickRange, 'all' | 'custom'>
+
+function getDateRange(range: BoundedRange): { from: Date; to: Date } {
   const to = new Date()
   to.setHours(23, 59, 59, 999)
 
@@ -34,6 +37,7 @@ function getDateRange(range: QuickRange): { from: Date; to: Date } {
     from.setHours(0, 0, 0, 0)
     return { from, to }
   }
+  // 'today'
   return { from: todayStart(), to }
 }
 
@@ -53,13 +57,18 @@ export function useCashbookFilters() {
   }
 
   const filters: TransactionFilters = useMemo(() => {
-    const dateRange =
-      quickRange === 'custom'
-        ? {
-            from: new Date(customFrom),
-            to: new Date(`${customTo}T23:59:59.999`),
-          }
-        : getDateRange(quickRange)
+    let dateRange: { from: Date; to: Date } | undefined
+
+    if (quickRange === 'all') {
+      dateRange = undefined
+    } else if (quickRange === 'custom') {
+      dateRange = {
+        from: new Date(customFrom),
+        to: new Date(`${customTo}T23:59:59.999`),
+      }
+    } else {
+      dateRange = getDateRange(quickRange)
+    }
 
     return {
       dateRange,

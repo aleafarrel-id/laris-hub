@@ -11,9 +11,12 @@ import {
 import { useAuthStore } from '@/store/auth.store'
 import type { DateRange } from '@/types'
 
-export type DashboardPeriod = 'today' | 'week' | 'month' | 'custom'
+export type DashboardPeriod = 'today' | 'week' | 'month' | 'custom' | 'all'
 
-function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from: Date; to: Date } {
+function getDateRange(
+  period: DashboardPeriod,
+  customRange?: DateRange,
+): { from: Date | undefined; to: Date | undefined } {
   const now = new Date()
   const today = new Date(now)
   today.setHours(0, 0, 0, 0)
@@ -33,6 +36,8 @@ function getDateRange(period: DashboardPeriod, customRange?: DateRange): { from:
     }
     case 'custom':
       return customRange ?? { from: today, to: now }
+    case 'all':
+      return { from: undefined, to: undefined }
     default:
       return { from: today, to: now }
   }
