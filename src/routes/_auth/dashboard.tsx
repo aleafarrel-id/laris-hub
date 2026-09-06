@@ -18,6 +18,7 @@ import { CustomSelect } from '@/components/ui/CustomSelect'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { KPICard } from '@/components/ui/KPICard'
+import { QueryErrorFallback } from '@/components/ui/QueryErrorFallback'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import type { DashboardPeriod } from '@/hooks/useDashboard'
@@ -122,21 +123,29 @@ function DashboardPage() {
   const {
     data: kpi,
     isLoading: kpiLoading,
+    isError: kpiError,
+    refetch: refetchKpi,
     isOfflinePaused: kpiOffline,
   } = useKPISummary(period, customRange, cashierFilter)
   const {
     data: trend,
     isLoading: trendLoading,
+    isError: trendError,
+    refetch: refetchTrend,
     isOfflinePaused: trendOffline,
   } = useMonthlyTrend(30, cashierFilter)
   const {
     data: topProducts,
     isLoading: topProductsLoading,
+    isError: topProductsError,
+    refetch: refetchTopProducts,
     isOfflinePaused: topProductsOffline,
   } = useTopProducts(period, customRange, 5, cashierFilter)
   const {
     data: recentTransactionsResult,
     isLoading: recentLoading,
+    isError: recentError,
+    refetch: refetchRecent,
     isOfflinePaused: recentOffline,
   } = useTransactions({
     limit: 10,
@@ -208,7 +217,14 @@ function DashboardPage() {
           </div>
         )}
 
-        {kpiOffline ? (
+        {kpiError ? (
+          <QueryErrorFallback
+            onRetry={refetchKpi}
+            title="Data KPI tidak dapat dimuat"
+            description="Gagal mengambil data ringkasan. Periksa koneksi Anda dan coba lagi."
+            compact
+          />
+        ) : kpiOffline ? (
           <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm col-span-full h-full min-h-[160px] flex items-center justify-center">
             <EmptyState
               icon={WifiOff}
@@ -272,7 +288,14 @@ function DashboardPage() {
             <Calendar size={16} className="text-neutral-400" />
           </div>
           <div className="flex-1 flex flex-col justify-end">
-            {trendOffline ? (
+            {trendError ? (
+              <QueryErrorFallback
+                onRetry={refetchTrend}
+                title="Grafik tren tidak dapat dimuat"
+                description="Gagal mengambil data tren penjualan."
+                compact
+              />
+            ) : trendOffline ? (
               <EmptyState
                 icon={WifiOff}
                 title="Data Tren Tidak Tersedia"
@@ -338,7 +361,14 @@ function DashboardPage() {
           <p className="text-xs text-neutral-400 mb-4">
             Distribusi penjualan {PERIOD_LABELS[period].toLowerCase()}
           </p>
-          {topProductsOffline ? (
+          {topProductsError ? (
+            <QueryErrorFallback
+              onRetry={refetchTopProducts}
+              title="Data produk tidak dapat dimuat"
+              description="Gagal mengambil data produk terlaris."
+              compact
+            />
+          ) : topProductsOffline ? (
             <EmptyState
               icon={WifiOff}
               title="Produk Terlaris Tidak Tersedia"
@@ -395,7 +425,14 @@ function DashboardPage() {
       >
         <h2 className="text-sm font-semibold text-neutral-900 mb-5">10 Transaksi Terbaru</h2>
 
-        {recentOffline ? (
+        {recentError ? (
+          <QueryErrorFallback
+            onRetry={refetchRecent}
+            title="Transaksi terbaru tidak dapat dimuat"
+            description="Gagal mengambil data transaksi terbaru."
+            compact
+          />
+        ) : recentOffline ? (
           <EmptyState
             icon={WifiOff}
             title="Transaksi Terbaru Tidak Tersedia"

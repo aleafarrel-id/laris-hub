@@ -21,6 +21,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { QueryErrorFallback } from '@/components/ui/QueryErrorFallback'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
@@ -51,6 +52,8 @@ function ProductPage() {
   const {
     data: paginatedData,
     isLoading: isQueryLoading,
+    isError,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -189,7 +192,17 @@ function ProductPage() {
         </div>
       )}
 
-      {!isLoading && !isOfflinePaused && !products.length && (
+      {!isLoading && isError && !products.length && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <QueryErrorFallback
+            onRetry={refetch}
+            title="Katalog tidak dapat dimuat"
+            description="Gagal mengambil data produk. Periksa koneksi Anda dan coba lagi."
+          />
+        </div>
+      )}
+
+      {!isLoading && !isError && !isOfflinePaused && !products.length && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           <EmptyState
             icon={Package}

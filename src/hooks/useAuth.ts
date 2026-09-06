@@ -100,6 +100,16 @@ export function useAuthListener() {
           } catch (err: any) {
             if (err.message === 'ACCOUNT_SUSPENDED' || err.message === 'PROFILE_NOT_FOUND') {
               await performSignOut(queryClient, clearAuth)
+            } else {
+              // Unexpected error (e.g. network failure) while loading profile in the background.
+              // The user is still authenticated, just show a gentle warning.
+              console.error('[AuthListener] Failed to load user profile:', err)
+              if (mounted) {
+                toast.warning('Profil tidak dapat dimuat', {
+                  description: 'Terjadi masalah saat memuat data profil Anda. Coba muat ulang halaman.',
+                  duration: 6000,
+                })
+              }
             }
           }
         }
@@ -129,6 +139,16 @@ export function useAuthListener() {
           } catch (err: any) {
             if (err.message === 'ACCOUNT_SUSPENDED' || err.message === 'PROFILE_NOT_FOUND') {
               await performSignOut(queryClient, clearAuth)
+            } else {
+              // Unexpected error during post-login profile fetch. Keep user signed in
+              // but warn them so they can act (e.g. refresh the page).
+              console.error('[AuthListener] Failed to load profile after sign-in:', err)
+              if (mounted) {
+                toast.warning('Profil tidak dapat dimuat', {
+                  description: 'Terjadi masalah saat memuat data profil. Coba muat ulang halaman.',
+                  duration: 6000,
+                })
+              }
             }
           }
         }

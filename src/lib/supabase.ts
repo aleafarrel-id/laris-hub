@@ -1,18 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
+import { env } from '@/env'
 import type { Database } from '@/types/database.types'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
-  throw new Error('[Supabase] VITE_SUPABASE_URL belum dikonfigurasi.')
-}
-
-if (!supabaseAnonKey || supabaseAnonKey === 'your-anon-key-here') {
-  throw new Error('[Supabase] VITE_SUPABASE_ANON_KEY belum dikonfigurasi.')
-}
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -22,8 +12,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'x-app-name': import.meta.env.VITE_APP_NAME ?? 'Laris Hub',
-      'x-app-version': import.meta.env.VITE_APP_VERSION ?? '1.0.0',
+      'x-app-name': env.VITE_APP_NAME,
+      'x-app-version': env.VITE_APP_VERSION,
     },
   },
   realtime: {

@@ -8,6 +8,7 @@ import { CashierStats } from '@/components/cashier-management/CashierStats'
 import { CreateCashierModal } from '@/components/cashier-management/CreateCashierModal'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { QueryErrorFallback } from '@/components/ui/QueryErrorFallback'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useCashierList, useToggleCashierStatus } from '@/hooks/useCashierManagement'
@@ -30,7 +31,7 @@ export const Route = createFileRoute('/_auth/cashier-management')({
 // Main Page
 function CashierManagementPage() {
   const { profile: adminProfile } = useAuth()
-  const { data: cashierList = [], isLoading } = useCashierList()
+  const { data: cashierList = [], isLoading, isError, refetch } = useCashierList()
   const { mutate: toggleStatus, isPending: isToggling } = useToggleCashierStatus()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedCashier, setSelectedCashier] = useState<Profile | null>(null)
@@ -118,6 +119,12 @@ function CashierManagementPage() {
                 </div>
               ))}
             </div>
+          ) : isError ? (
+            <QueryErrorFallback
+              onRetry={refetch}
+              title="Daftar kasir tidak dapat dimuat"
+              description="Gagal mengambil data tim kasir. Periksa koneksi Anda dan coba lagi."
+            />
           ) : (cashierList?.length ?? 0) === 0 ? (
             <EmptyState
               icon={Users}

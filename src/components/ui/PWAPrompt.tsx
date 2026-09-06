@@ -1,5 +1,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 
 /**
  * PWAPrompt
@@ -8,6 +9,8 @@ import { useEffect } from 'react'
  * this component just needs to call useRegisterSW() to activate it.
  */
 export function PWAPrompt() {
+  const swErrorToastShown = useRef(false)
+
   const {
     offlineReady: [offlineReady],
     needRefresh: [needRefresh],
@@ -18,6 +21,17 @@ export function PWAPrompt() {
     },
     onRegisterError(error) {
       console.error('[PWA] Service Worker registration error:', error)
+
+      // Only notify in development — production users shouldn't see
+      // technical PWA error details. The app still works without a SW.
+      if (import.meta.env.DEV && !swErrorToastShown.current) {
+        swErrorToastShown.current = true
+        toast.warning('Mode offline tidak aktif', {
+          description:
+            'Service Worker gagal terdaftar. Fitur offline tidak tersedia dalam sesi ini.',
+          duration: 8000,
+        })
+      }
     },
   })
 

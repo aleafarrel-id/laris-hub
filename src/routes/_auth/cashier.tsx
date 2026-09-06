@@ -7,6 +7,7 @@ import { SaleForm } from '@/components/cashier/SaleForm'
 import { TransactionListItem } from '@/components/cashier/TransactionListItem'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
+import { QueryErrorFallback } from '@/components/ui/QueryErrorFallback'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { TransactionDetailModal } from '@/components/ui/TransactionDetailModal'
 import { useAuth } from '@/hooks/useAuth'
@@ -20,7 +21,9 @@ export const Route = createFileRoute('/_auth/cashier')({
 
 function CashierPage() {
   const { profile, isAdmin } = useAuth()
-  const { data: todayTx, isLoading } = useTodayTransactions(isAdmin ? undefined : profile?.id)
+  const { data: todayTx, isLoading, isError, refetch } = useTodayTransactions(
+    isAdmin ? undefined : profile?.id,
+  )
 
   const [showSaleModal, setShowSaleModal] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
@@ -157,7 +160,16 @@ function CashierPage() {
             </div>
           )}
 
-          {!isLoading && !todayTx?.length && (
+          {!isLoading && isError && (
+            <QueryErrorFallback
+              onRetry={refetch}
+              title="Transaksi tidak dapat dimuat"
+              description="Gagal mengambil transaksi hari ini. Periksa koneksi Anda dan coba lagi."
+              compact
+            />
+          )}
+
+          {!isLoading && !isError && !todayTx?.length && (
             <EmptyState
               icon={ShoppingCart}
               title="Belum ada transaksi hari ini"
@@ -165,7 +177,7 @@ function CashierPage() {
             />
           )}
 
-          {!isLoading && (
+          {!isLoading && !isError && (
             <div className="space-y-2">
               {todayTx?.slice(0, 15).map((tx, idx) => (
                 <TransactionListItem

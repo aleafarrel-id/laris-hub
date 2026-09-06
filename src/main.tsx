@@ -1,3 +1,6 @@
+// Environment validation — must be the first import so Vite fails fast on misconfiguration
+import '@/env'
+
 import { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'

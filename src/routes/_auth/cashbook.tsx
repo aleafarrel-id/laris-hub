@@ -10,6 +10,7 @@ import { CashierProfileModal } from '@/components/ui/CashierProfileModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EditTransactionModal } from '@/components/ui/EditTransactionModal'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { QueryErrorFallback } from '@/components/ui/QueryErrorFallback'
 import { useAuth } from '@/hooks/useAuth'
 import { type CashbookSearch, useCashbookFilters } from '@/hooks/useCashbookFilters'
 import { useCashiers } from '@/hooks/useProfile'
@@ -64,12 +65,16 @@ function CashbookPage() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isTransactionsLoading,
+    isError: isTransactionsError,
+    refetch: refetchTransactions,
     isOfflinePaused: isTransactionsOffline,
   } = useInfiniteTransactions(filters, 25)
 
   const {
     data: summaryData,
     isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    refetch: refetchSummary,
     isOfflinePaused: isSummaryOffline,
   } = useTransactionSummary({
     dateRange: filters.dateRange,
@@ -124,7 +129,14 @@ function CashbookPage() {
         onPaymentMethodFilterChange={(val) => updateSearch({ paymentMethodFilter: val })}
       />
 
-      {isSummaryOffline ? (
+      {isSummaryError ? (
+        <QueryErrorFallback
+          onRetry={refetchSummary}
+          title="Ringkasan tidak dapat dimuat"
+          description="Gagal mengambil data ringkasan keuangan. Periksa koneksi Anda dan coba lagi."
+          compact
+        />
+      ) : isSummaryOffline ? (
         <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm mb-6 flex items-center justify-center">
           <EmptyState
             icon={WifiOff}
@@ -147,7 +159,21 @@ function CashbookPage() {
       )}
 
       <AnimatePresence mode="wait">
-        {isTransactionsOffline ? (
+        {isTransactionsError ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <QueryErrorFallback
+              onRetry={refetchTransactions}
+              title="Transaksi tidak dapat dimuat"
+              description="Gagal mengambil riwayat transaksi. Periksa koneksi Anda dan coba lagi."
+            />
+          </motion.div>
+        ) : isTransactionsOffline ? (
           <motion.div
             key="offline"
             initial={{ opacity: 0, y: 10 }}

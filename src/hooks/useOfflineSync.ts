@@ -94,6 +94,13 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
           console.error('[OfflineSync] Max retries reached for item:', item)
           await dequeueOfflineItem(item.localId)
           failedItems.push(item)
+          // Notify the user so they know this specific action was not saved —
+          // without exposing any internal action name or technical details.
+          toast.warning('Satu tindakan tidak dapat disimpan', {
+            description:
+              'Gagal menyinkronkan setelah beberapa kali percobaan. Tindakan ini telah dibatalkan.',
+            duration: 6000,
+          })
           continue
         }
 
@@ -234,6 +241,13 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
             console.error('[OfflineSync] Permanent error for item:', item, err)
             await dequeueOfflineItem(item.localId)
             failedItems.push(item)
+            // Notify the user that this action was permanently rejected by the
+            // server (e.g. validation failure, 4xx). It cannot be retried.
+            toast.warning('Satu tindakan tidak dapat disimpan', {
+              description:
+                'Tindakan ditolak oleh server dan tidak dapat diulang. Data ini telah dihapus dari antrean.',
+              duration: 6000,
+            })
           } else if (isNetworkError) {
             console.log('[OfflineSync] Network error, keeping in queue:', item.localId)
           } else {
@@ -255,12 +269,8 @@ export function useOfflineSync(isOnline: boolean): OfflineSyncStatus {
         })
       }
 
-      if ((failedItems?.length ?? 0) > 0) {
-        toast.error(`${failedItems?.length ?? 0} tindakan batal disinkronkan`, {
-          description:
-            'Tindakan ditolak oleh server atau melebihi batas percobaan. Data tersebut telah dihapus dari antrean.',
-        })
-      }
+      // Per-item failure toasts are shown individually inside the loop above
+      // when an item reaches MAX_RETRIES, so no duplicate summary is needed here.
     } finally {
       isSyncingRef.current = false
       setIsSyncing(false)
